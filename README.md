@@ -70,3 +70,8 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
 Create `backend/.env` later when API keys are added.
+
+
+## v0.2.1
+
+Adds expanded GPU catalog matching and homepage autocomplete. Free-text searches still work; the dropdown is only there to help users choose exact products.

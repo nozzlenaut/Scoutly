@@ -1,46 +1,29 @@
 # Product Catalog
 
-Scoutly uses a product catalog to turn messy user searches into canonical products.
+Scoutly uses a product catalog so searches can resolve messy user input into a canonical product before marketplace results are ranked.
 
-Example:
+Examples:
 
-- User searches: `3060 12gb`
-- Scoutly resolves it to: `RTX 3060 12GB`
-- Providers search with the canonical product name
-- Ranking rejects bad matches like `RTX 3060 Ti`, `RTX 3060 Laptop`, and `Broken RTX 3060`
+| User input | Resolved product |
+|---|---|
+| `3060` | RTX 3060 12GB |
+| `rtx3060` | RTX 3060 12GB |
+| `3060 ti` | RTX 3060 Ti 8GB |
+| `rx6700xt` | RX 6700 XT 12GB |
+| `a770 16gb` | Arc A770 16GB |
 
-## Current V1 Scope
+## Why free-text and dropdown both exist
 
-The first catalog is GPU-only, but the shape is category-neutral.
+The dropdown improves accuracy, but it is not required. Users can still type natural shorthand. The backend resolver decides the canonical product either way.
 
-Each product includes:
+## Current category
 
-- `id`
-- `category`
-- `brand`
-- `chipset_brand`
-- `model`
-- `variant`
-- `generation`
-- `vram_gb`
-- `memory_type`
-- `aliases`
-- `required_terms`
-- `excluded_terms`
+- GPU: active
+- CPU: planned
+- Cameras: planned
 
-## API Endpoints
+## Backend endpoints
 
-```txt
-GET /api/products?category=gpu
-GET /api/products/resolve?q=3060+12gb
-GET /api/search?q=3060+12gb
-```
-
-## Next Catalog Improvements
-
-- Add more NVIDIA GPUs
-- Add more AMD GPUs
-- Add more Intel Arc GPUs
-- Add manufacturer board partner aliases like EVGA, ASUS, MSI, Sapphire, XFX
-- Add launch dates and typical used-price ranges
-- Move JSON data into PostgreSQL once the catalog stabilizes
+- `GET /api/products?category=gpu`
+- `GET /api/products/resolve?q=3060`
+- `GET /api/products/suggest?q=3060&category=gpu&limit=8`

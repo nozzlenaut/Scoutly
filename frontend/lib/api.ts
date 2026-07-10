@@ -40,13 +40,27 @@ export type SearchResponse = {
   results: SearchResult[];
 };
 
+const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export async function searchDeals(query: string, providers = "ebay,amazon"): Promise<SearchResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const url = `${baseUrl}/api/search?q=${encodeURIComponent(query)}&providers=${encodeURIComponent(providers)}`;
   const response = await fetch(url, { cache: "no-store" });
 
   if (!response.ok) {
     throw new Error("Search failed");
+  }
+
+  return response.json();
+}
+
+export async function suggestProducts(query: string, category = "gpu", limit = 8): Promise<ProductMatch[]> {
+  if (query.trim().length < 2) return [];
+
+  const url = `${baseUrl}/api/products/suggest?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&limit=${limit}`;
+  const response = await fetch(url, { cache: "no-store" });
+
+  if (!response.ok) {
+    return [];
   }
 
   return response.json();

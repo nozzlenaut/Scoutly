@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1 - Product catalog autocomplete
+
+- Expanded the GPU product catalog with common NVIDIA, AMD, and Intel desktop GPUs.
+- Added `/api/products/suggest` for autocomplete-ready product suggestions.
+- Improved alias matching for shorthand searches like `3060`, `rtx3060`, and `rx6700xt`.
+- Added homepage autocomplete dropdown while keeping free-text search available.
+- Pinned Tailwind dependencies to avoid the Tailwind 4/PostCSS mismatch during local setup.
+
+
 ## 0.2.0 - GPU search added
 
 - Added visible category status tags to the homepage.
