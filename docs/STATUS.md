@@ -1,43 +1,33 @@
-# Scoutly Status Tags
+# Scoutly Category Status
 
-Scoutly should make the current product support obvious to visitors.
+The homepage category selector should show what users can search now without turning the page into a large status board.
 
-## Current tags
+## Current categories
 
-| Area | Tag | Status |
-| --- | --- | --- |
-| GPUs | GPU search added | Added |
-| eBay GPU pricing | eBay live pricing pending | Soon |
-| CPUs | CPU search planned | Planned |
-| Cameras | Camera search planned | Planned |
+| Group | Category | Status | Notes |
+| --- | --- | --- | --- |
+| Photography | Cameras | Active | Starter camera body catalog is available. |
+| Photography | Lenses | Active | Starter lens catalog is available. |
+| PC Parts | GPUs | Lab | Catalog exists, but the public MVP is shifting toward category-based search. |
 
 ## Status meanings
 
-- **Added** means the feature is visible and usable in the current app.
-- **Soon** means the architecture is ready, but a dependency is pending.
-- **Planned** means the feature is on the roadmap but not started.
+- **Active** means users can search this category in the current UI.
+- **Lab** means the category works for testing but is not the main launch focus.
+- **Planned** means the category is not live yet.
 
-## Release tag style
+## Grouping direction
 
-Use short release labels that say what users can actually do.
+For now, the selector can show specific categories like:
 
-Examples:
+```text
+Cameras | Lenses | GPUs
+```
 
-- `v0.2.0 - GPU search added`
-- `v0.3.0 - eBay GPU pricing added`
-- `v0.4.0 - CPU search added`
+If the list grows, condense categories into groups:
 
+```text
+Photography | PC Parts | Gaming | Collectibles
+```
 
-## v0.2.1 - Product catalog autocomplete
-
-Done:
-
-- GPU catalog expanded.
-- Search aliases supported, including `3060`, `rtx3060`, `rx6700xt`, and similar shorthand.
-- Autocomplete suggestions added to the homepage.
-
-Still coming:
-
-- Live eBay pricing.
-- Affiliate links.
-- Real marketplace ranking.
+Then show item types inside the selected group.

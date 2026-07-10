@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.catalog import router as catalog_router
 from app.api.search import router as search_router
 
-app = FastAPI(title="Scoutly API", version="0.2.0")
+app = FastAPI(title="Scoutly API", version="0.2.2")
 
 app.add_middleware(
     CORSMiddleware,

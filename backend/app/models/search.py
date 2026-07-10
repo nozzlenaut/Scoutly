@@ -6,5 +6,6 @@ from app.models.product import ProductMatch
 
 class SearchResponse(BaseModel):
     query: str
+    category: str | None = None
     resolved_product: ProductMatch | None = None
     results: list[Listing]

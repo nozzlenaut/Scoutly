@@ -1,19 +1,45 @@
 import re
 
-BRAND_WORDS = ["geforce", "radeon", "nvidia", "amd", "intel", "graphics", "card", "gpu"]
+FILLER_WORDS = [
+    "used",
+    "new",
+    "camera",
+    "digital",
+    "mirrorless",
+    "dslr",
+    "lens",
+    "body",
+    "only",
+    "graphics",
+    "card",
+    "gpu",
+]
+
+ROMAN_NUMERALS = {
+    "ii": "2",
+    "iii": "3",
+    "iv": "4",
+    "v": "5",
+}
 
 
 def normalize_text(value: str) -> str:
     value = value.lower()
-    for word in BRAND_WORDS:
-        value = re.sub(rf"\b{re.escape(word)}\b", " ", value)
+    value = value.replace("f/", "f ")
 
-    # Turn RTX3060 / RX6600XT / A77016GB into token-friendly text.
+    # Turn RTX3060 / RX6600XT / A7III / 24-70mm into token-friendly text.
     value = re.sub(r"([a-z])([0-9])", r"\1 \2", value)
     value = re.sub(r"([0-9])([a-z])", r"\1 \2", value)
-    value = re.sub(r"(\d+)\s*(gb)\b", r"\1gb", value)
+    value = re.sub(r"(\d+)\s*(gb|mm)\b", r"\1\2", value)
     value = re.sub(r"[^a-z0-9]+", " ", value)
-    return re.sub(r"\s+", " ", value).strip()
+    value = re.sub(r"\s+", " ", value).strip()
+
+    tokens = []
+    for token in value.split():
+        token = ROMAN_NUMERALS.get(token, token)
+        if token not in FILLER_WORDS:
+            tokens.append(token)
+    return " ".join(tokens)
 
 
 def compact_text(value: str) -> str:
@@ -29,9 +55,7 @@ def has_term(text: str, term: str) -> bool:
     if not normalized_term:
         return False
 
-    # Direct token match covers normal terms like "3060", "ti", "12gb".
     if re.search(rf"(^|\s){re.escape(normalized_term)}($|\s)", normalized):
         return True
 
-    # Compact match covers terms like "rtx3060" and "a77016gb".
     return compact_term in compact

@@ -1,6 +1,6 @@
 # Scoutly Database Notes
 
-Database is not required for Sprint 1.
+Database is not required for the current local prototype.
 
 Future tables:
 
@@ -8,15 +8,21 @@ Future tables:
 
 - id
 - category
+- category_label
+- product_type
 - brand
 - model
 - variant
 - aliases
+- required_terms
+- excluded_terms
+- metadata
 - active
 
 ## listings
 
 - id
+- product_id
 - provider
 - external_id
 - title

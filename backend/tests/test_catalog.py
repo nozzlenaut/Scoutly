@@ -1,56 +1,89 @@
 from app.catalog.catalog import listing_matches_product, match_product, suggest_products
 
 
+def test_resolves_camera_from_category_alias():
+    match = match_product("a7iii", category="cameras")
+    assert match is not None
+    assert match.product.id == "camera-sony-a7-iii-body"
+
+
+def test_camera_category_rejects_accessories():
+    match = match_product("Sony A7 III Body", category="cameras")
+    assert match is not None
+    assert listing_matches_product("Sony A7III Battery Charger Bundle Only", match.product) is False
+
+
+def test_resolves_lens_from_common_typing():
+    match = match_product("sony 24-70 2.8", category="lenses")
+    assert match is not None
+    assert match.product.id == "lens-sony-fe-24-70-f28-gm"
+
+
+def test_lens_category_rejects_lens_hood_only():
+    match = match_product("Sony 24-70 GM", category="lenses")
+    assert match is not None
+    assert listing_matches_product("Sony 24-70 GM Lens Hood Only", match.product) is False
+
+
+def test_category_suggestions_are_filtered():
+    camera_suggestions = suggest_products("sony", category="cameras")
+    lens_suggestions = suggest_products("sony", category="lenses")
+    assert camera_suggestions
+    assert lens_suggestions
+    assert all(item.product.category == "cameras" for item in camera_suggestions)
+    assert all(item.product.category == "lenses" for item in lens_suggestions)
+
+
 def test_resolves_short_3060_to_rtx_3060_12gb():
-    match = match_product("3060")
+    match = match_product("3060", category="gpus")
     assert match is not None
     assert match.product.id == "gpu-nvidia-rtx-3060-12gb"
 
 
 def test_resolves_rtx3060_compact_alias():
-    match = match_product("rtx3060")
+    match = match_product("rtx3060", category="gpu")
     assert match is not None
     assert match.product.id == "gpu-nvidia-rtx-3060-12gb"
 
 
 def test_resolves_rtx_3060_12gb():
-    match = match_product("3060 12gb")
+    match = match_product("3060 12gb", category="gpus")
     assert match is not None
     assert match.product.id == "gpu-nvidia-rtx-3060-12gb"
 
 
 def test_suggests_multiple_3060_products():
-    suggestions = suggest_products("3060")
+    suggestions = suggest_products("3060", category="gpus")
     ids = [item.product.id for item in suggestions]
     assert "gpu-nvidia-rtx-3060-12gb" in ids
     assert "gpu-nvidia-rtx-3060-ti-8gb" in ids
 
 
 def test_rejects_3060_ti_when_looking_for_3060_12gb():
-    match = match_product("rtx 3060 12gb")
+    match = match_product("rtx 3060 12gb", category="gpus")
     assert match is not None
     assert listing_matches_product("NVIDIA RTX 3060 Ti 8GB", match.product) is False
 
 
 def test_rejects_broken_listing():
-    match = match_product("rtx 3060 12gb")
+    match = match_product("rtx 3060 12gb", category="gpus")
     assert match is not None
     assert listing_matches_product("Broken RTX 3060 12GB for parts", match.product) is False
 
 
 def test_accepts_valid_3060_listing():
-    match = match_product("rtx 3060 12gb")
+    match = match_product("rtx 3060 12gb", category="gpus")
     assert match is not None
     assert listing_matches_product("EVGA GeForce RTX 3060 XC 12GB GDDR6 Graphics Card", match.product) is True
 
 
 def test_resolves_amd_compact_alias():
-    match = match_product("rx6700xt")
+    match = match_product("rx6700xt", category="gpus")
     assert match is not None
     assert match.product.id == "gpu-amd-rx-6700-xt-12gb"
 
 
 def test_resolves_intel_arc_alias():
-    match = match_product("a770 16gb")
+    match = match_product("a770 16gb", category="gpus")
     assert match is not None
     assert match.product.id == "gpu-intel-arc-a770-16gb"

@@ -10,8 +10,12 @@ PROVIDERS = {
 }
 
 
-async def search_best_deals(query: str, provider_keys: list[str]) -> tuple[ProductMatch | None, list[Listing]]:
-    product_match = match_product(query)
+async def search_best_deals(
+    query: str,
+    provider_keys: list[str],
+    category: str | None = None,
+) -> tuple[ProductMatch | None, list[Listing]]:
+    product_match = match_product(query, category)
     provider_query = product_match.product.display_name if product_match else query
     results: list[Listing] = []
 

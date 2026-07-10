@@ -1,16 +1,15 @@
 export type Product = {
   id: string;
   category: string;
+  category_label: string;
+  product_type: string;
   brand: string;
-  chipset_brand: string;
   model: string;
   variant: string | null;
-  generation: string | null;
-  vram_gb: number | null;
-  memory_type: string | null;
   aliases: string[];
   required_terms: string[];
   excluded_terms: string[];
+  metadata: Record<string, unknown>;
   active: boolean;
   display_name: string;
 };
@@ -36,14 +35,15 @@ export type SearchResult = {
 
 export type SearchResponse = {
   query: string;
+  category: string | null;
   resolved_product: ProductMatch | null;
   results: SearchResult[];
 };
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export async function searchDeals(query: string, providers = "ebay,amazon"): Promise<SearchResponse> {
-  const url = `${baseUrl}/api/search?q=${encodeURIComponent(query)}&providers=${encodeURIComponent(providers)}`;
+export async function searchDeals(query: string, category = "cameras", providers = "ebay,amazon"): Promise<SearchResponse> {
+  const url = `${baseUrl}/api/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&providers=${encodeURIComponent(providers)}`;
   const response = await fetch(url, { cache: "no-store" });
 
   if (!response.ok) {
@@ -53,7 +53,7 @@ export async function searchDeals(query: string, providers = "ebay,amazon"): Pro
   return response.json();
 }
 
-export async function suggestProducts(query: string, category = "gpu", limit = 8): Promise<ProductMatch[]> {
+export async function suggestProducts(query: string, category = "cameras", limit = 8): Promise<ProductMatch[]> {
   if (query.trim().length < 2) return [];
 
   const url = `${baseUrl}/api/products/suggest?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&limit=${limit}`;

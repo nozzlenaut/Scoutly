@@ -1,22 +1,22 @@
 # Scoutly
 
-Scoutly helps users find the best used deals across multiple online marketplaces by intelligently comparing listings and surfacing the best option from each retailer.
+Scoutly helps users find the best used deals across multiple online marketplaces by resolving messy searches into exact products, then surfacing the best option from each retailer.
 
 ## Current status
 
-- **GPU search added**
-- **eBay live pricing pending** until API credentials are approved
-- CPU and camera search are planned future categories
+- **Category-based search added**
+- **Cameras and lenses are the primary starter categories**
+- **GPU catalog remains available as a PC-parts lab category**
+- **Live eBay pricing is pending** until API credentials are approved
 
-## Included in this sprint
+## Included in v0.2.2
 
-Sprint 3A adds the public product-status layer:
-
-- Homepage "What's added" panel
-- Future-ready category tabs
-- GPU marked as the active supported category
-- eBay live pricing marked as coming soon
-- Release/status tag documentation
+- Replaces the old status-heavy section with a real category picker
+- Adds Cameras and Lenses as active starter categories
+- Converts the backend catalog from GPU-only to a generic product catalog
+- Adds starter photography products and filters
+- Keeps GPU autocomplete working under the GPUs category
+- Keeps free-text typing working while encouraging exact autocomplete selection
 
 ## Project structure
 
@@ -31,12 +31,14 @@ Scoutly/
 
 ### Backend
 
+Git Bash:
+
 ```bash
 cd backend
-python -m venv .venv
-.venv\Scripts\activate
+py -3.12 -m venv .venv
+source .venv/Scripts/activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
 Backend runs at:
@@ -70,8 +72,3 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
 Create `backend/.env` later when API keys are added.
-
-
-## v0.2.1
-
-Adds expanded GPU catalog matching and homepage autocomplete. Free-text searches still work; the dropdown is only there to help users choose exact products.

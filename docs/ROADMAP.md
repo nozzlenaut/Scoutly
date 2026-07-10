@@ -1,45 +1,50 @@
 # Scoutly Roadmap
 
-## Sprint 1 - Foundation
+## Current MVP direction
 
-- Next.js frontend
-- FastAPI backend
-- Mock search results
-- Basic ranking logic
-- Clean project structure
+The MVP is a simple category-based search flow:
 
-## Sprint 2 - Product Catalog
+```text
+Pick category
+↓
+Start typing item
+↓
+Choose exact autocomplete result
+↓
+Scoutly checks a marketplace
+↓
+Show the best used result
+```
 
-- Add GPU catalog
-- Add aliases
-- Reject wrong models, laptop GPUs, broken cards, and parts-only listings
-- Resolve messy user searches to canonical products
+## v0.2.2 - Category Search
 
-## Sprint 3A - Product Status UI
+- Category picker on the homepage
+- Cameras and Lenses as active starter categories
+- Generic product catalog model
+- Starter photography catalog
+- GPU catalog kept as a PC-parts lab category
 
-- Add visible "What's added" status panel
-- Add category tabs for future item types
-- Show `GPU search added` in the app
-- Add release/status tag conventions
-
-## Sprint 3B - eBay Provider
+## v0.3.0 - eBay Provider
 
 - Add eBay Browse API credentials support
 - Add eBay provider
-- Filter bad eBay listings
-- Return best eBay result for a GPU search
+- Search eBay using the resolved canonical product
+- Filter bad used listings
+- Return the best eBay result for Cameras, Lenses, and GPUs
 
-## Sprint 4 - Affiliate Redirects
+## v0.4.0 - Affiliate Redirects
 
 - Add outbound redirect route
 - Track clicks
 - Add eBay Partner Network links
+- Add affiliate disclosure page
 
-## Sprint 5 - More Marketplaces
+## v0.5.0 - Product Catalog Expansion
 
-- Add Amazon used/open-box where possible
-- Add Newegg refurbished/open-box if available
-- Add Best Buy open-box if available
+- Add more camera bodies
+- Add more lenses
+- Add grouped categories, such as Photography and PC Parts, if the category bar gets crowded
+- Add category-specific metadata and filters
 
 ## Later
 
@@ -48,3 +53,4 @@
 - Saved searches
 - Email/Discord alerts
 - User accounts
+- More marketplaces

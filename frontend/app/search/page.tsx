@@ -2,13 +2,13 @@ import Link from "next/link";
 import { CategoryTabs } from "@/components/CategoryTabs";
 import { ResultCard } from "@/components/ResultCard";
 import { searchDeals } from "@/lib/api";
-import { getActiveCategoryStatus } from "@/lib/categoryStatus";
+import { getCategory } from "@/lib/categoryCatalog";
 
-export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
-  const query = searchParams.q || "RTX 3060 12GB";
-  const data = await searchDeals(query);
+export default async function SearchPage({ searchParams }: { searchParams: { q?: string; category?: string } }) {
+  const category = getCategory(searchParams.category);
+  const query = searchParams.q || category.defaultQuery;
+  const data = await searchDeals(query, category.id);
   const resolved = data.resolved_product;
-  const activeCategory = getActiveCategoryStatus();
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
@@ -18,10 +18,10 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
         <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Current support</p>
-              <p className="mt-2 font-semibold text-emerald-100">{activeCategory.tag}</p>
+              <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Selected category</p>
+              <p className="mt-2 font-semibold text-emerald-100">{category.group} · {category.label}</p>
             </div>
-            <CategoryTabs />
+            <CategoryTabs selectedId={category.id} />
           </div>
         </div>
 
@@ -37,7 +37,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
               <p className="mt-3 text-sm text-amber-300">No catalog match yet. Showing keyword-based results.</p>
             )}
           </div>
-          <p className="text-sm text-slate-400">Mock providers with catalog filtering</p>
+          <p className="text-sm text-slate-400">Mock providers until live eBay API is connected</p>
         </div>
         <section className="mt-8 grid gap-5 md:grid-cols-2">
           {data.results.map((result) => (
