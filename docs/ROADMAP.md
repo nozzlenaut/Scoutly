@@ -8,18 +8,26 @@
 - Basic ranking logic
 - Clean project structure
 
-## Sprint 2 - eBay Provider
-
-- Create eBay developer account
-- Add eBay Browse API integration
-- Filter bad listings
-- Return best eBay result for a GPU search
-
-## Sprint 3 - Smarter Matching
+## Sprint 2 - Product Catalog
 
 - Add GPU catalog
 - Add aliases
 - Reject wrong models, laptop GPUs, broken cards, and parts-only listings
+- Resolve messy user searches to canonical products
+
+## Sprint 3A - Product Status UI
+
+- Add visible "What's added" status panel
+- Add category tabs for future item types
+- Show `GPU search added` in the app
+- Add release/status tag conventions
+
+## Sprint 3B - eBay Provider
+
+- Add eBay Browse API credentials support
+- Add eBay provider
+- Filter bad eBay listings
+- Return best eBay result for a GPU search
 
 ## Sprint 4 - Affiliate Redirects
 

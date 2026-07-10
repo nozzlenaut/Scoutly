@@ -2,15 +2,21 @@
 
 Scoutly helps users find the best used deals across multiple online marketplaces by intelligently comparing listings and surfacing the best option from each retailer.
 
-## Sprint 1
+## Current status
 
-This starter app includes:
+- **GPU search added**
+- **eBay live pricing pending** until API credentials are approved
+- CPU and camera search are planned future categories
 
-- Next.js frontend with TypeScript and Tailwind CSS
-- FastAPI backend with a mock `/api/search` endpoint
-- Provider-style backend architecture ready for eBay/Amazon integrations
-- Basic ranking logic
-- Planning docs for roadmap, API, database, and project vision
+## Included in this sprint
+
+Sprint 3A adds the public product-status layer:
+
+- Homepage "What's added" panel
+- Future-ready category tabs
+- GPU marked as the active supported category
+- eBay live pricing marked as coming soon
+- Release/status tag documentation
 
 ## Project structure
 
@@ -64,7 +70,3 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
 Create `backend/.env` later when API keys are added.
-
-## Current status
-
-The app currently uses mock used-GPU results. The next milestone is replacing the mock eBay provider with the real eBay Browse API.

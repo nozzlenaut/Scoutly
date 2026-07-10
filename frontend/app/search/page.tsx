@@ -1,20 +1,34 @@
 import Link from "next/link";
+import { CategoryTabs } from "@/components/CategoryTabs";
 import { ResultCard } from "@/components/ResultCard";
 import { searchDeals } from "@/lib/api";
+import { getActiveCategoryStatus } from "@/lib/categoryStatus";
 
 export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
   const query = searchParams.q || "RTX 3060 12GB";
   const data = await searchDeals(query);
   const resolved = data.resolved_product;
+  const activeCategory = getActiveCategoryStatus();
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
       <div className="mx-auto max-w-5xl">
         <Link href="/" className="text-sm text-cyan-200 hover:text-cyan-100">← New search</Link>
+
+        <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Current support</p>
+              <p className="mt-2 font-semibold text-emerald-100">{activeCategory.tag}</p>
+            </div>
+            <CategoryTabs />
+          </div>
+        </div>
+
         <div className="mt-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Best used results</p>
-            <h1 className="mt-2 text-4xl font-black">{resolved?.product.model ?? data.query}</h1>
+            <h1 className="mt-2 text-4xl font-black">{resolved?.product.display_name ?? data.query}</h1>
             {resolved ? (
               <p className="mt-3 text-sm text-slate-400">
                 Resolved to {resolved.product.display_name} · {Math.round(resolved.confidence * 100)}% confidence
