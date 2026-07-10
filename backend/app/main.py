@@ -4,12 +4,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.catalog import router as catalog_router
 from app.api.search import router as search_router
 
-app = FastAPI(title="Scoutly API", version="0.2.2")
+app = FastAPI(title="Scoutly API", version="0.2.3")
 
+# Scoutly does not use cookies or browser credentials yet, so a public API CORS
+# policy is the simplest way to support localhost, Vercel production domains,
+# and Vercel preview deployments while we are in MVP development.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

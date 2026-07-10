@@ -40,3 +40,8 @@
 - Added FastAPI backend.
 - Added mock search results.
 - Added basic ranking logic.
+
+## v0.2.3 - Vercel autocomplete CORS hotfix
+
+- Allows the deployed Vercel frontend to call the Railway backend from the browser.
+- Keeps the public API open for MVP development because Scoutly does not use cookies or browser credentials yet.

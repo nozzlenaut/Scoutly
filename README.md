@@ -4,6 +4,7 @@ Scoutly helps users find the best used deals across multiple online marketplaces
 
 ## Current status
 
+- **Vercel autocomplete CORS hotfix added**
 - **Category-based search added**
 - **Cameras and lenses are the primary starter categories**
 - **GPU catalog remains available as a PC-parts lab category**
@@ -72,3 +73,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
 Create `backend/.env` later when API keys are added.
+
+## v0.2.3
+
+Fixes deployed autocomplete by allowing the Vercel frontend to call the Railway backend API from the browser.
