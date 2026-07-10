@@ -1,0 +1,6 @@
+[
+  "tests/test_catalog.py::test_accepts_valid_3060_listing",
+  "tests/test_catalog.py::test_rejects_3060_ti_when_looking_for_3060_12gb",
+  "tests/test_catalog.py::test_rejects_broken_listing",
+  "tests/test_catalog.py::test_resolves_rtx_3060_12gb"
+]

@@ -12,5 +12,5 @@ async def search(
     providers: str = Query("ebay,amazon"),
 ) -> SearchResponse:
     provider_keys = [provider.strip() for provider in providers.split(",") if provider.strip()]
-    results = await search_best_deals(q, provider_keys)
-    return SearchResponse(query=q, results=results)
+    resolved_product, results = await search_best_deals(q, provider_keys)
+    return SearchResponse(query=q, resolved_product=resolved_product, results=results)

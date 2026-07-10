@@ -1,3 +1,26 @@
+export type Product = {
+  id: string;
+  category: string;
+  brand: string;
+  chipset_brand: string;
+  model: string;
+  variant: string | null;
+  generation: string | null;
+  vram_gb: number | null;
+  memory_type: string | null;
+  aliases: string[];
+  required_terms: string[];
+  excluded_terms: string[];
+  active: boolean;
+  display_name: string;
+};
+
+export type ProductMatch = {
+  product: Product;
+  confidence: number;
+  matched_alias: string | null;
+};
+
 export type SearchResult = {
   provider: string;
   title: string;
@@ -13,6 +36,7 @@ export type SearchResult = {
 
 export type SearchResponse = {
   query: string;
+  resolved_product: ProductMatch | null;
   results: SearchResult[];
 };
 
