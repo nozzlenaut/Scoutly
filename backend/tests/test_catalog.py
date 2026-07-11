@@ -121,3 +121,35 @@ def test_accepts_valid_a7iii_body_listing():
     assert match is not None
     title = "Sony Alpha A7 III 24.2MP Mirrorless Digital Camera Body ILCE-7M3 Excellent"
     assert listing_matches_product(title, match.product) is True
+
+
+def test_rejects_a7iii_camera_error_please_read():
+    match = match_product("Sony A7 III Body", category="cameras")
+    assert match is not None
+    title = "Sony A7 iii Full Frame Mirrorless Body A7 III *Camera Error Please READ*"
+    assert listing_matches_product(title, match.product) is False
+
+
+def test_rejects_box_only_for_everything():
+    camera = match_product("Sony A7 III Body", category="cameras")
+    lens = match_product("Sony 24-70 GM", category="lenses")
+    gpu = match_product("RTX 3060 12GB", category="gpus")
+    assert camera is not None
+    assert lens is not None
+    assert gpu is not None
+    assert listing_matches_product("Sony A7 III Body Box Only", camera.product) is False
+    assert listing_matches_product("Sony FE 24-70mm f/2.8 GM Box Only", lens.product) is False
+    assert listing_matches_product("NVIDIA RTX 3060 12GB Box Only", gpu.product) is False
+
+
+def test_rejects_lens_coat_and_ring_gear():
+    match = match_product("Sony 24-70 GM", category="lenses")
+    assert match is not None
+    assert listing_matches_product("LensCoat Lens Coat for Sony 24-70 GM", match.product) is False
+    assert listing_matches_product("Sony 24-70 GM Focus Ring Gear for Follow Focus", match.product) is False
+
+
+def test_rejects_gpu_as_is_parts_listing():
+    match = match_product("RTX 3060 12GB", category="gpus")
+    assert match is not None
+    assert listing_matches_product("EVGA RTX 3060 12GB AS-IS Parts Only No Display", match.product) is False

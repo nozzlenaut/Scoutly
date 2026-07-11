@@ -156,20 +156,14 @@ class EbayProvider(MarketplaceProvider):
             "q": query,
             "limit": "50",
             "sort": "price",
+            # Keep this conservative for now. Removing the condition filter caused
+            # eBay to return too many parts/accessory listings. Additional safe
+            # conditions can be added once we validate category-specific filters.
             "filter": "conditions:{USED},buyingOptions:{FIXED_PRICE}",
         }
 
         payload = await self._search_request(headers, params)
         items = payload.get("itemSummaries") or []
-
-        # Some categories/markets can be picky about condition filters. If eBay
-        # returns nothing, retry once without the condition filter so Scoutly can
-        # still rank/filter the returned listings itself.
-        if not items:
-            fallback_params = dict(params)
-            fallback_params.pop("filter", None)
-            payload = await self._search_request(headers, fallback_params)
-            items = payload.get("itemSummaries") or []
 
         listings: list[Listing] = []
         for item in items:

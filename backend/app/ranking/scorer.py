@@ -1,21 +1,28 @@
-from app.catalog.catalog import listing_matches_product
+from app.catalog.catalog import GLOBAL_BAD_LISTING_TERMS, listing_matches_product
 from app.models.listing import Listing
 from app.models.product import Product
 
 BAD_TITLE_WORDS = [
-    "broken",
-    "for parts",
-    "parts only",
-    "repair",
-    "no display",
+    *GLOBAL_BAD_LISTING_TERMS,
     "laptop",
     "mobile",
+    "no display",
+]
+
+BAD_CONDITION_WORDS = [
+    "for parts",
+    "not working",
+    "parts only",
+    "repair",
 ]
 
 
 def is_bad_listing(listing: Listing, product: Product | None = None) -> bool:
     title = listing.title.lower()
+    condition = listing.condition.lower()
     if any(word in title for word in BAD_TITLE_WORDS):
+        return True
+    if any(word in condition for word in BAD_CONDITION_WORDS):
         return True
 
     if product is not None and not listing_matches_product(listing.title, product):

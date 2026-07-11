@@ -76,3 +76,8 @@ Create `backend/.env` using `backend/.env.example` as the template.
 ## v0.3.1
 
 Fixes Next.js search parameter handling so deployed searches use the actual query from the URL, and tightens camera-body filtering so A7 IV does not match A7R IV repair parts.
+
+
+## v0.3.3
+
+Adds stricter search-quality filters to reject box-only, please-read, as-is, parts, accessory, lens-coat, ring-gear, and broken listings.

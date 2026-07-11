@@ -7,6 +7,56 @@ from app.models.product import Product, ProductMatch
 
 CATALOG_PATH = Path(__file__).resolve().parents[1] / "data" / "product_catalog.json"
 
+GLOBAL_BAD_LISTING_TERMS = [
+    "as is",
+    "as-is",
+    "box only",
+    "broken",
+    "camera error",
+    "damaged",
+    "does not work",
+    "error please read",
+    "for parts",
+    "not working",
+    "parts only",
+    "please read",
+    "read description",
+    "repair",
+    "spares",
+    "untested",
+]
+
+LENS_PART_ACCESSORY_TERMS = [
+    "adapter only",
+    "cap only",
+    "case only",
+    "filter only",
+    "focus gear",
+    "gear ring",
+    "hood only",
+    "lens cap",
+    "lens cap only",
+    "lens coat",
+    "lens cover",
+    "lens hood",
+    "lens hood only",
+    "rear cap",
+    "rear cap only",
+    "ring gear",
+    "tripod collar only",
+]
+
+GPU_PART_ACCESSORY_TERMS = [
+    "artifacting",
+    "artifacts",
+    "backplate only",
+    "cooler only",
+    "fan only",
+    "mining rig",
+    "no display",
+    "shroud only",
+]
+
 CAMERA_PART_ACCESSORY_TERMS = [
     "adapter",
     "battery door",
@@ -203,9 +253,18 @@ def suggest_products(query: str, category: str | None = None, limit: int = 8) ->
 
 
 def listing_matches_product(title: str, product: Product) -> bool:
+    if _has_any_term(title, GLOBAL_BAD_LISTING_TERMS):
+        return False
+
     for excluded_term in product.excluded_terms:
         if has_term(title, excluded_term):
             return False
+
+    if product.category == "gpus" and _has_any_term(title, GPU_PART_ACCESSORY_TERMS):
+        return False
+
+    if product.category == "lenses" and _has_any_term(title, LENS_PART_ACCESSORY_TERMS):
+        return False
 
     if product.category == "cameras" and product.product_type == "camera_body":
         if _looks_like_camera_body_accessory(title):

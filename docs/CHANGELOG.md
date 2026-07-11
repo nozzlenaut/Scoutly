@@ -41,3 +41,10 @@
 - Keeps autocomplete suggestions above the catalog description/status cards.
 - Rejects camera-body accessory listings such as bayonet mount rings and replacement parts.
 - Adds tests for A7 III accessory false positives.
+
+
+## v0.3.3 - Search quality filters
+
+- Adds stricter global rejection terms like box only, please read, read description, as-is, and untested.
+- Adds camera, lens, and GPU accessory/parts filters.
+- Keeps eBay searches conservative by avoiding fallback searches without condition filtering.
