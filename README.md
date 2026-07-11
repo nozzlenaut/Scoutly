@@ -89,3 +89,7 @@ Adds a larger catalog for cameras, lenses, and GPUs, plus another lens accessory
 ## v0.3.5
 
 Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount rings, rear mount rings, and metal replacement rings are rejected while real used lens listings can still pass.
+
+## v0.3.6
+
+Temporarily pauses lens search from the public UI and adds eBay US category IDs for camera-body and GPU searches so Scoutly searches inside Digital Cameras and Graphics/Video Cards instead of relying on keywords alone.

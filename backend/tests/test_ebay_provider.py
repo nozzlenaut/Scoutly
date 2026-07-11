@@ -1,4 +1,6 @@
-from app.providers.ebay import ebay_item_to_listing
+import asyncio
+
+from app.providers.ebay import EbayConfig, EbayProvider, ebay_item_to_listing
 
 
 def test_ebay_item_maps_to_listing():
@@ -46,3 +48,45 @@ def test_ebay_item_prefers_affiliate_url():
 def test_ebay_item_without_price_or_url_is_ignored():
     assert ebay_item_to_listing({"title": "Sony A7 III"}) is None
     assert ebay_item_to_listing({"price": {"value": "10"}, "itemWebUrl": "https://www.ebay.com/itm/1"}) is None
+
+
+
+class _FakeTokenService:
+    async def get_access_token(self) -> str:
+        return "fake-token"
+
+
+class _CaptureEbayProvider(EbayProvider):
+    def __init__(self, marketplace_id: str = "EBAY_US"):
+        self.config = EbayConfig(client_id="client", client_secret="secret", marketplace_id=marketplace_id)
+        self.tokens = _FakeTokenService()
+        self.last_params: dict[str, str] = {}
+
+    async def _search_request(self, headers: dict[str, str], params: dict[str, str]) -> dict:
+        self.last_params = params
+        return {"itemSummaries": []}
+
+
+def test_ebay_search_adds_camera_category_id():
+    provider = _CaptureEbayProvider()
+
+    asyncio.run(provider.search("Sony A7 III Body", category="cameras"))
+
+    assert provider.last_params["category_ids"] == "31388"
+    assert provider.last_params["filter"] == "conditions:{USED},buyingOptions:{FIXED_PRICE}"
+
+
+def test_ebay_search_adds_gpu_category_id():
+    provider = _CaptureEbayProvider()
+
+    asyncio.run(provider.search("RTX 3060 12GB", category="gpus"))
+
+    assert provider.last_params["category_ids"] == "27386"
+
+
+def test_ebay_search_skips_category_id_for_non_us_marketplace():
+    provider = _CaptureEbayProvider(marketplace_id="EBAY_GB")
+
+    asyncio.run(provider.search("RTX 3060 12GB", category="gpus"))
+
+    assert "category_ids" not in provider.last_params

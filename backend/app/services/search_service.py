@@ -37,7 +37,7 @@ async def search_best_deals(
             continue
 
         try:
-            listings = await provider.search(provider_query)
+            listings = await provider.search(provider_query, product_match.product.category if product_match else category)
         except Exception:
             # One provider should not take the entire search down. We will add
             # structured provider errors in a later sprint once the live API is

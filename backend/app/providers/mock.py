@@ -116,7 +116,7 @@ def _gpu_results(provider_name: str) -> list[Listing]:
 class MockEbayProvider(MarketplaceProvider):
     name = "eBay"
 
-    async def search(self, query: str) -> list[Listing]:
+    async def search(self, query: str, category: str | None = None) -> list[Listing]:
         lower = query.lower()
         if any(term in lower for term in ["sony", "canon", "nikon", "fujifilm", "fuji", "a7", "eos", "z6", "x-t4", "x100v"]):
             if any(term in lower for term in ["24-70", "70-200", "35mm", "50mm", "lens", "fe ", "rf ", "xf "]):
@@ -128,7 +128,7 @@ class MockEbayProvider(MarketplaceProvider):
 class MockAmazonProvider(MarketplaceProvider):
     name = "Amazon"
 
-    async def search(self, query: str) -> list[Listing]:
+    async def search(self, query: str, category: str | None = None) -> list[Listing]:
         lower = query.lower()
         if "a7 iii" in lower or "a7 3" in lower:
             return [

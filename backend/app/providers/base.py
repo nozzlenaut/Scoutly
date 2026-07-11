@@ -7,5 +7,5 @@ class MarketplaceProvider(ABC):
     name: str
 
     @abstractmethod
-    async def search(self, query: str) -> list[Listing]:
+    async def search(self, query: str, category: str | None = None) -> list[Listing]:
         raise NotImplementedError

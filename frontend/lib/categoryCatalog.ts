@@ -2,19 +2,19 @@ export type SearchCategory = {
   id: string;
   label: string;
   group: string;
-  status: "active" | "lab" | "planned";
+  status: "active" | "lab" | "planned" | "coming-soon";
   description: string;
   placeholder: string;
   defaultQuery: string;
 };
 
-export const searchCategories: SearchCategory[] = [
+export const allCategories: SearchCategory[] = [
   {
     id: "cameras",
     label: "Cameras",
     group: "Photography",
     status: "active",
-    description: "Used camera bodies with accessory and parts-only filtering.",
+    description: "Used camera bodies with eBay Digital Cameras category filtering.",
     placeholder: "Try Sony A7 IV, Canon R6 II, Nikon Z8...",
     defaultQuery: "Sony A7 III Body",
   },
@@ -22,9 +22,9 @@ export const searchCategories: SearchCategory[] = [
     id: "lenses",
     label: "Lenses",
     group: "Photography",
-    status: "active",
-    description: "Used lenses with cap, hood, fungus, haze, and parts-only filtering.",
-    placeholder: "Try Sony 85 1.8, Canon RF 70-200 2.8...",
+    status: "coming-soon",
+    description: "Temporarily paused while we validate cleaner eBay lens-category results.",
+    placeholder: "Coming soon",
     defaultQuery: "Sony FE 24-70mm f/2.8 GM",
   },
   {
@@ -32,11 +32,13 @@ export const searchCategories: SearchCategory[] = [
     label: "GPUs",
     group: "PC Parts",
     status: "lab",
-    description: "Lab category with live eBay search and expanded NVIDIA, AMD, and Intel matching.",
+    description: "Lab category with eBay Graphics/Video Cards category filtering.",
     placeholder: "Try RTX 3060, RX 9070 XT, Arc B580...",
     defaultQuery: "RTX 3060 12GB",
   },
 ];
+
+export const searchCategories = allCategories.filter((category) => category.status !== "coming-soon");
 
 export function getCategory(id?: string | null) {
   return searchCategories.find((category) => category.id === id) ?? searchCategories[0];

@@ -60,3 +60,11 @@
 ## v0.3.5
 
 Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount rings, rear mount rings, and metal replacement rings are rejected while real used lens listings can still pass.
+
+## v0.3.6 — Hide lenses + eBay category IDs
+
+- Temporarily removed lenses from the active search UI while lens-part filtering is validated.
+- Added eBay US category IDs for camera-body, lens, and GPU provider searches.
+- Camera searches now include `category_ids=31388` for Digital Cameras.
+- GPU searches now include `category_ids=27386` for Graphics/Video Cards.
+- Lens category support remains in the backend with `category_ids=3323`, but the UI marks lenses as coming soon.

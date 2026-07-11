@@ -14,6 +14,16 @@ SANDBOX_API_BASE = "https://api.sandbox.ebay.com"
 PRODUCTION_AUTH_URL = "https://api.ebay.com/identity/v1/oauth2/token"
 SANDBOX_AUTH_URL = "https://api.sandbox.ebay.com/identity/v1/oauth2/token"
 
+# eBay US category IDs used to keep exact-item searches out of nearby parts/accessory categories.
+# Digital Cameras: https://www.ebay.com/b/Digital-Cameras/31388/bn_779
+# Camera Lenses: https://www.ebay.com/b/Camera-Lenses/3323/bn_732
+# Graphics/Video Cards: https://www.ebay.com/b/Graphics-Video-Cards/27386/bn_661796
+EBAY_US_CATEGORY_IDS = {
+    "cameras": "31388",
+    "lenses": "3323",
+    "gpus": "27386",
+}
+
 
 @dataclass
 class EbayConfig:
@@ -139,7 +149,7 @@ class EbayProvider(MarketplaceProvider):
         self.config = config
         self.tokens = EbayTokenService(config)
 
-    async def search(self, query: str) -> list[Listing]:
+    async def search(self, query: str, category: str | None = None) -> list[Listing]:
         token = await self.tokens.get_access_token()
         headers = {
             "Authorization": f"Bearer {token}",
@@ -162,6 +172,10 @@ class EbayProvider(MarketplaceProvider):
             "filter": "conditions:{USED},buyingOptions:{FIXED_PRICE}",
         }
 
+        category_id = self._category_id_for(category)
+        if category_id is not None:
+            params["category_ids"] = category_id
+
         payload = await self._search_request(headers, params)
         items = payload.get("itemSummaries") or []
 
@@ -171,6 +185,11 @@ class EbayProvider(MarketplaceProvider):
             if listing is not None:
                 listings.append(listing)
         return listings
+
+    def _category_id_for(self, category: str | None) -> str | None:
+        if self.config.marketplace_id != "EBAY_US" or category is None:
+            return None
+        return EBAY_US_CATEGORY_IDS.get(category.strip().lower())
 
     async def _search_request(self, headers: dict[str, str], params: dict[str, str]) -> dict[str, Any]:
         async with httpx.AsyncClient(timeout=20) as client:
