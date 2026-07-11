@@ -35,3 +35,9 @@
 ## v0.2.0 - GPU search added
 
 - Adds status UI and early category direction.
+
+## v0.3.2 - Dropdown and camera accessory filtering
+
+- Keeps autocomplete suggestions above the catalog description/status cards.
+- Rejects camera-body accessory listings such as bayonet mount rings and replacement parts.
+- Adds tests for A7 III accessory false positives.

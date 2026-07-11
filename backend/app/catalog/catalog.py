@@ -23,15 +23,21 @@ CAMERA_PART_ACCESSORY_TERMS = [
     "flex cable",
     "hot shoe",
     "lcd",
+    "lens bayonet",
+    "lens mount",
     "lens mount contact",
     "main board",
+    "mount ring",
     "motherboard",
     "pcb",
     "port cover",
+    "repair part",
     "replacement",
+    "replacement part",
     "ribbon",
     "screen repair",
     "sensor cleaning",
+    "spare part",
     "strap lug",
     "top cover",
     "viewfinder",
@@ -40,6 +46,19 @@ CAMERA_PART_ACCESSORY_TERMS = [
 
 def _has_any_term(text: str, terms: list[str]) -> bool:
     return any(has_term(text, term) for term in terms)
+
+
+def _looks_like_camera_body_accessory(title: str) -> bool:
+    normalized = normalize_text(title)
+    if _has_any_term(title, CAMERA_PART_ACCESSORY_TERMS):
+        return True
+
+    # Marketplace accessory listings often start with "for Sony/Canon/etc."
+    # Legitimate camera bodies usually start with the product name itself.
+    # Only use the prefix as a reject signal when the title also has accessory
+    # words so we do not reject a rare legitimate title just because it says "for".
+    accessory_words = ["bayonet", "mount", "ring", "contact", "part", "repair", "cable"]
+    return normalized.startswith("for ") and _has_any_term(title, accessory_words)
 
 
 def _has_camera_model_alias(title: str, product: Product) -> bool:
@@ -188,10 +207,12 @@ def listing_matches_product(title: str, product: Product) -> bool:
         if has_term(title, excluded_term):
             return False
 
+    if product.category == "cameras" and product.product_type == "camera_body":
+        if _looks_like_camera_body_accessory(title):
+            return False
+        return _has_camera_model_alias(title, product)
+
     if product.category == "cameras" and _has_any_term(title, CAMERA_PART_ACCESSORY_TERMS):
         return False
-
-    if product.category == "cameras" and product.product_type == "camera_body":
-        return _has_camera_model_alias(title, product)
 
     return all(has_term(title, required_term) for required_term in product.required_terms)

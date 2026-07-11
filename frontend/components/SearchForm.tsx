@@ -66,7 +66,7 @@ export function SearchForm() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl rounded-[2rem] border border-white/10 bg-slate-950/35 p-4 text-left shadow-2xl shadow-black/30 backdrop-blur sm:p-5">
+    <div className="relative z-50 mx-auto w-full max-w-3xl rounded-[2rem] border border-white/10 bg-slate-950/35 p-4 text-left shadow-2xl shadow-black/30 backdrop-blur sm:p-5">
       <div className="mb-4">
         <p className="mb-2 text-xs uppercase tracking-[0.22em] text-slate-500">Choose a category</p>
         <div className="flex flex-wrap gap-2">
@@ -105,7 +105,7 @@ export function SearchForm() {
           />
 
           {showSuggestions && suggestions.length > 0 ? (
-            <div className="absolute left-0 right-0 top-16 z-20 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 text-left shadow-2xl shadow-black/50 backdrop-blur">
+            <div className="absolute left-0 right-0 top-16 z-[100] max-h-80 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/95 text-left shadow-2xl shadow-black/50 backdrop-blur">
               <div className="border-b border-white/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-500">
                 Matching {selectedCategory.label.toLowerCase()}
               </div>

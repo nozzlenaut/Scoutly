@@ -1,9 +1,13 @@
 [
   "tests/test_catalog.py::test_accepts_valid_3060_listing",
+  "tests/test_catalog.py::test_accepts_valid_a7_iv_body_listing",
+  "tests/test_catalog.py::test_accepts_valid_a7iii_body_listing",
   "tests/test_catalog.py::test_camera_category_rejects_accessories",
   "tests/test_catalog.py::test_category_suggestions_are_filtered",
   "tests/test_catalog.py::test_lens_category_rejects_lens_hood_only",
   "tests/test_catalog.py::test_rejects_3060_ti_when_looking_for_3060_12gb",
+  "tests/test_catalog.py::test_rejects_a7iii_mount_ring_accessory",
+  "tests/test_catalog.py::test_rejects_a7r_iv_repair_part_for_a7_iv",
   "tests/test_catalog.py::test_rejects_broken_listing",
   "tests/test_catalog.py::test_resolves_amd_compact_alias",
   "tests/test_catalog.py::test_resolves_camera_from_category_alias",
@@ -12,7 +16,11 @@
   "tests/test_catalog.py::test_resolves_rtx3060_compact_alias",
   "tests/test_catalog.py::test_resolves_rtx_3060_12gb",
   "tests/test_catalog.py::test_resolves_short_3060_to_rtx_3060_12gb",
+  "tests/test_catalog.py::test_resolves_sony_a7_iv_body",
   "tests/test_catalog.py::test_suggests_multiple_3060_products",
   "tests/test_ebay_notifications.py::test_ebay_notification_challenge_response",
-  "tests/test_ebay_notifications.py::test_ebay_notification_post_acknowledges"
+  "tests/test_ebay_notifications.py::test_ebay_notification_post_acknowledges",
+  "tests/test_ebay_provider.py::test_ebay_item_maps_to_listing",
+  "tests/test_ebay_provider.py::test_ebay_item_prefers_affiliate_url",
+  "tests/test_ebay_provider.py::test_ebay_item_without_price_or_url_is_ignored"
 ]

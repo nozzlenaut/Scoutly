@@ -107,3 +107,17 @@ def test_accepts_valid_a7_iv_body_listing():
     assert match is not None
     title = "Sony Alpha A7 IV 33MP Mirrorless Camera Body Only ILCE-7M4 Excellent"
     assert listing_matches_product(title, match.product) is True
+
+
+def test_rejects_a7iii_mount_ring_accessory():
+    match = match_product("Sony A7 III Body", category="cameras")
+    assert match is not None
+    title = "For Sony ILCE-A9 A7RM3 A7III A7M3 A7R4 Camera Body Lens Bayonet E Mount Ring"
+    assert listing_matches_product(title, match.product) is False
+
+
+def test_accepts_valid_a7iii_body_listing():
+    match = match_product("Sony A7 III Body", category="cameras")
+    assert match is not None
+    title = "Sony Alpha A7 III 24.2MP Mirrorless Digital Camera Body ILCE-7M3 Excellent"
+    assert listing_matches_product(title, match.product) is True
