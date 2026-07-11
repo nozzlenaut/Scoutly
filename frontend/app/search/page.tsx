@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CategoryTabs } from "@/components/CategoryTabs";
 import { ResultCard } from "@/components/ResultCard";
+import { SearchForm } from "@/components/SearchForm";
 import { searchDeals } from "@/lib/api";
 import { getCategory } from "@/lib/categoryCatalog";
 
@@ -28,6 +29,10 @@ export default async function SearchPage({
             </div>
             <CategoryTabs selectedId={category.id} />
           </div>
+        </div>
+
+        <div className="relative z-50 mt-6">
+          <SearchForm initialCategoryId={category.id} initialQuery={query} compact />
         </div>
 
         <div className="mt-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">

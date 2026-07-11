@@ -71,3 +71,13 @@ The catalog now contains 184 products total:
 - Lenses: 26 retained in the backend catalog, but hidden from the active UI for now
 
 This update is catalog-only plus camera matching cleanup. It does not add the bad-result report button yet.
+
+## v0.3.8 catalog expansion
+
+The catalog now contains 343 products total:
+
+- Cameras: 140 active camera bodies and fixed-lens cameras
+- GPUs: 177 active graphics cards across consumer, workstation, and datacenter-style listings
+- Lenses: 26 retained in the backend catalog, but still hidden from the active UI
+
+The GPU expansion includes more common homelab/LLM search targets such as Tesla P40, Tesla T4, RTX A4000/A5000/A6000, RTX 5000/6000 Ada, Radeon Pro, Instinct, and Arc Pro cards.

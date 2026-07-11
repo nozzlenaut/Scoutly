@@ -232,3 +232,25 @@ def test_resolves_more_gpu_catalog_entries():
     assert match_product("rx480 8gb", category="gpus").product.id == "gpu-amd-rx-480-8gb"
     assert match_product("radeon vii", category="gpus").product.id == "gpu-amd-radeon-vii-16gb"
     assert match_product("arc a580", category="gpus").product.id == "gpu-intel-arc-a580-8gb"
+
+
+def test_rejects_camera_accessories_listing():
+    match = match_product("Canon EOS RP Body", category="cameras")
+    assert match is not None
+    assert listing_matches_product("EOS RP Camera Accessories", match.product) is False
+
+
+def test_resolves_larger_camera_catalog_entries():
+    assert match_product("Sony A7 II", category="cameras").product.id == "camera-sony-a7-ii-body"
+    assert match_product("Canon 5D Mark IV", category="cameras").product.id == "camera-canon-eos-5d-mark-iv-body"
+    assert match_product("Nikon D850", category="cameras").product.id == "camera-nikon-d850-body"
+    assert match_product("Fuji X100VI", category="cameras").product.id == "camera-fujifilm-x100vi"
+    assert match_product("Ricoh GR IIIx", category="cameras").product.id == "camera-ricoh-gr-iiix"
+
+
+def test_resolves_llm_gpu_catalog_entries():
+    assert match_product("Tesla P40", category="gpus").product.id == "gpu-nvidia-tesla-p40-24gb"
+    assert match_product("RTX A5000", category="gpus").product.id == "gpu-nvidia-rtx-a5000-24gb"
+    assert match_product("RTX 5000", category="gpus").product.id == "gpu-nvidia-quadro-rtx-5000-16gb"
+    assert match_product("RTX 5000 Ada", category="gpus").product.id == "gpu-nvidia-rtx-5000-ada-32gb"
+    assert match_product("Radeon Pro W7900", category="gpus").product.id == "gpu-amd-radeon-pro-w7900-48gb"

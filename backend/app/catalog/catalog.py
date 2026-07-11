@@ -89,10 +89,14 @@ CAMERA_BODY_BUNDLE_TERMS = [
 
 
 CAMERA_PART_ACCESSORY_TERMS = [
+    "accessories only",
+    "accessory kit",
+    "accessory only",
     "adapter",
     "battery door",
     "button",
     "cable",
+    "camera accessories",
     "circuit board",
     "contact flex",
     "cover",

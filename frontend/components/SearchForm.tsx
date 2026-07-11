@@ -6,19 +6,33 @@ import { suggestProducts, type ProductMatch } from "@/lib/api";
 import { getCategory, searchCategories } from "@/lib/categoryCatalog";
 import { StatusBadge } from "@/components/StatusBadge";
 
-export function SearchForm() {
-  const [categoryId, setCategoryId] = useState(searchCategories[0].id);
+type SearchFormProps = {
+  initialCategoryId?: string | null;
+  initialQuery?: string | null;
+  compact?: boolean;
+};
+
+export function SearchForm({ initialCategoryId, initialQuery, compact = false }: SearchFormProps) {
+  const initialCategory = getCategory(initialCategoryId);
+  const [categoryId, setCategoryId] = useState(initialCategory.id);
   const selectedCategory = getCategory(categoryId);
-  const [query, setQuery] = useState(selectedCategory.defaultQuery);
+  const [query, setQuery] = useState(initialQuery?.trim() || initialCategory.defaultQuery);
   const [suggestions, setSuggestions] = useState<ProductMatch[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didMountRef = useRef(false);
 
   useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+
     setQuery(selectedCategory.defaultQuery);
     setSuggestions([]);
+    setShowSuggestions(false);
   }, [selectedCategory.defaultQuery]);
 
   useEffect(() => {
@@ -66,8 +80,12 @@ export function SearchForm() {
   }
 
   return (
-    <div className="relative z-50 mx-auto w-full max-w-3xl rounded-[2rem] border border-white/10 bg-slate-950/35 p-4 text-left shadow-2xl shadow-black/30 backdrop-blur sm:p-5">
-      <div className="mb-4">
+    <div
+      className={`relative z-50 mx-auto w-full rounded-[2rem] border border-white/10 bg-slate-950/35 text-left shadow-2xl shadow-black/30 backdrop-blur ${
+        compact ? "max-w-5xl p-3 sm:p-4" : "max-w-3xl p-4 sm:p-5"
+      }`}
+    >
+      <div className={compact ? "mb-3" : "mb-4"}>
         <p className="mb-2 text-xs uppercase tracking-[0.22em] text-slate-500">Choose a category</p>
         <div className="flex flex-wrap gap-2">
           {searchCategories.map((category) => {
@@ -89,9 +107,11 @@ export function SearchForm() {
             );
           })}
         </div>
-        <p className="mt-3 text-sm text-slate-400">
-          {selectedCategory.group} · {selectedCategory.description}
-        </p>
+        {!compact ? (
+          <p className="mt-3 text-sm text-slate-400">
+            {selectedCategory.group} · {selectedCategory.description}
+          </p>
+        ) : null}
       </div>
 
       <form onSubmit={handleSubmit} className="relative flex w-full flex-col gap-3 sm:flex-row">
@@ -138,7 +158,9 @@ export function SearchForm() {
       </form>
 
       <p className="mt-3 text-sm text-slate-400">
-        Start typing, pick the exact item from autocomplete, then Scoutly finds the best used listing.
+        {compact
+          ? "Search another exact item without going back."
+          : "Start typing, pick the exact item from autocomplete, then Scoutly finds the best used listing."}
         {isLoading ? " Checking catalog..." : ""}
       </p>
     </div>

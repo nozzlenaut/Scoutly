@@ -1,6 +1,15 @@
 # Changelog
 
 
+## v0.3.8 - Bigger catalog and results-page search
+
+- Expands the active camera catalog to 140 camera bodies and fixed-lens cameras.
+- Expands the GPU lab catalog to 177 cards, including more NVIDIA workstation/datacenter GPUs, AMD Radeon Pro/Instinct cards, and Intel Arc Pro cards.
+- Adds a compact search form directly to the search results page so users can test another item without returning home.
+- Rejects camera accessory-only results like `EOS RP Camera Accessories`.
+- Keeps lenses hidden from the active UI while lens-part results are still noisy.
+
+
 ## v0.3.7A - Catalog accuracy expansion
 
 - Expands the active camera catalog to 61 camera bodies.

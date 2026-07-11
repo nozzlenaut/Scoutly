@@ -98,3 +98,7 @@ Temporarily pauses lens search from the public UI and adds eBay US category IDs 
 ## v0.3.7A
 
 Adds a larger camera/GPU catalog for broader test searches without enabling the bad-result reporting UI yet. Also tightens camera generation matching so A7R III does not match original A7R 36.4MP listings.
+
+## v0.3.8
+
+Doubles down on catalog coverage for camera/GPU testing, adds a compact search form to the results page, and rejects camera-accessory listings such as EOS RP accessory-only results.
