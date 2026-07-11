@@ -31,3 +31,9 @@ Photography | PC Parts | Gaming | Collectibles
 ```
 
 Then show item types inside the selected group.
+
+
+## v0.3.4
+
+- Catalog expanded for broader Cameras, Lenses, and GPUs testing.
+- Lens accessory filters tightened.

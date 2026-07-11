@@ -55,3 +55,8 @@ The dropdown improves accuracy, but it is not required. Users can still type nat
 - `GET /api/products?category=cameras`
 - `GET /api/products/resolve?q=a7iii&category=cameras`
 - `GET /api/products/suggest?q=sony&category=lenses&limit=8`
+
+
+## v0.3.4 catalog expansion
+
+The catalog now includes a broader test set across camera bodies, lenses, and GPUs. The product catalog is still curated manually so exact-item matching stays conservative.

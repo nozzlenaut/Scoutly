@@ -9,14 +9,12 @@ Scoutly helps users find the best used deals across multiple online marketplaces
 - **Live eBay marketplace search added**
 - **GPU catalog remains available as a PC-parts lab category**
 
-## Included in v0.3.0
+## Included in v0.3.4
 
-- eBay Browse API OAuth support
-- Live eBay used-listing provider
-- eBay listing normalization into Scoutly result cards
-- Image support on result cards
-- eBay-only default search so the live site does not mix real eBay data with mock Amazon data
-- Mock eBay fallback for local development when credentials are missing
+- Expanded camera-body catalog for broader photography testing
+- Expanded lens catalog across Sony, Canon, Nikon, Fuji, Sigma, and Tamron
+- Expanded GPU catalog with more AMD, Intel, and NVIDIA cards
+- Tighter lens accessory filters for ring adapters, lens coats, skins, and gear listings
 
 ## Project structure
 
@@ -81,3 +79,8 @@ Fixes Next.js search parameter handling so deployed searches use the actual quer
 ## v0.3.3
 
 Adds stricter search-quality filters to reject box-only, please-read, as-is, parts, accessory, lens-coat, ring-gear, and broken listings.
+
+
+## v0.3.4
+
+Adds a larger catalog for cameras, lenses, and GPUs, plus another lens accessory filtering pass.

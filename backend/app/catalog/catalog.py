@@ -28,10 +28,17 @@ GLOBAL_BAD_LISTING_TERMS = [
 
 LENS_PART_ACCESSORY_TERMS = [
     "adapter only",
+    "adapter ring",
+    "aperture ring",
     "cap only",
     "case only",
+    "decal",
+    "decoration ring",
+    "decorative ring",
     "filter only",
+    "filter ring",
     "focus gear",
+    "focus ring",
     "gear ring",
     "hood only",
     "lens cap",
@@ -40,10 +47,19 @@ LENS_PART_ACCESSORY_TERMS = [
     "lens cover",
     "lens hood",
     "lens hood only",
+    "lens protector",
+    "lens skin",
+    "mount ring",
     "rear cap",
     "rear cap only",
     "ring gear",
+    "skin",
+    "step down ring",
+    "step up ring",
+    "step-down ring",
+    "step-up ring",
     "tripod collar only",
+    "zoom ring",
 ]
 
 GPU_PART_ACCESSORY_TERMS = [
@@ -204,13 +220,29 @@ def _score_product_candidate(query: str, product: Product) -> ProductMatch | Non
         if product.variant and has_term(normalized_query, product.variant):
             confidence = min(1.0, confidence + 0.04)
 
-        # For GPUs, prefer the base card when the user types only the number.
-        modifiers = ["ti", "super", "xtx", "xt", "gre"]
         product_text = normalize_text(f"{product.model} {product.variant or ''}")
+
+        # For GPUs, prefer the base card when the user types only the number.
+        gpu_modifiers = ["ti", "super", "xtx", "xt", "gre"]
         if product.category == "gpus" and any(
-            has_term(product_text, modifier) and not has_term(normalized_query, modifier) for modifier in modifiers
+            has_term(product_text, modifier) and not has_term(normalized_query, modifier) for modifier in gpu_modifiers
         ):
             confidence = max(0.0, confidence - 0.07)
+
+        # For versioned lenses, do not let GM II / VR II entries beat the
+        # original product when the user did not type the version clue.
+        # We avoid has_term() here because roman numeral II normalizes to "2",
+        # which would falsely match aperture terms like f/2.8.
+        raw_query = query.lower()
+        raw_product = f"{product.model} {product.variant or ''}".lower()
+        lens_versioned = product.category == "lenses" and any(
+            marker in raw_product for marker in [" ii", " iii", " iv", " v"]
+        )
+        query_has_version = any(
+            marker in raw_query for marker in [" ii", " iii", " iv", " v", "gm2", "gm 2", "g2"]
+        )
+        if lens_versioned and not query_has_version:
+            confidence = max(0.0, confidence - 0.05)
 
         if confidence > best_confidence:
             best_confidence = confidence

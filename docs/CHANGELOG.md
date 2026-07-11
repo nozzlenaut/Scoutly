@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.4 - Catalog expansion and lens filter cleanup
+
+- Expands the camera-body catalog across Sony, Canon, Nikon, Fujifilm, and Panasonic.
+- Expands the lens catalog across Sony, Canon RF, Nikon Z, Fujifilm X, Sigma, and Tamron.
+- Adds more AMD, Intel, and NVIDIA GPUs for broader search testing.
+- Tightens lens accessory rejection for ring adapters, lens coats/skins, gear rings, and cap/hood-only listings.
+
 ## 0.3.1 - Search query and camera filter hotfix
 
 - Fixes deployed Next.js search pages reading default category queries instead of URL search params.

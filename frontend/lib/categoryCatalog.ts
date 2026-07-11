@@ -15,7 +15,7 @@ export const searchCategories: SearchCategory[] = [
     group: "Photography",
     status: "active",
     description: "Used camera bodies with accessory and parts-only filtering.",
-    placeholder: "Try Sony A7 III, Canon R6, Fuji X-T4...",
+    placeholder: "Try Sony A7 IV, Canon R6 II, Nikon Z8...",
     defaultQuery: "Sony A7 III Body",
   },
   {
@@ -24,7 +24,7 @@ export const searchCategories: SearchCategory[] = [
     group: "Photography",
     status: "active",
     description: "Used lenses with cap, hood, fungus, haze, and parts-only filtering.",
-    placeholder: "Try Sony 24-70 2.8, Canon RF 50 1.8...",
+    placeholder: "Try Sony 85 1.8, Canon RF 70-200 2.8...",
     defaultQuery: "Sony FE 24-70mm f/2.8 GM",
   },
   {
@@ -32,8 +32,8 @@ export const searchCategories: SearchCategory[] = [
     label: "GPUs",
     group: "PC Parts",
     status: "lab",
-    description: "Catalog matching is built, but live marketplace pricing is waiting on eBay API access.",
-    placeholder: "Try RTX 3060, RX 6700 XT, Arc A770...",
+    description: "Lab category with live eBay search and expanded NVIDIA, AMD, and Intel matching.",
+    placeholder: "Try RTX 3060, RX 9070 XT, Arc B580...",
     defaultQuery: "RTX 3060 12GB",
   },
 ];

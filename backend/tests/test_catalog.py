@@ -153,3 +153,29 @@ def test_rejects_gpu_as_is_parts_listing():
     match = match_product("RTX 3060 12GB", category="gpus")
     assert match is not None
     assert listing_matches_product("EVGA RTX 3060 12GB AS-IS Parts Only No Display", match.product) is False
+
+
+def test_resolves_expanded_camera_catalog_entries():
+    assert match_product("Canon R6 II", category="cameras").product.id == "camera-canon-eos-r6-mark-ii-body"
+    assert match_product("Nikon Z8", category="cameras").product.id == "camera-nikon-z8-body"
+    assert match_product("Fuji XT5", category="cameras").product.id == "camera-fujifilm-x-t5-body"
+
+
+def test_resolves_expanded_lens_catalog_entries():
+    assert match_product("Sony 85 1.8", category="lenses").product.id == "lens-sony-fe-85mm-f-1-8"
+    assert match_product("Canon RF 70-200 2.8", category="lenses").product.id == "lens-canon-rf-70-200mm-f-2-8l-is-usm"
+    assert match_product("Tamron 28-75 G2", category="lenses").product.id == "lens-tamron-28-75mm-f-2-8-di-iii-vxd-g2-sony-e"
+
+
+def test_resolves_expanded_gpu_catalog_entries():
+    assert match_product("rx580 8gb", category="gpus").product.id == "gpu-amd-rx-580-8gb"
+    assert match_product("rx9070xt", category="gpus").product.id == "gpu-amd-rx-9070-xt-16gb"
+    assert match_product("arc b580", category="gpus").product.id == "gpu-intel-arc-b580-12gb"
+
+
+def test_rejects_more_lens_ring_accessories():
+    match = match_product("Sony FE 85mm f/1.8", category="lenses")
+    assert match is not None
+    assert listing_matches_product("Zoom Ring Rubber Grip for Sony FE 85mm f/1.8 Lens", match.product) is False
+    assert listing_matches_product("Step Up Ring Adapter for Sony FE 85mm f/1.8", match.product) is False
+    assert listing_matches_product("Sony FE 85mm f/1.8 Lens Excellent Condition", match.product) is True
