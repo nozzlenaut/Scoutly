@@ -1,4 +1,5 @@
 [
+  "tests/test_catalog.py::test_accepts_real_tesla_v100_card_with_passive_heatsink_note",
   "tests/test_catalog.py::test_accepts_real_used_lens_with_normal_focus_ring_language",
   "tests/test_catalog.py::test_accepts_valid_3060_listing",
   "tests/test_catalog.py::test_accepts_valid_a7_iv_body_listing",
@@ -19,6 +20,7 @@
   "tests/test_catalog.py::test_rejects_lens_rubber_and_bayonet_ring_accessories",
   "tests/test_catalog.py::test_rejects_more_lens_ring_accessories",
   "tests/test_catalog.py::test_rejects_original_a7r_when_searching_a7r_iii",
+  "tests/test_catalog.py::test_rejects_tesla_v100_heatsink_accessory",
   "tests/test_catalog.py::test_resolves_amd_compact_alias",
   "tests/test_catalog.py::test_resolves_camera_from_category_alias",
   "tests/test_catalog.py::test_resolves_expanded_camera_catalog_entries",

@@ -86,3 +86,9 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Camera searches now include `category_ids=31388` for Digital Cameras.
 - GPU searches now include `category_ids=27386` for Graphics/Video Cards.
 - Lens category support remains in the backend with `category_ids=3323`, but the UI marks lenses as coming soon.
+
+## v0.3.9 - GPU accessory filtering
+
+- Rejects GPU heatsink-only and replacement cooler/fan/accessory listings.
+- Specifically covers Tesla V100 heatsink false positives seen in live search testing.
+- Keeps legitimate data-center GPU card listings valid when they mention passive heatsinks as part of the full card.

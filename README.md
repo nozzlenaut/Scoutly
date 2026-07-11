@@ -102,3 +102,7 @@ Adds a larger camera/GPU catalog for broader test searches without enabling the 
 ## v0.3.8
 
 Doubles down on catalog coverage for camera/GPU testing, adds a compact search form to the results page, and rejects camera-accessory listings such as EOS RP accessory-only results.
+
+## v0.3.9
+
+Adds a focused GPU accessory filter for Tesla/data-center GPU searches so heatsink-only, heat-sink-only, replacement cooler, fan, waterblock, and bracket listings do not win over real GPU cards.

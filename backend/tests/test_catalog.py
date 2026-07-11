@@ -254,3 +254,17 @@ def test_resolves_llm_gpu_catalog_entries():
     assert match_product("RTX 5000", category="gpus").product.id == "gpu-nvidia-quadro-rtx-5000-16gb"
     assert match_product("RTX 5000 Ada", category="gpus").product.id == "gpu-nvidia-rtx-5000-ada-32gb"
     assert match_product("Radeon Pro W7900", category="gpus").product.id == "gpu-amd-radeon-pro-w7900-48gb"
+
+
+def test_rejects_tesla_v100_heatsink_accessory():
+    match = match_product("Tesla V100 16GB", category="gpus")
+    assert match is not None
+    assert listing_matches_product("NVIDIA Tesla V100 16GB GPU Heatsink", match.product) is False
+    assert listing_matches_product("For NVIDIA Tesla V100 16GB Replacement Heatsink Cooler", match.product) is False
+
+
+def test_accepts_real_tesla_v100_card_with_passive_heatsink_note():
+    match = match_product("Tesla V100 16GB", category="gpus")
+    assert match is not None
+    title = "NVIDIA Tesla V100 16GB PCIe GPU Accelerator with passive heatsink"
+    assert listing_matches_product(title, match.product) is True

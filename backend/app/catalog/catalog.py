@@ -71,11 +71,19 @@ GPU_PART_ACCESSORY_TERMS = [
     "artifacting",
     "artifacts",
     "backplate only",
+    "bracket only",
     "cooler only",
+    "cooling fan",
     "fan only",
+    "gpu cooler",
+    "gpu fan",
     "mining rig",
     "no display",
+    "replacement fan",
+    "replacement heatsink",
     "shroud only",
+    "water block",
+    "waterblock",
 ]
 
 LENS_SAFE_CONTEXT_TERMS = {"aperture ring", "focus ring", "zoom ring"}
@@ -131,6 +139,52 @@ CAMERA_PART_ACCESSORY_TERMS = [
 
 def _has_any_term(text: str, terms: list[str]) -> bool:
     return any(has_term(text, term) for term in terms)
+
+
+def _looks_like_gpu_accessory(title: str) -> bool:
+    normalized = normalize_text(title)
+    raw = title.lower()
+    if _has_any_term(title, GPU_PART_ACCESSORY_TERMS):
+        return True
+
+    explicit_heatsink_only = [
+        "heatsink only",
+        "heat sink only",
+        "only heatsink",
+        "only heat sink",
+        "gpu heatsink",
+        "gpu heat sink",
+    ]
+    if any(term in raw for term in explicit_heatsink_only):
+        return True
+
+    # Data-center GPUs can legitimately mention passive cooling or a heatsink,
+    # but accessory listings usually sell only the cooler/heatsink/fan assembly.
+    # Catch those without rejecting real cards like "Tesla V100 16GB PCIe GPU".
+    accessory_words = [
+        "adapter",
+        "bracket",
+        "cooler",
+        "fan",
+        "heat sink",
+        "heatsink",
+        "mount",
+        "replacement",
+        "screw",
+        "shroud",
+        "water block",
+        "waterblock",
+    ]
+    if normalized.startswith("for ") and _has_any_term(title, accessory_words):
+        return True
+
+    if has_term(title, "heatsink") or has_term(title, "heat sink"):
+        strong_card_words = ["graphics card", "video card", "gpu card", "accelerator", "pcie", "pci-e"]
+        memory_words = ["8gb", "12gb", "16gb", "20gb", "24gb", "32gb", "40gb", "48gb", "80gb"]
+        if not _has_any_term(title, strong_card_words + memory_words):
+            return True
+
+    return False
 
 
 def _looks_like_lens_accessory(title: str) -> bool:
@@ -357,7 +411,7 @@ def listing_matches_product(title: str, product: Product) -> bool:
         if has_term(title, excluded_term):
             return False
 
-    if product.category == "gpus" and _has_any_term(title, GPU_PART_ACCESSORY_TERMS):
+    if product.category == "gpus" and _looks_like_gpu_accessory(title):
         return False
 
     if product.category == "lenses" and _looks_like_lens_accessory(title):
