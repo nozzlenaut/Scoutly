@@ -77,3 +77,15 @@ Create `backend/.env` later when API keys are added.
 ## v0.2.3
 
 Fixes deployed autocomplete by allowing the Vercel frontend to call the Railway backend API from the browser.
+
+
+## eBay notification setup
+
+For eBay Marketplace Account Deletion notifications, set these backend environment variables in Railway:
+
+```env
+EBAY_NOTIFICATION_ENDPOINT_URL=https://scoutly-production-f472.up.railway.app/api/ebay/notifications
+EBAY_NOTIFICATION_VERIFICATION_TOKEN=replace_with_32_to_80_chars_letters_numbers_underscores_or_hyphens
+```
+
+Use the same endpoint URL in the eBay Developer portal. Do not commit the verification token.

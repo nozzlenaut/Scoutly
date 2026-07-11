@@ -1,3 +1,10 @@
+
+## v0.2.4 - eBay notification endpoint prep
+
+- Added eBay Marketplace Account Deletion notification endpoint.
+- Added challenge-response support for eBay endpoint verification.
+- Added POST acknowledgement route for account deletion notifications.
+
 # Changelog
 
 ## 0.2.2 - Category search added
