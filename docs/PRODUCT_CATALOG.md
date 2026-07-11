@@ -32,7 +32,7 @@ Examples:
 ## Current categories
 
 - Cameras: active starter category
-- Lenses: active starter category
+- Lenses: paused in the public UI until eBay lens-part filtering is cleaner
 - GPUs: lab category, still useful for testing the PC-parts path
 
 ## Example resolutions
@@ -60,3 +60,14 @@ The dropdown improves accuracy, but it is not required. Users can still type nat
 ## v0.3.4 catalog expansion
 
 The catalog now includes a broader test set across camera bodies, lenses, and GPUs. The product catalog is still curated manually so exact-item matching stays conservative.
+
+
+## v0.3.7A catalog accuracy expansion
+
+The catalog now contains 184 products total:
+
+- Cameras: 61 active camera bodies
+- GPUs: 97 active graphics cards
+- Lenses: 26 retained in the backend catalog, but hidden from the active UI for now
+
+This update is catalog-only plus camera matching cleanup. It does not add the bad-result report button yet.

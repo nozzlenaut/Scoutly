@@ -93,3 +93,8 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 ## v0.3.6
 
 Temporarily pauses lens search from the public UI and adds eBay US category IDs for camera-body and GPU searches so Scoutly searches inside Digital Cameras and Graphics/Video Cards instead of relying on keywords alone.
+
+
+## v0.3.7A
+
+Adds a larger camera/GPU catalog for broader test searches without enabling the bad-result reporting UI yet. Also tightens camera generation matching so A7R III does not match original A7R 36.4MP listings.

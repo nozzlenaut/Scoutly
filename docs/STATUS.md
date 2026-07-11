@@ -42,3 +42,8 @@ Then show item types inside the selected group.
 ## v0.3.5
 
 Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount rings, rear mount rings, and metal replacement rings are rejected while real used lens listings can still pass.
+
+
+## v0.3.7A
+
+Catalog accuracy expansion complete: 61 cameras, 97 GPUs, 26 retained lenses. Lenses remain paused from the public UI.

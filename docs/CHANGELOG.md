@@ -1,5 +1,14 @@
 # Changelog
 
+
+## v0.3.7A - Catalog accuracy expansion
+
+- Expands the active camera catalog to 61 camera bodies.
+- Expands the GPU lab catalog to 97 graphics cards across NVIDIA, AMD, and Intel.
+- Keeps lenses paused in the public UI while lens-part results are investigated.
+- Tightens Sony Alpha generation matching so A7R III does not match original A7R 36.4MP listings.
+- Rejects body-only camera searches when eBay returns lens-kit bundles.
+
 ## v0.3.4 - Catalog expansion and lens filter cleanup
 
 - Expands the camera-body catalog across Sony, Canon, Nikon, Fujifilm, and Panasonic.

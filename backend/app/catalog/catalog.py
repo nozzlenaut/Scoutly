@@ -1,4 +1,5 @@
 import json
+import re
 from functools import lru_cache
 from pathlib import Path
 
@@ -78,6 +79,14 @@ GPU_PART_ACCESSORY_TERMS = [
 ]
 
 LENS_SAFE_CONTEXT_TERMS = {"aperture ring", "focus ring", "zoom ring"}
+
+CAMERA_BODY_BUNDLE_TERMS = [
+    "kit lens",
+    "lens kit",
+    "w/ lens",
+    "with lens",
+]
+
 
 CAMERA_PART_ACCESSORY_TERMS = [
     "adapter",
@@ -163,30 +172,41 @@ def _looks_like_camera_body_accessory(title: str) -> bool:
     return normalized.startswith("for ") and _has_any_term(title, accessory_words)
 
 
-def _has_camera_model_alias(title: str, product: Product) -> bool:
-    """Require a strong camera model clue so A7 IV does not match A7R IV parts.
+def _camera_alias_matches_title(candidate: str, title: str, title_has_brand: bool) -> bool:
+    """Match compact camera aliases without letting A7R3 match A7R36.4MP."""
 
-    Generic required terms like sony + a7 + iv are too loose for camera bodies
-    because eBay has many repair-part listings such as A7R IV flex cables.
-    For camera bodies, require one of our exact model aliases after compact
-    normalization.
-    """
+    candidate_normalized = normalize_text(candidate)
+    title_normalized = normalize_text(title)
+    if candidate_normalized and re.search(rf"(^|\s){re.escape(candidate_normalized)}($|\s)", title_normalized):
+        return True
 
+    candidate_compact = compact_text(candidate)
     title_compact = compact_text(title)
-    title_has_brand = has_term(title, product.brand)
+    if not candidate_compact:
+        return False
 
-    candidates = [product.display_name, product.model, *product.aliases]
-    for candidate in candidates:
-        candidate_compact = compact_text(candidate)
-        if not candidate_compact:
+    # Compact matching catches eBay titles like "A7RIII" and "A7R3", but it
+    # must not treat "A7R 36.4MP" as A7R III simply because the compact text
+    # contains the substring "a7r3" inside "a7r364".
+    for match in re.finditer(re.escape(candidate_compact), title_compact):
+        next_char = title_compact[match.end() : match.end() + 1]
+        if next_char.isdigit():
             continue
 
-        # Short model aliases like "a74" are okay when the title also includes
-        # the brand. Longer aliases are safe enough on their own.
-        if candidate_compact in title_compact and (len(candidate_compact) >= 4 or title_has_brand):
+        # Short aliases such as "a73" or "a7r3" are only safe when the title
+        # also names the brand. Longer aliases include enough context.
+        if len(candidate_compact) >= 5 or title_has_brand:
             return True
 
     return False
+
+
+def _has_camera_model_alias(title: str, product: Product) -> bool:
+    """Require a strong camera model clue so nearby Alpha bodies do not cross-match."""
+
+    title_has_brand = has_term(title, product.brand)
+    candidates = [product.display_name, product.model, *product.aliases]
+    return any(_camera_alias_matches_title(candidate, title, title_has_brand) for candidate in candidates)
 
 CATEGORY_ALIASES = {
     "gpu": "gpus",
@@ -341,6 +361,8 @@ def listing_matches_product(title: str, product: Product) -> bool:
 
     if product.category == "cameras" and product.product_type == "camera_body":
         if _looks_like_camera_body_accessory(title):
+            return False
+        if product.variant and product.variant.lower() == "body" and _has_any_term(title, CAMERA_BODY_BUNDLE_TERMS):
             return False
         return _has_camera_model_alias(title, product)
 

@@ -15,7 +15,7 @@ export const allCategories: SearchCategory[] = [
     group: "Photography",
     status: "active",
     description: "Used camera bodies with eBay Digital Cameras category filtering.",
-    placeholder: "Try Sony A7 IV, Canon R6 II, Nikon Z8...",
+    placeholder: "Try Sony A7R V, Canon R5 II, Nikon Z6 III...",
     defaultQuery: "Sony A7 III Body",
   },
   {
@@ -33,7 +33,7 @@ export const allCategories: SearchCategory[] = [
     group: "PC Parts",
     status: "lab",
     description: "Lab category with eBay Graphics/Video Cards category filtering.",
-    placeholder: "Try RTX 3060, RX 9070 XT, Arc B580...",
+    placeholder: "Try RTX 5050, RX 480, RX 9070 XT, Arc A580...",
     defaultQuery: "RTX 3060 12GB",
   },
 ];

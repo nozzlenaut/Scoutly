@@ -203,3 +203,32 @@ def test_accepts_real_used_lens_with_normal_focus_ring_language():
         "Sony FE 85mm f/1.8 Lens - clean glass, smooth focus ring, excellent condition",
         lens.product,
     ) is True
+
+
+def test_resolves_more_camera_catalog_entries():
+    assert match_product("Sony A7R V", category="cameras").product.id == "camera-sony-a7r-v-body"
+    assert match_product("Canon R5 II", category="cameras").product.id == "camera-canon-eos-r5-mark-ii-body"
+    assert match_product("Nikon Z6III", category="cameras").product.id == "camera-nikon-z6-iii-body"
+    assert match_product("Fuji XH2S", category="cameras").product.id == "camera-fujifilm-x-h2s-body"
+    assert match_product("OM-1", category="cameras").product.id == "camera-om-system-om-1-body"
+
+
+def test_rejects_original_a7r_when_searching_a7r_iii():
+    match = match_product("Sony A7R III Body", category="cameras")
+    assert match is not None
+    title = "Sony Alpha A7R 36.4MP Mirrorless Digital SLR Camera With 16-50mm Lens - 95% New"
+    assert listing_matches_product(title, match.product) is False
+
+
+def test_rejects_body_search_lens_kit_bundle():
+    match = match_product("Sony A7R III Body", category="cameras")
+    assert match is not None
+    title = "Sony A7R III Mirrorless Camera Body with lens kit"
+    assert listing_matches_product(title, match.product) is False
+
+
+def test_resolves_more_gpu_catalog_entries():
+    assert match_product("RTX 5050", category="gpus").product.id == "gpu-nvidia-rtx-5050-8gb"
+    assert match_product("rx480 8gb", category="gpus").product.id == "gpu-amd-rx-480-8gb"
+    assert match_product("radeon vii", category="gpus").product.id == "gpu-amd-radeon-vii-16gb"
+    assert match_product("arc a580", category="gpus").product.id == "gpu-intel-arc-a580-8gb"
