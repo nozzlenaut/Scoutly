@@ -23,6 +23,24 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
   const router = useRouter();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didMountRef = useRef(false);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  function normalizeMatchValue(value: string | null | undefined) {
+    return (value || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+  }
+
+  function hasExactSuggestion(value: string, matches: ProductMatch[]) {
+    const normalizedValue = normalizeMatchValue(value);
+    if (!normalizedValue) return false;
+
+    return matches.some((match) => {
+      if (match.confidence < 0.999) return false;
+      return [match.product.display_name, match.matched_alias].some((candidate) =>
+        normalizeMatchValue(candidate) === normalizedValue
+      );
+    });
+  }
 
   useEffect(() => {
     if (!didMountRef.current) {
@@ -43,6 +61,7 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
     const cleaned = query.trim();
     if (cleaned.length < 2) {
       setSuggestions([]);
+      setShowSuggestions(false);
       return;
     }
 
@@ -50,7 +69,7 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
       setIsLoading(true);
       const matches = await suggestProducts(cleaned, categoryId);
       setSuggestions(matches);
-      setShowSuggestions(true);
+      setShowSuggestions(matches.length > 0 && !hasExactSuggestion(cleaned, matches));
       setIsLoading(false);
     }, 180);
 
@@ -64,6 +83,9 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
   function submitSearch(value = query) {
     const cleaned = value.trim();
     if (!cleaned) return;
+
+    setShowSuggestions(false);
+    inputRef.current?.blur();
     router.push(`/search?category=${encodeURIComponent(categoryId)}&q=${encodeURIComponent(cleaned)}`);
   }
 
@@ -81,6 +103,12 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
 
   return (
     <div
+      ref={wrapperRef}
+      onBlur={(event) => {
+        if (!wrapperRef.current?.contains(event.relatedTarget as Node | null)) {
+          setShowSuggestions(false);
+        }
+      }}
       className={`relative z-50 mx-auto w-full rounded-[2rem] border border-white/10 bg-slate-950/35 text-left shadow-2xl shadow-black/30 backdrop-blur ${
         compact ? "max-w-5xl p-3 sm:p-4" : "max-w-3xl p-4 sm:p-5"
       }`}
@@ -117,9 +145,15 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
       <form onSubmit={handleSubmit} className="relative flex w-full flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
           <input
+            ref={inputRef}
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            onFocus={() => setShowSuggestions(true)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setShowSuggestions(false);
+            }}
+            onFocus={() => {
+              setShowSuggestions(suggestions.length > 0 && !hasExactSuggestion(query.trim(), suggestions));
+            }}
             placeholder={selectedCategory.placeholder}
             className="min-h-14 w-full rounded-2xl border border-white/10 bg-white/10 px-5 text-base text-white outline-none placeholder:text-slate-400 focus:border-cyan-300"
           />

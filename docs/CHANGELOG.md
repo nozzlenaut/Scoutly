@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.4.0 - Dropdown cleanup and eBay affiliate readiness
+
+- Closes the autocomplete dropdown when a search is submitted from the homepage or results page.
+- Hides autocomplete suggestions when the current query is already a 100% exact catalog match.
+- Closes autocomplete when focus leaves the search form.
+- Adds optional eBay Partner Network context headers so Browse API results can return `itemAffiliateWebUrl` after ePN campaign details are configured.
+- Marks outgoing marketplace links as sponsored.
+
 
 ## v0.3.8 - Bigger catalog and results-page search
 

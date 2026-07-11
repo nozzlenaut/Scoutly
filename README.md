@@ -5,16 +5,16 @@ Scoutly helps users find the best used deals across multiple online marketplaces
 ## Current status
 
 - **Category-based search added**
-- **Cameras and lenses are the primary starter categories**
+- **Cameras are active; lenses are retained but temporarily hidden while filtering improves**
 - **Live eBay marketplace search added**
 - **GPU catalog remains available as a PC-parts lab category**
 
-## Included in v0.3.4
+## Included in v0.4.0
 
-- Expanded camera-body catalog for broader photography testing
-- Expanded lens catalog across Sony, Canon, Nikon, Fuji, Sigma, and Tamron
-- Expanded GPU catalog with more AMD, Intel, and NVIDIA cards
-- Tighter lens accessory filters for ring adapters, lens coats, skins, and gear listings
+- Autocomplete closes after search submit so suggestions do not cover results.
+- Autocomplete hides itself when the typed query is already a 100% exact catalog match.
+- eBay Partner Network tracking is supported when affiliate campaign environment variables are set.
+- Result links use `rel="sponsored"` for affiliate-readiness.
 
 ## Project structure
 
@@ -106,3 +106,8 @@ Doubles down on catalog coverage for camera/GPU testing, adds a compact search f
 ## v0.3.9
 
 Adds a focused GPU accessory filter for Tesla/data-center GPU searches so heatsink-only, heat-sink-only, replacement cooler, fan, waterblock, and bracket listings do not win over real GPU cards.
+
+
+## v0.4.0
+
+Closes autocomplete suggestions after searching or when an exact 100% catalog match is typed, and adds optional eBay Partner Network affiliate tracking support through `EBAY_AFFILIATE_CAMPAIGN_ID` and `EBAY_AFFILIATE_REFERENCE_ID`.

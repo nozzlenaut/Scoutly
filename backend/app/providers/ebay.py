@@ -2,6 +2,7 @@ import os
 import time
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -33,6 +34,8 @@ class EbayConfig:
     environment: str = "production"
     delivery_country: str = "US"
     delivery_postal_code: str | None = None
+    affiliate_campaign_id: str | None = None
+    affiliate_reference_id: str | None = None
 
     @property
     def api_base(self) -> str:
@@ -56,6 +59,8 @@ def ebay_config_from_env() -> EbayConfig | None:
         environment=os.getenv("EBAY_ENV", "production").strip().lower() or "production",
         delivery_country=os.getenv("EBAY_DELIVERY_COUNTRY", "US").strip() or "US",
         delivery_postal_code=os.getenv("EBAY_DELIVERY_POSTAL_CODE", "").strip() or None,
+        affiliate_campaign_id=os.getenv("EBAY_AFFILIATE_CAMPAIGN_ID", "").strip() or None,
+        affiliate_reference_id=os.getenv("EBAY_AFFILIATE_REFERENCE_ID", "").strip() or None,
     )
 
 
@@ -156,11 +161,9 @@ class EbayProvider(MarketplaceProvider):
             "X-EBAY-C-MARKETPLACE-ID": self.config.marketplace_id,
         }
 
-        if self.config.delivery_country:
-            location = f"country={self.config.delivery_country}"
-            if self.config.delivery_postal_code:
-                location = f"{location},zip={self.config.delivery_postal_code}"
-            headers["X-EBAY-C-ENDUSERCTX"] = f"contextualLocation={location}"
+        enduser_context = self._enduser_context_header()
+        if enduser_context:
+            headers["X-EBAY-C-ENDUSERCTX"] = enduser_context
 
         params = {
             "q": query,
@@ -190,6 +193,22 @@ class EbayProvider(MarketplaceProvider):
         if self.config.marketplace_id != "EBAY_US" or category is None:
             return None
         return EBAY_US_CATEGORY_IDS.get(category.strip().lower())
+
+    def _enduser_context_header(self) -> str | None:
+        values: list[str] = []
+
+        if self.config.affiliate_campaign_id:
+            values.append(f"affiliateCampaignId={self.config.affiliate_campaign_id}")
+            if self.config.affiliate_reference_id:
+                values.append(f"affiliateReferenceId={self.config.affiliate_reference_id}")
+
+        if self.config.delivery_country:
+            location = f"country={self.config.delivery_country}"
+            if self.config.delivery_postal_code:
+                location = f"{location},zip={self.config.delivery_postal_code}"
+            values.append(f"contextualLocation={quote(location, safe='')}")
+
+        return ",".join(values) if values else None
 
     async def _search_request(self, headers: dict[str, str], params: dict[str, str]) -> dict[str, Any]:
         async with httpx.AsyncClient(timeout=20) as client:

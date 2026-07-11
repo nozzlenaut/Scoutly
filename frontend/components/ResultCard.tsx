@@ -27,7 +27,7 @@ export function ResultCard({ result }: { result: SearchResult }) {
       <a
         href={result.url}
         target="_blank"
-        rel="noreferrer"
+        rel="sponsored noreferrer"
         className="mt-5 block rounded-2xl bg-white px-5 py-3 text-center font-semibold text-slate-950 transition hover:bg-slate-200"
       >
         View deal

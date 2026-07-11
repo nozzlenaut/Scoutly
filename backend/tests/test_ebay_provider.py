@@ -60,9 +60,11 @@ class _CaptureEbayProvider(EbayProvider):
     def __init__(self, marketplace_id: str = "EBAY_US"):
         self.config = EbayConfig(client_id="client", client_secret="secret", marketplace_id=marketplace_id)
         self.tokens = _FakeTokenService()
+        self.last_headers: dict[str, str] = {}
         self.last_params: dict[str, str] = {}
 
     async def _search_request(self, headers: dict[str, str], params: dict[str, str]) -> dict:
+        self.last_headers = headers
         self.last_params = params
         return {"itemSummaries": []}
 
@@ -90,3 +92,17 @@ def test_ebay_search_skips_category_id_for_non_us_marketplace():
     asyncio.run(provider.search("RTX 3060 12GB", category="gpus"))
 
     assert "category_ids" not in provider.last_params
+
+
+def test_ebay_search_adds_affiliate_context_header():
+    provider = _CaptureEbayProvider()
+    provider.config.affiliate_campaign_id = "1234567890"
+    provider.config.affiliate_reference_id = "scoutly-test"
+    provider.config.delivery_postal_code = "90210"
+
+    asyncio.run(provider.search("Tesla V100", category="gpus"))
+
+    header = provider.last_headers["X-EBAY-C-ENDUSERCTX"]
+    assert "affiliateCampaignId=1234567890" in header
+    assert "affiliateReferenceId=scoutly-test" in header
+    assert "contextualLocation=country%3DUS%2Czip%3D90210" in header

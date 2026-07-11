@@ -7,7 +7,7 @@ The homepage category selector should show what users can search now without tur
 | Group | Category | Status | Notes |
 | --- | --- | --- | --- |
 | Photography | Cameras | Active | Starter camera body catalog is available. |
-| Photography | Lenses | Active | Starter lens catalog is available. |
+| Photography | Lenses | Coming soon | Lens catalog is retained but hidden while lens-part results are being improved. |
 | PC Parts | GPUs | Lab | Catalog exists, but the public MVP is shifting toward category-based search. |
 
 ## Status meanings
@@ -47,3 +47,8 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 ## v0.3.7A
 
 Catalog accuracy expansion complete: 61 cameras, 97 GPUs, 26 retained lenses. Lenses remain paused from the public UI.
+
+
+## v0.4.0
+
+Autocomplete now closes on submit, exact 100% matches, and focus exit. eBay affiliate tracking is supported once ePN campaign variables are configured.
