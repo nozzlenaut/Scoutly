@@ -30,6 +30,8 @@ export type SearchResult = {
   seller_rating: number | null;
   url: string;
   image_url: string | null;
+  affiliate_url_used: boolean;
+  affiliate_url_has_campaign_id: boolean;
   score: number;
 };
 

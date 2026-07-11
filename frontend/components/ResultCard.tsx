@@ -32,9 +32,14 @@ export function ResultCard({ result }: { result: SearchResult }) {
       >
         View deal
       </a>
-      <p className="mt-3 text-xs leading-5 text-slate-500">
-        Scoutly may earn from qualifying purchases once affiliate tracking is enabled.
-      </p>
+      <div className="mt-3 space-y-2 text-xs leading-5 text-slate-500">
+        <p>Scoutly may earn from qualifying purchases through affiliate links.</p>
+        {result.affiliate_url_has_campaign_id ? (
+          <p className="text-emerald-300/80">Affiliate tracking active for this eBay link.</p>
+        ) : result.affiliate_url_used ? (
+          <p className="text-amber-300/80">Affiliate URL returned, but campaign ID was not visible in the final link.</p>
+        ) : null}
+      </div>
       </div>
     </article>
   );

@@ -111,3 +111,7 @@ Adds a focused GPU accessory filter for Tesla/data-center GPU searches so heatsi
 ## v0.4.0
 
 Closes autocomplete suggestions after searching or when an exact 100% catalog match is typed, and adds optional eBay Partner Network affiliate tracking support through `EBAY_AFFILIATE_CAMPAIGN_ID` and `EBAY_AFFILIATE_REFERENCE_ID`.
+
+## v0.4.1
+
+Adds a casual affiliate disclosure page/footer and makes eBay affiliate URLs safer by adding the configured `campid` when eBay returns a partial affiliate URL with `customid`/`toolid` but no visible campaign ID.

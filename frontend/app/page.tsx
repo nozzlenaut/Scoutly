@@ -1,5 +1,6 @@
 import { CategoryStatusPanel } from "@/components/CategoryStatusPanel";
 import { SearchForm } from "@/components/SearchForm";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export default function HomePage() {
   return (
@@ -29,6 +30,7 @@ export default function HomePage() {
           <CategoryStatusPanel />
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }

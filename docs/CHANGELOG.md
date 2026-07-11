@@ -100,3 +100,11 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Rejects GPU heatsink-only and replacement cooler/fan/accessory listings.
 - Specifically covers Tesla V100 heatsink false positives seen in live search testing.
 - Keeps legitimate data-center GPU card listings valid when they mention passive heatsinks as part of the full card.
+
+## v0.4.1 - Affiliate disclosure and campid fallback
+
+- Adds a casual affiliate disclosure page at `/disclosure`.
+- Adds a small affiliate disclosure footer on the home and search pages.
+- Keeps result-card disclosure text visible near eBay outbound links.
+- Adds affiliate-link status fields to result payloads so the UI can show when a link contains a campaign ID.
+- Adds a conservative eBay URL fallback that appends the configured `campid` if eBay returns a partial affiliate URL with `customid`/`toolid` but no visible campaign ID.

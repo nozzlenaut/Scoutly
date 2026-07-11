@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CategoryTabs } from "@/components/CategoryTabs";
 import { ResultCard } from "@/components/ResultCard";
 import { SearchForm } from "@/components/SearchForm";
+import { SiteFooter } from "@/components/SiteFooter";
 import { searchDeals } from "@/lib/api";
 import { getCategory } from "@/lib/categoryCatalog";
 
@@ -60,6 +61,7 @@ export default async function SearchPage({
             No matching used listings found yet. Try a more specific product from autocomplete or check back after marketplace data refreshes.
           </div>
         )}
+        <SiteFooter />
       </div>
     </main>
   );

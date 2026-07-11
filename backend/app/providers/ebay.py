@@ -2,7 +2,7 @@ import os
 import time
 from dataclasses import dataclass
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import parse_qsl, quote, urlencode, urlsplit, urlunsplit
 
 import httpx
 
@@ -85,7 +85,56 @@ def _best_shipping(item: dict[str, Any]) -> float:
     return min(costs) if costs else 0.0
 
 
-def ebay_item_to_listing(item: dict[str, Any]) -> Listing | None:
+def _query_params(url: str) -> dict[str, str]:
+    try:
+        return dict(parse_qsl(urlsplit(url).query, keep_blank_values=True))
+    except ValueError:
+        return {}
+
+
+def _url_has_campaign_id(url: str) -> bool:
+    return bool(_query_params(url).get("campid"))
+
+
+def _ensure_affiliate_campaign_params(
+    url: str,
+    affiliate_campaign_id: str | None = None,
+    affiliate_reference_id: str | None = None,
+) -> str:
+    """Add missing ePN tracking params when eBay returns a partial affiliate URL.
+
+    eBay normally returns itemAffiliateWebUrl when the affiliate header is sent.
+    In practice, some returned URLs can contain customid/toolid but omit campid,
+    so we add the configured campaign ID as a conservative fallback.
+    """
+    if not affiliate_campaign_id or "ebay.com" not in url:
+        return url
+
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return url
+
+    params = dict(parse_qsl(parts.query, keep_blank_values=True))
+    if not params.get("campid"):
+        params["campid"] = affiliate_campaign_id
+    if affiliate_reference_id and not params.get("customid"):
+        params["customid"] = affiliate_reference_id
+
+    # These are standard ePN link params. Keep existing values if eBay supplied them.
+    params.setdefault("mkevt", "1")
+    params.setdefault("mkcid", "1")
+    params.setdefault("mkrid", "711-53200-19255-0")
+    params.setdefault("toolid", "10049")
+
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(params), parts.fragment))
+
+
+def ebay_item_to_listing(
+    item: dict[str, Any],
+    affiliate_campaign_id: str | None = None,
+    affiliate_reference_id: str | None = None,
+) -> Listing | None:
     title = item.get("title")
     price = _money_value(item.get("price"))
     if not title or price <= 0:
@@ -94,9 +143,12 @@ def ebay_item_to_listing(item: dict[str, Any]) -> Listing | None:
     shipping = _best_shipping(item)
     seller = item.get("seller") or {}
     image = item.get("image") or {}
-    url = item.get("itemAffiliateWebUrl") or item.get("itemWebUrl")
-    if not url:
+    raw_affiliate_url = item.get("itemAffiliateWebUrl")
+    raw_url = raw_affiliate_url or item.get("itemWebUrl")
+    if not raw_url:
         return None
+
+    url = _ensure_affiliate_campaign_params(raw_url, affiliate_campaign_id, affiliate_reference_id)
 
     seller_rating = seller.get("feedbackPercentage")
     try:
@@ -114,6 +166,8 @@ def ebay_item_to_listing(item: dict[str, Any]) -> Listing | None:
         seller_rating=seller_rating_value,
         url=url,
         image_url=image.get("imageUrl"),
+        affiliate_url_used=bool(raw_affiliate_url) or _url_has_campaign_id(url),
+        affiliate_url_has_campaign_id=_url_has_campaign_id(url),
     )
 
 
@@ -184,7 +238,11 @@ class EbayProvider(MarketplaceProvider):
 
         listings: list[Listing] = []
         for item in items:
-            listing = ebay_item_to_listing(item)
+            listing = ebay_item_to_listing(
+                item,
+                affiliate_campaign_id=self.config.affiliate_campaign_id,
+                affiliate_reference_id=self.config.affiliate_reference_id,
+            )
             if listing is not None:
                 listings.append(listing)
         return listings

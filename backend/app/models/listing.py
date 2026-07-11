@@ -11,4 +11,6 @@ class Listing(BaseModel):
     seller_rating: float | None = None
     url: HttpUrl
     image_url: HttpUrl | None = None
+    affiliate_url_used: bool = False
+    affiliate_url_has_campaign_id: bool = False
     score: float = 0

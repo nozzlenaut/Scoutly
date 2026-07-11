@@ -34,7 +34,7 @@ def test_ebay_item_prefers_affiliate_url():
         "price": {"value": "1099.00", "currency": "USD"},
         "condition": "Used",
         "itemWebUrl": "https://www.ebay.com/itm/plain",
-        "itemAffiliateWebUrl": "https://rover.ebay.com/affiliate-link",
+        "itemAffiliateWebUrl": "https://www.ebay.com/itm/affiliate?campid=1234567890&customid=scoutly&toolid=10049",
         "seller": {},
         "shippingOptions": [],
     }
@@ -42,7 +42,33 @@ def test_ebay_item_prefers_affiliate_url():
     listing = ebay_item_to_listing(item)
 
     assert listing is not None
-    assert str(listing.url) == "https://rover.ebay.com/affiliate-link"
+    assert str(listing.url) == "https://www.ebay.com/itm/affiliate?campid=1234567890&customid=scoutly&toolid=10049"
+    assert listing.affiliate_url_used is True
+    assert listing.affiliate_url_has_campaign_id is True
+
+
+def test_ebay_item_adds_missing_campaign_to_partial_affiliate_url():
+    item = {
+        "title": "NVIDIA RTX 3060 12GB",
+        "price": {"value": "219.00", "currency": "USD"},
+        "condition": "Used",
+        "itemAffiliateWebUrl": "https://www.ebay.com/itm/298498636414?_skw=NVIDIA+RTX+3060+12GB&customid=scoutly&toolid=10049",
+        "seller": {},
+        "shippingOptions": [],
+    }
+
+    listing = ebay_item_to_listing(item, affiliate_campaign_id="1234567890", affiliate_reference_id="scoutly")
+
+    assert listing is not None
+    url = str(listing.url)
+    assert "campid=1234567890" in url
+    assert "customid=scoutly" in url
+    assert "toolid=10049" in url
+    assert "mkevt=1" in url
+    assert "mkcid=1" in url
+    assert "mkrid=711-53200-19255-0" in url
+    assert listing.affiliate_url_used is True
+    assert listing.affiliate_url_has_campaign_id is True
 
 
 def test_ebay_item_without_price_or_url_is_ignored():
