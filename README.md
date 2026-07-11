@@ -84,3 +84,8 @@ Adds stricter search-quality filters to reject box-only, please-read, as-is, par
 ## v0.3.4
 
 Adds a larger catalog for cameras, lenses, and GPUs, plus another lens accessory filtering pass.
+
+
+## v0.3.5
+
+Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount rings, rear mount rings, and metal replacement rings are rejected while real used lens listings can still pass.

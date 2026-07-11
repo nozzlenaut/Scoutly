@@ -179,3 +179,27 @@ def test_rejects_more_lens_ring_accessories():
     assert listing_matches_product("Zoom Ring Rubber Grip for Sony FE 85mm f/1.8 Lens", match.product) is False
     assert listing_matches_product("Step Up Ring Adapter for Sony FE 85mm f/1.8", match.product) is False
     assert listing_matches_product("Sony FE 85mm f/1.8 Lens Excellent Condition", match.product) is True
+
+
+def test_rejects_lens_rubber_and_bayonet_ring_accessories():
+    zoom = match_product("Sony FE 24-70mm f/2.8 GM", category="lenses")
+    prime = match_product("Sony FE 85mm f/1.8", category="lenses")
+    assert zoom is not None
+    assert prime is not None
+    assert listing_matches_product(
+        "COPY NEW Lens Zoom Rubber Ring Focus Rubber Ring For Sony FE 24-70mm 1:2.8 GM",
+        zoom.product,
+    ) is False
+    assert listing_matches_product(
+        "For Sony FE 85mm F1.8 Rear Bayonet Mount Metal Ring SEL85F18 FE 85 1.8 85/1.8",
+        prime.product,
+    ) is False
+
+
+def test_accepts_real_used_lens_with_normal_focus_ring_language():
+    lens = match_product("Sony FE 85mm f/1.8", category="lenses")
+    assert lens is not None
+    assert listing_matches_product(
+        "Sony FE 85mm f/1.8 Lens - clean glass, smooth focus ring, excellent condition",
+        lens.product,
+    ) is True

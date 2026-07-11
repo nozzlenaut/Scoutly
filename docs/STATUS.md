@@ -37,3 +37,8 @@ Then show item types inside the selected group.
 
 - Catalog expanded for broader Cameras, Lenses, and GPUs testing.
 - Lens accessory filters tightened.
+
+
+## v0.3.5
+
+Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount rings, rear mount rings, and metal replacement rings are rejected while real used lens listings can still pass.

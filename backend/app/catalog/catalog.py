@@ -29,7 +29,8 @@ GLOBAL_BAD_LISTING_TERMS = [
 LENS_PART_ACCESSORY_TERMS = [
     "adapter only",
     "adapter ring",
-    "aperture ring",
+    "bayonet mount",
+    "bayonet ring",
     "cap only",
     "case only",
     "decal",
@@ -38,9 +39,9 @@ LENS_PART_ACCESSORY_TERMS = [
     "filter only",
     "filter ring",
     "focus gear",
-    "focus ring",
     "gear ring",
     "hood only",
+    "metal ring",
     "lens cap",
     "lens cap only",
     "lens coat",
@@ -50,6 +51,10 @@ LENS_PART_ACCESSORY_TERMS = [
     "lens protector",
     "lens skin",
     "mount ring",
+    "rear bayonet",
+    "rear mount",
+    "rubber grip",
+    "rubber ring",
     "rear cap",
     "rear cap only",
     "ring gear",
@@ -59,7 +64,6 @@ LENS_PART_ACCESSORY_TERMS = [
     "step-down ring",
     "step-up ring",
     "tripod collar only",
-    "zoom ring",
 ]
 
 GPU_PART_ACCESSORY_TERMS = [
@@ -72,6 +76,8 @@ GPU_PART_ACCESSORY_TERMS = [
     "no display",
     "shroud only",
 ]
+
+LENS_SAFE_CONTEXT_TERMS = {"aperture ring", "focus ring", "zoom ring"}
 
 CAMERA_PART_ACCESSORY_TERMS = [
     "adapter",
@@ -112,6 +118,36 @@ CAMERA_PART_ACCESSORY_TERMS = [
 
 def _has_any_term(text: str, terms: list[str]) -> bool:
     return any(has_term(text, term) for term in terms)
+
+
+def _looks_like_lens_accessory(title: str) -> bool:
+    normalized = normalize_text(title)
+    if _has_any_term(title, LENS_PART_ACCESSORY_TERMS):
+        return True
+
+    # Many eBay accessory/repair-part titles include the real lens model but
+    # describe replacement rings, rubber grips, or bayonet mounts. Those should
+    # never beat a real used lens listing.
+    if has_term(title, "ring") and _has_any_term(title, ["rubber", "metal", "bayonet", "mount", "replacement"]):
+        return True
+
+    if has_term(title, "bayonet") and _has_any_term(title, ["mount", "rear", "ring", "replacement"]):
+        return True
+
+    accessory_words = [
+        "adapter",
+        "bayonet",
+        "coat",
+        "cover",
+        "gear",
+        "mount",
+        "protector",
+        "replacement",
+        "ring",
+        "rubber",
+        "skin",
+    ]
+    return normalized.startswith("for ") and _has_any_term(title, accessory_words)
 
 
 def _looks_like_camera_body_accessory(title: str) -> bool:
@@ -289,13 +325,18 @@ def listing_matches_product(title: str, product: Product) -> bool:
         return False
 
     for excluded_term in product.excluded_terms:
+        # Real lens condition notes often say things like "smooth focus ring".
+        # Do not reject those broad terms by themselves; the lens accessory
+        # detector below catches actual rubber rings, bayonet rings, and gears.
+        if product.category == "lenses" and excluded_term in LENS_SAFE_CONTEXT_TERMS:
+            continue
         if has_term(title, excluded_term):
             return False
 
     if product.category == "gpus" and _has_any_term(title, GPU_PART_ACCESSORY_TERMS):
         return False
 
-    if product.category == "lenses" and _has_any_term(title, LENS_PART_ACCESSORY_TERMS):
+    if product.category == "lenses" and _looks_like_lens_accessory(title):
         return False
 
     if product.category == "cameras" and product.product_type == "camera_body":

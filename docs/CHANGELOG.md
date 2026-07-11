@@ -55,3 +55,8 @@
 - Adds stricter global rejection terms like box only, please read, read description, as-is, and untested.
 - Adds camera, lens, and GPU accessory/parts filters.
 - Keeps eBay searches conservative by avoiding fallback searches without condition filtering.
+
+
+## v0.3.5
+
+Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount rings, rear mount rings, and metal replacement rings are rejected while real used lens listings can still pass.

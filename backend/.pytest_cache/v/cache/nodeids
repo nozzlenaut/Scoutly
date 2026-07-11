@@ -1,4 +1,5 @@
 [
+  "tests/test_catalog.py::test_accepts_real_used_lens_with_normal_focus_ring_language",
   "tests/test_catalog.py::test_accepts_valid_3060_listing",
   "tests/test_catalog.py::test_accepts_valid_a7_iv_body_listing",
   "tests/test_catalog.py::test_accepts_valid_a7iii_body_listing",
@@ -6,11 +7,20 @@
   "tests/test_catalog.py::test_category_suggestions_are_filtered",
   "tests/test_catalog.py::test_lens_category_rejects_lens_hood_only",
   "tests/test_catalog.py::test_rejects_3060_ti_when_looking_for_3060_12gb",
+  "tests/test_catalog.py::test_rejects_a7iii_camera_error_please_read",
   "tests/test_catalog.py::test_rejects_a7iii_mount_ring_accessory",
   "tests/test_catalog.py::test_rejects_a7r_iv_repair_part_for_a7_iv",
+  "tests/test_catalog.py::test_rejects_box_only_for_everything",
   "tests/test_catalog.py::test_rejects_broken_listing",
+  "tests/test_catalog.py::test_rejects_gpu_as_is_parts_listing",
+  "tests/test_catalog.py::test_rejects_lens_coat_and_ring_gear",
+  "tests/test_catalog.py::test_rejects_lens_rubber_and_bayonet_ring_accessories",
+  "tests/test_catalog.py::test_rejects_more_lens_ring_accessories",
   "tests/test_catalog.py::test_resolves_amd_compact_alias",
   "tests/test_catalog.py::test_resolves_camera_from_category_alias",
+  "tests/test_catalog.py::test_resolves_expanded_camera_catalog_entries",
+  "tests/test_catalog.py::test_resolves_expanded_gpu_catalog_entries",
+  "tests/test_catalog.py::test_resolves_expanded_lens_catalog_entries",
   "tests/test_catalog.py::test_resolves_intel_arc_alias",
   "tests/test_catalog.py::test_resolves_lens_from_common_typing",
   "tests/test_catalog.py::test_resolves_rtx3060_compact_alias",
@@ -22,5 +32,6 @@
   "tests/test_ebay_notifications.py::test_ebay_notification_post_acknowledges",
   "tests/test_ebay_provider.py::test_ebay_item_maps_to_listing",
   "tests/test_ebay_provider.py::test_ebay_item_prefers_affiliate_url",
-  "tests/test_ebay_provider.py::test_ebay_item_without_price_or_url_is_ignored"
+  "tests/test_ebay_provider.py::test_ebay_item_without_price_or_url_is_ignored",
+  "tests/test_ranking.py::test_rejects_for_parts_condition"
 ]
