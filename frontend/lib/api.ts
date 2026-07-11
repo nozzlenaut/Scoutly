@@ -42,7 +42,7 @@ export type SearchResponse = {
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export async function searchDeals(query: string, category = "cameras", providers = "ebay,amazon"): Promise<SearchResponse> {
+export async function searchDeals(query: string, category = "cameras", providers = "ebay"): Promise<SearchResponse> {
   const url = `${baseUrl}/api/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&providers=${encodeURIComponent(providers)}`;
   const response = await fetch(url, { cache: "no-store" });
 

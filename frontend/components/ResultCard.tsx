@@ -2,7 +2,14 @@ import type { SearchResult } from "@/lib/api";
 
 export function ResultCard({ result }: { result: SearchResult }) {
   return (
-    <article className="rounded-3xl border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/20">
+    <article className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.06] shadow-2xl shadow-black/20">
+      {result.image_url ? (
+        <div className="flex h-48 items-center justify-center bg-white/[0.03]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={result.image_url} alt="" className="max-h-44 max-w-full object-contain" />
+        </div>
+      ) : null}
+      <div className="p-5">
       <div className="mb-4 flex items-center justify-between gap-4">
         <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-cyan-200">
           {result.provider}
@@ -25,6 +32,10 @@ export function ResultCard({ result }: { result: SearchResult }) {
       >
         View deal
       </a>
+      <p className="mt-3 text-xs leading-5 text-slate-500">
+        Scoutly may earn from qualifying purchases once affiliate tracking is enabled.
+      </p>
+      </div>
     </article>
   );
 }

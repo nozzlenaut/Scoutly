@@ -1,54 +1,31 @@
-
-## v0.2.4 - eBay notification endpoint prep
-
-- Added eBay Marketplace Account Deletion notification endpoint.
-- Added challenge-response support for eBay endpoint verification.
-- Added POST acknowledgement route for account deletion notifications.
-
 # Changelog
 
-## 0.2.2 - Category search added
+## v0.3.0 - eBay marketplace integration
 
-- Replaced the status-heavy homepage area with a category picker.
-- Added Cameras and Lenses as active starter categories.
-- Converted the product catalog from GPU-specific fields to a generic category/product model.
-- Added starter photography catalog entries for common camera bodies and lenses.
-- Added category-specific reject terms for accessories, parts-only listings, broken gear, lens fungus/haze, caps, hoods, and boxes.
-- Kept GPUs available as a PC-parts lab category.
-- Updated search, autocomplete, and mock results to pass category context through the app.
+- Adds eBay Browse API OAuth client credentials flow.
+- Adds live eBay provider for used item searches.
+- Normalizes eBay item summaries into Scoutly listing cards.
+- Uses eBay images and seller feedback when available.
+- Keeps mock eBay fallback when local credentials are not configured.
+- Defaults search to eBay only so the public site does not mix live eBay results with mock Amazon results.
 
-## 0.2.1 - Product catalog autocomplete
+## v0.2.4 - eBay notification endpoint
 
-- Expanded the GPU product catalog with common NVIDIA, AMD, and Intel desktop GPUs.
-- Added `/api/products/suggest` for autocomplete-ready product suggestions.
-- Improved alias matching for shorthand searches like `3060`, `rtx3060`, and `rx6700xt`.
-- Added homepage autocomplete dropdown while keeping free-text search available.
-- Pinned Tailwind dependencies to avoid the Tailwind 4/PostCSS mismatch during local setup.
+- Adds Marketplace Account Deletion notification verification endpoint for eBay developer compliance.
 
-## 0.2.0 - GPU search added
+## v0.2.3 - Vercel autocomplete CORS fixed
 
-- Added visible category status tags to the homepage.
-- Added future-ready category tabs for GPUs, CPUs, and cameras.
-- Marked GPU search as added.
-- Marked eBay live pricing as pending until API credentials are approved.
-- Added `docs/STATUS.md` for release/status tag conventions.
+- Allows browser calls from deployed Vercel domains while Scoutly is in MVP development.
 
-## 0.1.0 - Product catalog added
+## v0.2.2 - Category search added
 
-- Added GPU catalog JSON.
-- Added product resolver.
-- Added catalog API routes.
-- Added tests for GPU product matching and listing filtering.
+- Adds category-based search for Cameras, Lenses, and GPUs.
+- Converts the catalog from GPU-only to generic products.
 
-## 0.0.1 - Foundation added
+## v0.2.1 - Product catalog autocomplete added
 
-- Initial Sprint 1 starter app.
-- Added Next.js frontend.
-- Added FastAPI backend.
-- Added mock search results.
-- Added basic ranking logic.
+- Adds expanded GPU catalog matching and homepage autocomplete.
 
-## v0.2.3 - Vercel autocomplete CORS hotfix
+## v0.2.0 - GPU search added
 
-- Allows the deployed Vercel frontend to call the Railway backend from the browser.
-- Keeps the public API open for MVP development because Scoutly does not use cookies or browser credentials yet.
+- Adds status UI and early category direction.

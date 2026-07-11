@@ -37,13 +37,19 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
               <p className="mt-3 text-sm text-amber-300">No catalog match yet. Showing keyword-based results.</p>
             )}
           </div>
-          <p className="text-sm text-slate-400">Mock providers until live eBay API is connected</p>
+          <p className="text-sm text-slate-400">Live eBay results · one best listing per marketplace</p>
         </div>
-        <section className="mt-8 grid gap-5 md:grid-cols-2">
-          {data.results.map((result) => (
-            <ResultCard key={`${result.provider}-${result.title}`} result={result} />
-          ))}
-        </section>
+        {data.results.length > 0 ? (
+          <section className="mt-8 grid gap-5 md:grid-cols-2">
+            {data.results.map((result) => (
+              <ResultCard key={`${result.provider}-${result.title}`} result={result} />
+            ))}
+          </section>
+        ) : (
+          <div className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-6 text-amber-100">
+            No matching used listings found yet. Try a more specific product from autocomplete or check back after marketplace data refreshes.
+          </div>
+        )}
       </div>
     </main>
   );

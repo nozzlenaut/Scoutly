@@ -4,20 +4,19 @@ Scoutly helps users find the best used deals across multiple online marketplaces
 
 ## Current status
 
-- **Vercel autocomplete CORS hotfix added**
 - **Category-based search added**
 - **Cameras and lenses are the primary starter categories**
+- **Live eBay marketplace search added**
 - **GPU catalog remains available as a PC-parts lab category**
-- **Live eBay pricing is pending** until API credentials are approved
 
-## Included in v0.2.2
+## Included in v0.3.0
 
-- Replaces the old status-heavy section with a real category picker
-- Adds Cameras and Lenses as active starter categories
-- Converts the backend catalog from GPU-only to a generic product catalog
-- Adds starter photography products and filters
-- Keeps GPU autocomplete working under the GPUs category
-- Keeps free-text typing working while encouraging exact autocomplete selection
+- eBay Browse API OAuth support
+- Live eBay used-listing provider
+- eBay listing normalization into Scoutly result cards
+- Image support on result cards
+- eBay-only default search so the live site does not mix real eBay data with mock Amazon data
+- Mock eBay fallback for local development when credentials are missing
 
 ## Project structure
 
@@ -72,20 +71,4 @@ Create `frontend/.env.local`:
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-Create `backend/.env` later when API keys are added.
-
-## v0.2.3
-
-Fixes deployed autocomplete by allowing the Vercel frontend to call the Railway backend API from the browser.
-
-
-## eBay notification setup
-
-For eBay Marketplace Account Deletion notifications, set these backend environment variables in Railway:
-
-```env
-EBAY_NOTIFICATION_ENDPOINT_URL=https://scoutly-production-f472.up.railway.app/api/ebay/notifications
-EBAY_NOTIFICATION_VERIFICATION_TOKEN=replace_with_32_to_80_chars_letters_numbers_underscores_or_hyphens
-```
-
-Use the same endpoint URL in the eBay Developer portal. Do not commit the verification token.
+Create `backend/.env` using `backend/.env.example` as the template.

@@ -10,7 +10,7 @@ router = APIRouter()
 async def search(
     q: str = Query(..., min_length=2),
     category: str | None = Query(None),
-    providers: str = Query("ebay,amazon"),
+    providers: str = Query("ebay"),
 ) -> SearchResponse:
     provider_keys = [provider.strip() for provider in providers.split(",") if provider.strip()]
     resolved_product, results = await search_best_deals(q, provider_keys, category)
