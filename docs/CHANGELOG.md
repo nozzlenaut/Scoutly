@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1 - Search query and camera filter hotfix
+
+- Fixes deployed Next.js search pages reading default category queries instead of URL search params.
+- Rejects camera-body repair parts and model-crossmatches such as A7R IV parts when searching A7 IV.
+- Keeps public npm registry config for Vercel builds.
+
 ## v0.3.0 - eBay marketplace integration
 
 - Adds eBay Browse API OAuth client credentials flow.

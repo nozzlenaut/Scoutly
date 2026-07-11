@@ -6,6 +6,67 @@ from app.catalog.normalizer import compact_text, has_term, normalize_text
 from app.models.product import Product, ProductMatch
 
 CATALOG_PATH = Path(__file__).resolve().parents[1] / "data" / "product_catalog.json"
+
+CAMERA_PART_ACCESSORY_TERMS = [
+    "adapter",
+    "battery door",
+    "button",
+    "cable",
+    "circuit board",
+    "contact flex",
+    "cover",
+    "dial",
+    "display screen",
+    "door cover",
+    "dummy",
+    "flex",
+    "flex cable",
+    "hot shoe",
+    "lcd",
+    "lens mount contact",
+    "main board",
+    "motherboard",
+    "pcb",
+    "port cover",
+    "replacement",
+    "ribbon",
+    "screen repair",
+    "sensor cleaning",
+    "strap lug",
+    "top cover",
+    "viewfinder",
+]
+
+
+def _has_any_term(text: str, terms: list[str]) -> bool:
+    return any(has_term(text, term) for term in terms)
+
+
+def _has_camera_model_alias(title: str, product: Product) -> bool:
+    """Require a strong camera model clue so A7 IV does not match A7R IV parts.
+
+    Generic required terms like sony + a7 + iv are too loose for camera bodies
+    because eBay has many repair-part listings such as A7R IV flex cables.
+    For camera bodies, require one of our exact model aliases after compact
+    normalization.
+    """
+
+    title_compact = compact_text(title)
+    title_has_brand = has_term(title, product.brand)
+
+    candidates = [product.display_name, product.model, *product.aliases]
+    for candidate in candidates:
+        candidate_compact = compact_text(candidate)
+        if not candidate_compact:
+            continue
+
+        # Short model aliases like "a74" are okay when the title also includes
+        # the brand. Longer aliases are safe enough on their own.
+        if candidate_compact in title_compact and (len(candidate_compact) >= 4 or title_has_brand):
+            return True
+
+    return False
+
 CATEGORY_ALIASES = {
     "gpu": "gpus",
     "graphics": "gpus",
@@ -126,5 +187,11 @@ def listing_matches_product(title: str, product: Product) -> bool:
     for excluded_term in product.excluded_terms:
         if has_term(title, excluded_term):
             return False
+
+    if product.category == "cameras" and _has_any_term(title, CAMERA_PART_ACCESSORY_TERMS):
+        return False
+
+    if product.category == "cameras" and product.product_type == "camera_body":
+        return _has_camera_model_alias(title, product)
 
     return all(has_term(title, required_term) for required_term in product.required_terms)

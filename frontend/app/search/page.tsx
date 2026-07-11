@@ -4,9 +4,14 @@ import { ResultCard } from "@/components/ResultCard";
 import { searchDeals } from "@/lib/api";
 import { getCategory } from "@/lib/categoryCatalog";
 
-export default async function SearchPage({ searchParams }: { searchParams: { q?: string; category?: string } }) {
-  const category = getCategory(searchParams.category);
-  const query = searchParams.q || category.defaultQuery;
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; category?: string }>
+}) {
+  const params = await searchParams;
+  const category = getCategory(params.category);
+  const query = params.q || category.defaultQuery;
   const data = await searchDeals(query, category.id);
   const resolved = data.resolved_product;
 

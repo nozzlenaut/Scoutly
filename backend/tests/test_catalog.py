@@ -87,3 +87,23 @@ def test_resolves_intel_arc_alias():
     match = match_product("a770 16gb", category="gpus")
     assert match is not None
     assert match.product.id == "gpu-intel-arc-a770-16gb"
+
+
+def test_resolves_sony_a7_iv_body():
+    match = match_product("Sony A7 IV Body", category="cameras")
+    assert match is not None
+    assert match.product.id == "camera-sony-a7-iv-body"
+
+
+def test_rejects_a7r_iv_repair_part_for_a7_iv():
+    match = match_product("Sony A7 IV Body", category="cameras")
+    assert match is not None
+    title = "For Sony ILCE-7RM4 A7R IV A7RM4 Body to Lens Mount Contact Flex Cable Original"
+    assert listing_matches_product(title, match.product) is False
+
+
+def test_accepts_valid_a7_iv_body_listing():
+    match = match_product("Sony A7 IV Body", category="cameras")
+    assert match is not None
+    title = "Sony Alpha A7 IV 33MP Mirrorless Camera Body Only ILCE-7M4 Excellent"
+    assert listing_matches_product(title, match.product) is True
