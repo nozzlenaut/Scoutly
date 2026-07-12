@@ -7,19 +7,25 @@ export default function HomePage() {
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,_#164e63,_#050816_45%)] px-6 py-10">
       <section className="mx-auto flex min-h-[80vh] max-w-5xl flex-col items-center justify-center text-center">
         <div className="mb-5 rounded-full border border-emerald-300/30 bg-emerald-300/10 px-4 py-2 text-sm font-medium text-emerald-100">
-          Category-filtered search added
+          Now testing consoles
         </div>
         <h1 className="text-5xl font-black tracking-tight text-white sm:text-7xl">Scoutly</h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-          Pick an active category, choose the exact item, and Scoutly surfaces the best used listing from each marketplace.
+          Pick an active category, choose the exact item, and Scoutly looks for complete used items at the lowest useful prices — no partials, broken listings, boxes-only, or parts-only junk when we can catch it.
         </p>
+
+        <div className="mt-6 max-w-3xl rounded-3xl border border-white/10 bg-white/[0.06] p-5 text-left text-sm leading-6 text-slate-300">
+          <p>
+            Scoutly is supported by referral links. If you do not want to use those, that is totally fine: use Scoutly to find the right item, then open eBay separately or in a private/incognito window and search normally.
+          </p>
+        </div>
 
         <div className="relative z-50 mt-8 w-full">
           <SearchForm />
         </div>
 
         <div className="relative z-0 mt-10 grid w-full gap-4 text-left sm:grid-cols-3">
-          {["Exact-item autocomplete", "Built for used prices", "One best result per store"].map((item) => (
+          {["Exact-item autocomplete", "Built for used prices", "Multiple safe options while testing"].map((item) => (
             <div key={item} className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-sm text-slate-300">
               {item}
             </div>

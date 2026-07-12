@@ -8,7 +8,7 @@ export function CategoryStatusPanel() {
         <div>
           <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Catalog direction</p>
           <p className="mt-1 text-sm text-slate-300">
-            Currently testing camera bodies, GPUs, and a LEGO set-number prototype. Lenses are paused until eBay lens results are clean enough to trust.
+            Currently testing camera bodies, GPUs, consoles, and a LEGO set-number prototype. Lenses are paused until eBay lens results are clean enough to trust.
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs text-slate-400">

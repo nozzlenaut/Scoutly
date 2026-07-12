@@ -37,6 +37,15 @@ export const allCategories: SearchCategory[] = [
     defaultQuery: "RTX 3060 12GB",
   },
   {
+    id: "consoles",
+    label: "Consoles",
+    group: "Gaming",
+    status: "lab",
+    description: "Prototype complete-console search for Xbox, PlayStation, and Nintendo systems.",
+    placeholder: "Try PS5 Disc, Xbox Series X, Switch OLED...",
+    defaultQuery: "Xbox Series X 1TB",
+  },
+  {
     id: "lego",
     label: "LEGO",
     group: "Collectibles",

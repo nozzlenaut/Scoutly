@@ -48,7 +48,7 @@ export default async function SearchPage({
               <p className="mt-3 text-sm text-amber-300">No catalog match yet. Showing keyword-based results.</p>
             )}
           </div>
-          <p className="text-sm text-slate-400">Live eBay results · Buy It Now first, up to 3 ending-soon auctions separate</p>
+          <p className="text-sm text-slate-400">Live eBay results · Up to 3 Buy It Now options plus ending-soon auctions</p>
         </div>
 
         {data.results.length > 0 ? (
@@ -66,7 +66,7 @@ export default async function SearchPage({
           </section>
         ) : (
           <div className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-6 text-amber-100">
-            No matching used Buy It Now listings found yet. Try a more specific product from autocomplete or check back after marketplace data refreshes.
+            No matching complete used Buy It Now listings found yet. Try a more specific product from autocomplete or check back after marketplace data refreshes.
           </div>
         )}
 

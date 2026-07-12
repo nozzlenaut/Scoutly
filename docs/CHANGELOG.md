@@ -173,3 +173,13 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Keep normal piece-count wording valid, such as `1931 Pieces | Complete Set`.
 - Allow complete LEGO set listings that mention manuals/instructions, while still rejecting instructions-only/manual-only listings.
 - Add `Partial / incomplete` as a report reason in the result card UI.
+
+## v0.4.9 — Consoles + testing UX
+
+- Added Consoles as a lab category covering Xbox, PlayStation, and Nintendo families.
+- Added eBay Video Game Consoles category filtering for console searches.
+- Search results now return up to three safe Buy It Now options instead of only one while categories are being tuned.
+- Homepage now explains Scoutly's goal: complete used items, lowest useful prices, no partials, no broken/parts-only listings when detectable.
+- Homepage now includes casual affiliate-link support wording and an incognito/private-search alternative.
+- Added console accessory/partial filters for controller-only, dock-only, tablet-only, HDMI-port, power-supply, screen-only, shell-only, and similar listings.
+- Added cleanup filters for recent reports: LEGO cartridge-only listings, minifigure-code/person listings, and GPU fan-missing listings.

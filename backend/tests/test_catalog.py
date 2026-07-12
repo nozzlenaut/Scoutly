@@ -390,3 +390,36 @@ def test_rejects_gpu_problem_notes_but_allows_no_problems():
         "Zotac Nvidia GeForce RTX 3060 12GB Graphics Card Tested Working No Problems",
         match.product,
     ) is True
+
+
+def test_resolves_console_catalog_entries():
+    assert match_product("PS5 Disc", category="consoles").product.id == "console-playstation-5-disc-edition"
+    assert match_product("Xbox Series X", category="consoles").product.id == "console-xbox-series-x-1tb"
+    assert match_product("Switch OLED", category="consoles").product.id == "console-nintendo-switch-oled"
+
+
+def test_console_filters_reject_parts_and_switch_tablet_only():
+    ps5 = match_product("PS5 Disc", category="consoles")
+    switch = match_product("Nintendo Switch OLED", category="consoles")
+    xbox = match_product("Xbox Series X", category="consoles")
+    assert ps5 is not None
+    assert switch is not None
+    assert xbox is not None
+
+    assert listing_matches_product("For PS5 HDMI Port Replacement Repair Part", ps5.product) is False
+    assert listing_matches_product("Nintendo Switch OLED Tablet Only", switch.product) is False
+    assert listing_matches_product("Xbox Series X Controller Only", xbox.product) is False
+    assert listing_matches_product("Microsoft Xbox Series X 1TB Console Complete", xbox.product) is True
+
+
+def test_rejects_recent_reported_gpu_and_lego_edge_cases():
+    gpu = match_product("RTX 3060 12GB", category="gpus")
+    lego = match_product("LEGO Super Mario Bros Nintendo Entertainment System 71374", category="lego")
+    falcon = match_product("LEGO Star Wars Millennium Falcon 75192", category="lego")
+    assert gpu is not None
+    assert lego is not None
+    assert falcon is not None
+
+    assert listing_matches_product("ASUS Nvidia GeForce RTX 3060 12GB Graphics Card GPU PC NON-LHR (1x FAN MISSING)", gpu.product) is False
+    assert listing_matches_product("LEGO Super Mario Bros Nintendo Entertainment System 71374 - Cartridge Only", lego.product) is False
+    assert listing_matches_product("LABRIA (sw1126) from Lego Star Wars 75290 Mos Eisley Cantina Kardue'sai'Malloc", falcon.product) is False

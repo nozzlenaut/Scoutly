@@ -5,7 +5,7 @@ from app.models.listing import Listing
 from app.models.product import Product, ProductMatch
 from app.providers.ebay import EbayProvider, ebay_config_from_env
 from app.providers.mock import MockAmazonProvider, MockEbayProvider
-from app.ranking.scorer import best_listing, is_bad_listing, rejection_reasons, score_listing
+from app.ranking.scorer import best_listing, is_bad_listing, rejection_reasons, score_listing, top_listings
 from app.services.feedback_store import filter_reported_listings, log_filtered_listing
 
 
@@ -167,9 +167,7 @@ async def search_best_deals_with_auctions(
             product=product,
             buying_option="fixed_price",
         )
-        fixed_best = best_listing(fixed_listings, product)
-        if fixed_best is not None:
-            fixed_results.append(fixed_best)
+        fixed_results.extend(top_listings(fixed_listings, product, limit=3))
 
         if include_auctions and provider_key.lower() == "ebay":
             auction_listings = await _search_provider(

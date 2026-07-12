@@ -77,6 +77,11 @@ GPU_PART_ACCESSORY_TERMS = [
     "fan only",
     "gpu cooler",
     "gpu fan",
+    "fan missing",
+    "missing fan",
+    "missing fans",
+    "1x fan missing",
+    "one fan missing",
     "mining rig",
     "no display",
     "replacement fan",
@@ -137,6 +142,8 @@ LEGO_INCOMPLETE_OR_PART_TERMS = [
     "base & towers only",
     "main build only",
     "build only",
+    "cartridge only",
+    "cart only",
 ]
 
 LEGO_INSTRUCTIONS_OR_BOX_ONLY_TERMS = [
@@ -230,6 +237,58 @@ CAMERA_PART_ACCESSORY_TERMS = [
     "strap lug",
     "top cover",
     "viewfinder",
+]
+
+CONSOLE_PART_ACCESSORY_TERMS = [
+    "account only",
+    "battery only",
+    "blu ray drive",
+    "blu-ray drive",
+    "box only",
+    "case only",
+    "carrying case",
+    "charge dock",
+    "charging dock",
+    "controller only",
+    "controllers only",
+    "disc drive only",
+    "dock only",
+    "faceplate",
+    "for parts",
+    "hdmi port",
+    "housing shell",
+    "joy con only",
+    "joy-con only",
+    "left joy con",
+    "left joy-con",
+    "motherboard",
+    "no console",
+    "parts only",
+    "power brick",
+    "power supply",
+    "replacement shell",
+    "right joy con",
+    "right joy-con",
+    "screen only",
+    "shell only",
+    "stand only",
+    "tablet only",
+    "thumbstick",
+]
+
+CONSOLE_INCOMPLETE_TERMS = [
+    "no cables",
+    "no controller",
+    "no controllers",
+    "no cords",
+    "no dock",
+    "no hdmi",
+    "no power cord",
+    "no power supply",
+    "missing cables",
+    "missing controller",
+    "missing controllers",
+    "missing dock",
 ]
 
 
@@ -368,6 +427,57 @@ def _looks_like_camera_body_accessory(title: str) -> bool:
     return normalized.startswith("for ") and _has_any_term(title, accessory_words)
 
 
+def _looks_like_console_accessory(title: str, product: Product | None = None) -> bool:
+    normalized = normalize_text(title)
+
+    if _has_any_term(title, CONSOLE_PART_ACCESSORY_TERMS + CONSOLE_INCOMPLETE_TERMS):
+        return True
+
+    # Marketplace repair-part listings often say "for PS5/Xbox/Switch".
+    # Only use that prefix as a reject signal when it is paired with part words.
+    accessory_words = [
+        "adapter",
+        "button",
+        "cable",
+        "case",
+        "controller",
+        "cover",
+        "dock",
+        "fan",
+        "hdmi",
+        "housing",
+        "joystick",
+        "port",
+        "power",
+        "replacement",
+        "screen",
+        "shell",
+        "stand",
+        "supply",
+    ]
+    if normalized.startswith("for ") and _has_any_term(title, accessory_words):
+        return True
+
+    # Switch listings are especially noisy. A full Switch should not be only
+    # the tablet/screen, dock, Joy-Con pair, or cartridge/game.
+    if product is not None and product.category == "consoles" and product.brand.lower() == "nintendo":
+        nintendo_only_terms = [
+            "tablet",
+            "tablet only",
+            "console tablet",
+            "dock",
+            "joycon",
+            "joy-con",
+            "game only",
+            "cartridge only",
+            "cart only",
+        ]
+        if _has_any_term(title, nintendo_only_terms) and not _has_any_term(title, ["complete", "complete set", "complete console", "console bundle"]):
+            return True
+
+    return False
+
+
 def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
     set_number = str(product.metadata.get("set_number") or product.variant or "").strip()
     if not set_number:
@@ -391,6 +501,11 @@ def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
     # Do not reject complete sets that mention included minifigures, but reject
     # character/minifigure-style titles that are not clearly full-set listings.
     if _has_any_term(title, LEGO_CHARACTER_ONLY_TERMS) and not clearly_full_set:
+        return True
+
+    # Minifigure/item-code listings often include a parent set number without
+    # saying "minifigure". Example: "LABRIA (sw1126) from Lego Star Wars 75290".
+    if not clearly_full_set and (re.search(r"\b(?:sw|hp|col|sh|njo)\d{3,5}\b", normalize_text(title)) or has_term(title, "from lego")):
         return True
 
     # Mentions of manuals/instructions are fine when the title also says the set
@@ -469,6 +584,67 @@ def _has_camera_model_alias(title: str, product: Product) -> bool:
     candidates = [product.display_name, product.model, *product.aliases]
     return any(_camera_alias_matches_title(candidate, title, title_has_brand) for candidate in candidates)
 
+
+def _console_title_matches_product(title: str, product: Product) -> bool:
+    normalized_title = normalize_text(title, strip_filler=False)
+    compact_title = compact_text(title, strip_filler=False)
+    product_text = normalize_text(f"{product.brand} {product.model} {product.variant or ''}", strip_filler=False)
+
+    def has_raw(term: str) -> bool:
+        return has_term(title, term)
+
+    if product.brand.lower() == "playstation":
+        is_ps5 = any(marker in compact_text(alias, strip_filler=False) for alias in product.aliases + [product.display_name] for marker in ["ps5", "playstation5"])
+        is_ps4 = any(marker in compact_text(alias, strip_filler=False) for alias in product.aliases + [product.display_name] for marker in ["ps4", "playstation4"])
+        if is_ps5 and not ("ps5" in compact_title or "playstation5" in compact_title):
+            return False
+        if is_ps4 and not ("ps4" in compact_title or "playstation4" in compact_title):
+            return False
+        if "pro" in product_text and not has_raw("pro"):
+            return False
+        if "slim" in product_text and not has_raw("slim"):
+            return False
+        if "digital" in product_text:
+            return has_raw("digital") or "digitaledition" in compact_title
+        # Disc edition/default PS5 should not return Digital Edition units.
+        if "disc" in product_text and (has_raw("digital") or "digitaledition" in compact_title) and not has_raw("disc"):
+            return False
+        return True
+
+    if product.brand.lower() == "xbox":
+        if not has_raw("xbox"):
+            return False
+        if "series x" in product_text:
+            return (has_raw("series x") or "seriesx" in compact_title) and not has_raw("series s")
+        if "series s" in product_text:
+            if not (has_raw("series s") or "seriess" in compact_title):
+                return False
+            if "1tb" in compact_text(product.variant or "", strip_filler=False):
+                return "1tb" in compact_title
+            if "512gb" in compact_text(product.variant or "", strip_filler=False):
+                return "1tb" not in compact_title
+            return True
+        if "one x" in product_text:
+            return has_raw("one x") or "onex" in compact_title
+        if "one s" in product_text:
+            return has_raw("one s") or "ones" in compact_title
+        return all(has_raw(required_term) for required_term in product.required_terms)
+
+    if product.brand.lower() == "nintendo":
+        if "switch 2" in product_text:
+            return has_raw("switch 2") or "switch2" in compact_title
+        if "switch oled" in product_text:
+            return has_raw("switch") and has_raw("oled") and not has_raw("lite")
+        if "switch lite" in product_text:
+            return has_raw("switch") and has_raw("lite")
+        if "switch" in product_text:
+            return has_raw("switch") and not has_raw("lite") and not has_raw("oled") and not has_raw("switch 2")
+        if "wii u" in product_text:
+            return has_raw("wii u") or "wiiu" in compact_title
+        return all(has_raw(required_term) for required_term in product.required_terms)
+
+    return all(has_raw(required_term) for required_term in product.required_terms)
+
 CATEGORY_ALIASES = {
     "gpu": "gpus",
     "graphics": "gpus",
@@ -482,6 +658,13 @@ CATEGORY_ALIASES = {
     "lego-set": "lego",
     "lego-sets": "lego",
     "sets": "lego",
+    "console": "consoles",
+    "consoles": "consoles",
+    "playstation": "consoles",
+    "ps5": "consoles",
+    "xbox": "consoles",
+    "switch": "consoles",
+    "nintendo": "consoles",
 }
 
 
@@ -636,6 +819,11 @@ def listing_matches_product(title: str, product: Product) -> bool:
 
     if product.category == "cameras" and _has_any_term(title, CAMERA_PART_ACCESSORY_TERMS):
         return False
+
+    if product.category == "consoles":
+        if _looks_like_console_accessory(title, product):
+            return False
+        return _console_title_matches_product(title, product)
 
     if product.category == "lego":
         if _looks_like_lego_bundle_or_multi_set(title, product):

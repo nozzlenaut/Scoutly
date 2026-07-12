@@ -61,12 +61,28 @@ def score_listing(listing: Listing, product: Product | None = None) -> float:
     return round(price_score + seller_score + condition_bonus + shipping_bonus + product_match_bonus, 2)
 
 
-def best_listing(listings: list[Listing], product: Product | None = None) -> Listing | None:
+def top_listings(listings: list[Listing], product: Product | None = None, limit: int = 3) -> list[Listing]:
     valid_listings = [listing for listing in listings if not is_bad_listing(listing, product)]
     if not valid_listings:
-        return None
+        return []
 
     for listing in valid_listings:
         listing.score = score_listing(listing, product)
 
-    return max(valid_listings, key=lambda item: item.score)
+    deduped: list[Listing] = []
+    seen: set[str] = set()
+    for listing in sorted(valid_listings, key=lambda item: item.score, reverse=True):
+        key = str(listing.url).split("?")[0]
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(listing)
+        if len(deduped) >= max(1, limit):
+            break
+
+    return deduped
+
+
+def best_listing(listings: list[Listing], product: Product | None = None) -> Listing | None:
+    top = top_listings(listings, product, limit=1)
+    return top[0] if top else None
