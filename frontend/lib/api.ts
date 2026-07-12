@@ -33,6 +33,11 @@ export type SearchResult = {
   affiliate_url_used: boolean;
   affiliate_url_has_campaign_id: boolean;
   score: number;
+  listing_type: "fixed_price" | "auction" | string;
+  buying_options: string[];
+  bid_count: number | null;
+  current_bid_price: number | null;
+  item_end_date: string | null;
 };
 
 export type SearchResponse = {
@@ -40,12 +45,48 @@ export type SearchResponse = {
   category: string | null;
   resolved_product: ProductMatch | null;
   results: SearchResult[];
+  auction_results: SearchResult[];
+};
+
+export type AnalyticsSummary = {
+  total_clicks: number;
+  affiliate_clicks: number;
+  active_bad_result_reports: number;
+  provider_counts: Record<string, number>;
+  category_counts: Record<string, number>;
+  latest_click: ClickRecord | null;
+};
+
+export type ClickRecord = {
+  clicked_at: string;
+  provider?: string | null;
+  category?: string | null;
+  product_id?: string | null;
+  query?: string | null;
+  title?: string | null;
+  ebay_item_id?: string | null;
+  affiliate_campaign_present?: boolean;
+  affiliate_reference?: string | null;
+  tracked_url?: string;
+};
+
+export type BadResultReport = {
+  reported_at: string;
+  expires_at: string;
+  reason?: string;
+  provider?: string | null;
+  category?: string | null;
+  product_id?: string | null;
+  query?: string | null;
+  title?: string | null;
+  ebay_item_id?: string | null;
+  link_key?: string;
 };
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export async function searchDeals(query: string, category = "cameras", providers = "ebay"): Promise<SearchResponse> {
-  const url = `${baseUrl}/api/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&providers=${encodeURIComponent(providers)}`;
+  const url = `${baseUrl}/api/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&providers=${encodeURIComponent(providers)}&include_auctions=true&auction_hours=24`;
   const response = await fetch(url, { cache: "no-store" });
 
   if (!response.ok) {
@@ -102,4 +143,30 @@ export function buildOutboundUrl(
   if (metadata.title) params.set("title", metadata.title);
 
   return `${baseUrl}/api/out?${params.toString()}`;
+}
+
+function adminQuery(token?: string): string {
+  return token ? `?token=${encodeURIComponent(token)}` : "";
+}
+
+export async function getAnalyticsSummary(token?: string): Promise<AnalyticsSummary> {
+  const response = await fetch(`${baseUrl}/api/analytics/summary${adminQuery(token)}`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Analytics summary failed");
+  return response.json();
+}
+
+export async function getRecentClicks(token?: string): Promise<ClickRecord[]> {
+  const separator = token ? `?token=${encodeURIComponent(token)}&limit=50` : "?limit=50";
+  const response = await fetch(`${baseUrl}/api/analytics/clicks${separator}`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Click analytics failed");
+  const data = await response.json();
+  return data.clicks || [];
+}
+
+export async function getActiveReports(token?: string): Promise<BadResultReport[]> {
+  const separator = token ? `?token=${encodeURIComponent(token)}&limit=50` : "?limit=50";
+  const response = await fetch(`${baseUrl}/api/analytics/reports${separator}`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Report analytics failed");
+  const data = await response.json();
+  return data.reports || [];
 }

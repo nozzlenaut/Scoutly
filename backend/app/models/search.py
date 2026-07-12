@@ -9,3 +9,4 @@ class SearchResponse(BaseModel):
     category: str | None = None
     resolved_product: ProductMatch | None = None
     results: list[Listing]
+    auction_results: list[Listing] = []

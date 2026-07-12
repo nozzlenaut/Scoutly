@@ -123,3 +123,12 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Temporarily hides reported eBay item URLs for the matched product/category for 72 hours.
 - Auto-prunes report storage to active reports only and caps it at 500 entries.
 - Caps click storage at the latest 2,000 click events for lightweight MVP analytics.
+
+## v0.4.4 — Analytics view and auction comparison
+
+- Adds `/admin` so Scoutly's own click tracking can be viewed without waiting on eBay Partner reporting.
+- Adds `GET /api/analytics/summary`, `/api/analytics/clicks`, and `/api/analytics/reports`.
+- Supports optional `SCOUTLY_ADMIN_TOKEN`; when set, analytics endpoints and `/admin?token=...` require the token.
+- Adds eBay auction search as a separate “Auction ending soon” comparison section.
+- Keeps Buy It Now as the primary result so auctions do not replace available-now deals.
+- Uses eBay `buyingOptions:{AUCTION}` and `sort=endingSoonest` for auction comparison searches.

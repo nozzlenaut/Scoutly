@@ -84,3 +84,32 @@ Flags a marketplace result as bad for the current product/category. The link is 
   "reason": "accessory_or_part"
 }
 ```
+
+## Analytics endpoints
+
+These are lightweight MVP endpoints for viewing Scoutly's own outbound click tracking and active bad-result reports.
+
+If `SCOUTLY_ADMIN_TOKEN` is set, include `?token=<token>`.
+
+```text
+GET /api/analytics/summary
+GET /api/analytics/clicks?limit=50
+GET /api/analytics/reports?limit=50
+```
+
+## Search with auctions
+
+Search now returns both primary Buy It Now results and a separate auction comparison list.
+
+```text
+GET /api/search?q=Sony%20A7%20III%20Body&category=cameras&providers=ebay&include_auctions=true&auction_hours=24
+```
+
+Response fields:
+
+```json
+{
+  "results": [],
+  "auction_results": []
+}
+```

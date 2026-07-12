@@ -132,3 +132,35 @@ def test_ebay_search_adds_affiliate_context_header():
     assert "affiliateCampaignId=1234567890" in header
     assert "affiliateReferenceId=scoutly-test" in header
     assert "contextualLocation=country%3DUS%2Czip%3D90210" in header
+
+
+def test_ebay_auction_item_uses_current_bid_and_end_date():
+    item = {
+        "title": "NVIDIA Tesla P100 16GB GPU",
+        "price": {"value": "450.00", "currency": "USD"},
+        "currentBidPrice": {"value": "180.50", "currency": "USD"},
+        "condition": "Used",
+        "itemWebUrl": "https://www.ebay.com/itm/123456789012",
+        "buyingOptions": ["AUCTION"],
+        "bidCount": 7,
+        "itemEndDate": "2099-01-01T00:00:00.000Z",
+    }
+
+    listing = ebay_item_to_listing(item, requested_listing_type="auction")
+
+    assert listing is not None
+    assert listing.listing_type == "auction"
+    assert listing.price == 180.50
+    assert listing.current_bid_price == 180.50
+    assert listing.bid_count == 7
+    assert listing.item_end_date == "2099-01-01T00:00:00.000Z"
+
+
+def test_ebay_auction_search_uses_auction_filter_and_ending_soonest():
+    provider = _CaptureEbayProvider()
+
+    asyncio.run(provider.search("NVIDIA Tesla P100", category="gpus", buying_option="auction"))
+
+    assert provider.last_params["category_ids"] == "27386"
+    assert provider.last_params["filter"] == "conditions:{USED},buyingOptions:{AUCTION}"
+    assert provider.last_params["sort"] == "endingSoonest"

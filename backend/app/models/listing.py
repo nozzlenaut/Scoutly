@@ -14,3 +14,8 @@ class Listing(BaseModel):
     affiliate_url_used: bool = False
     affiliate_url_has_campaign_id: bool = False
     score: float = 0
+    listing_type: str = "fixed_price"
+    buying_options: list[str] = Field(default_factory=list)
+    bid_count: int | None = None
+    current_bid_price: float | None = None
+    item_end_date: str | None = None

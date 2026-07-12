@@ -7,9 +7,28 @@ type Props = {
   query: string;
   category: string;
   productId?: string;
+  variant?: "buy_now" | "auction";
 };
 
-export function ResultCard({ result, query, category, productId }: Props) {
+function formatEndDate(value: string | null): string | null {
+  if (!value) return null;
+  const end = new Date(value);
+  if (Number.isNaN(end.getTime())) return null;
+
+  const now = Date.now();
+  const ms = end.getTime() - now;
+  if (ms <= 0) return "ending now";
+
+  const hours = Math.floor(ms / (1000 * 60 * 60));
+  const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+  if (hours <= 0) return `ends in ${minutes}m`;
+  return `ends in ${hours}h ${minutes}m`;
+}
+
+export function ResultCard({ result, query, category, productId, variant = "buy_now" }: Props) {
+  const isAuction = variant === "auction" || result.listing_type === "auction";
+  const endLabel = formatEndDate(result.item_end_date);
+
   return (
     <article className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.06] shadow-2xl shadow-black/20">
       {result.image_url ? (
@@ -23,15 +42,23 @@ export function ResultCard({ result, query, category, productId }: Props) {
           <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-cyan-200">
             {result.provider}
           </span>
-          <span className="text-sm text-slate-400">Score {Math.round(result.score)}</span>
+          <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
+            {isAuction ? "Auction" : "Buy It Now"}
+          </span>
         </div>
         <h2 className="text-xl font-semibold text-white">{result.title}</h2>
         <div className="mt-4 grid gap-2 text-sm text-slate-300">
-          <div className="flex justify-between"><span>Item price</span><span>${result.price.toFixed(2)}</span></div>
+          <div className="flex justify-between"><span>{isAuction ? "Current bid" : "Item price"}</span><span>${result.price.toFixed(2)}</span></div>
           <div className="flex justify-between"><span>Shipping</span><span>${result.shipping.toFixed(2)}</span></div>
-          <div className="flex justify-between border-t border-white/10 pt-2 text-lg font-bold text-white"><span>Total</span><span>${result.total_price.toFixed(2)}</span></div>
+          <div className="flex justify-between border-t border-white/10 pt-2 text-lg font-bold text-white"><span>{isAuction ? "Current total" : "Total"}</span><span>${result.total_price.toFixed(2)}</span></div>
           <div className="flex justify-between"><span>Condition</span><span>{result.condition}</span></div>
           <div className="flex justify-between"><span>Seller</span><span>{result.seller_rating ? `${result.seller_rating}%` : "Unknown"}</span></div>
+          {isAuction ? (
+            <>
+              <div className="flex justify-between"><span>Bids</span><span>{result.bid_count ?? "Unknown"}</span></div>
+              {endLabel ? <div className="flex justify-between"><span>Auction</span><span>{endLabel}</span></div> : null}
+            </>
+          ) : null}
         </div>
         <a
           href={buildOutboundUrl(result.url, { query, category, productId, provider: result.provider, title: result.title })}
@@ -39,7 +66,7 @@ export function ResultCard({ result, query, category, productId }: Props) {
           rel="sponsored noreferrer"
           className="mt-5 block rounded-2xl bg-white px-5 py-3 text-center font-semibold text-slate-950 transition hover:bg-slate-200"
         >
-          View deal
+          {isAuction ? "View auction" : "View deal"}
         </a>
         <ReportBadResultButton result={result} query={query} category={category} productId={productId} />
         <div className="mt-3 space-y-2 text-xs leading-5 text-slate-500">

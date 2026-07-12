@@ -134,9 +134,15 @@ def ebay_item_to_listing(
     item: dict[str, Any],
     affiliate_campaign_id: str | None = None,
     affiliate_reference_id: str | None = None,
+    requested_listing_type: str | None = None,
 ) -> Listing | None:
     title = item.get("title")
-    price = _money_value(item.get("price"))
+    buying_options = [str(option).upper() for option in item.get("buyingOptions") or []]
+    inferred_listing_type = requested_listing_type or ("auction" if "AUCTION" in buying_options else "fixed_price")
+
+    current_bid_price = _money_value(item.get("currentBidPrice"))
+    item_price = _money_value(item.get("price"))
+    price = current_bid_price if inferred_listing_type == "auction" and current_bid_price > 0 else item_price
     if not title or price <= 0:
         return None
 
@@ -156,6 +162,12 @@ def ebay_item_to_listing(
     except (TypeError, ValueError):
         seller_rating_value = None
 
+    bid_count = item.get("bidCount")
+    try:
+        bid_count_value = int(bid_count) if bid_count is not None else None
+    except (TypeError, ValueError):
+        bid_count_value = None
+
     return Listing(
         provider="eBay",
         title=title,
@@ -168,6 +180,11 @@ def ebay_item_to_listing(
         image_url=image.get("imageUrl"),
         affiliate_url_used=bool(raw_affiliate_url) or _url_has_campaign_id(url),
         affiliate_url_has_campaign_id=_url_has_campaign_id(url),
+        listing_type=inferred_listing_type,
+        buying_options=buying_options,
+        bid_count=bid_count_value,
+        current_bid_price=current_bid_price if current_bid_price > 0 else None,
+        item_end_date=item.get("itemEndDate"),
     )
 
 
@@ -208,7 +225,7 @@ class EbayProvider(MarketplaceProvider):
         self.config = config
         self.tokens = EbayTokenService(config)
 
-    async def search(self, query: str, category: str | None = None) -> list[Listing]:
+    async def search(self, query: str, category: str | None = None, buying_option: str = "fixed_price") -> list[Listing]:
         token = await self.tokens.get_access_token()
         headers = {
             "Authorization": f"Bearer {token}",
@@ -219,15 +236,26 @@ class EbayProvider(MarketplaceProvider):
         if enduser_context:
             headers["X-EBAY-C-ENDUSERCTX"] = enduser_context
 
-        params = {
-            "q": query,
-            "limit": "50",
-            "sort": "price",
-            # Keep this conservative for now. Removing the condition filter caused
-            # eBay to return too many parts/accessory listings. Additional safe
-            # conditions can be added once we validate category-specific filters.
-            "filter": "conditions:{USED},buyingOptions:{FIXED_PRICE}",
-        }
+        normalized_option = buying_option.strip().lower()
+        if normalized_option == "auction":
+            params = {
+                "q": query,
+                "limit": "50",
+                "sort": "endingSoonest",
+                "filter": "conditions:{USED},buyingOptions:{AUCTION}",
+            }
+            requested_listing_type = "auction"
+        else:
+            params = {
+                "q": query,
+                "limit": "50",
+                "sort": "price",
+                # Keep this conservative for now. Removing the condition filter caused
+                # eBay to return too many parts/accessory listings. Additional safe
+                # conditions can be added once we validate category-specific filters.
+                "filter": "conditions:{USED},buyingOptions:{FIXED_PRICE}",
+            }
+            requested_listing_type = "fixed_price"
 
         category_id = self._category_id_for(category)
         if category_id is not None:
@@ -242,10 +270,12 @@ class EbayProvider(MarketplaceProvider):
                 item,
                 affiliate_campaign_id=self.config.affiliate_campaign_id,
                 affiliate_reference_id=self.config.affiliate_reference_id,
+                requested_listing_type=requested_listing_type,
             )
             if listing is not None:
                 listings.append(listing)
         return listings
+
 
     def _category_id_for(self, category: str | None) -> str | None:
         if self.config.marketplace_id != "EBAY_US" or category is None:

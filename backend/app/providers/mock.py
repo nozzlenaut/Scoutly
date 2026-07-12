@@ -116,8 +116,27 @@ def _gpu_results(provider_name: str) -> list[Listing]:
 class MockEbayProvider(MarketplaceProvider):
     name = "eBay"
 
-    async def search(self, query: str, category: str | None = None) -> list[Listing]:
+    async def search(self, query: str, category: str | None = None, buying_option: str = "fixed_price") -> list[Listing]:
         lower = query.lower()
+        if buying_option == "auction":
+            return [
+                Listing(
+                    provider=self.name,
+                    title=f"{query} - auction ending soon",
+                    price=625.00,
+                    shipping=14.99,
+                    total_price=639.99,
+                    condition="Used",
+                    seller_rating=99.0,
+                    url="https://www.ebay.com/itm/123456789012",
+                    image_url=None,
+                    listing_type="auction",
+                    buying_options=["AUCTION"],
+                    bid_count=12,
+                    current_bid_price=625.00,
+                    item_end_date="2099-01-01T00:00:00.000Z",
+                )
+            ]
         if any(term in lower for term in ["sony", "canon", "nikon", "fujifilm", "fuji", "a7", "eos", "z6", "x-t4", "x100v"]):
             if any(term in lower for term in ["24-70", "70-200", "35mm", "50mm", "lens", "fe ", "rf ", "xf "]):
                 return _lens_results(self.name, query)
@@ -128,7 +147,7 @@ class MockEbayProvider(MarketplaceProvider):
 class MockAmazonProvider(MarketplaceProvider):
     name = "Amazon"
 
-    async def search(self, query: str, category: str | None = None) -> list[Listing]:
+    async def search(self, query: str, category: str | None = None, buying_option: str = "fixed_price") -> list[Listing]:
         lower = query.lower()
         if "a7 iii" in lower or "a7 3" in lower:
             return [

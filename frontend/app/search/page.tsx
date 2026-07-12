@@ -48,25 +48,57 @@ export default async function SearchPage({
               <p className="mt-3 text-sm text-amber-300">No catalog match yet. Showing keyword-based results.</p>
             )}
           </div>
-          <p className="text-sm text-slate-400">Live eBay results · one best listing per marketplace</p>
+          <p className="text-sm text-slate-400">Live eBay results · Buy It Now first, auctions separate</p>
         </div>
+
         {data.results.length > 0 ? (
           <section className="mt-8 grid gap-5 md:grid-cols-2">
             {data.results.map((result) => (
               <ResultCard
-                key={`${result.provider}-${result.title}`}
+                key={`buy-now-${result.provider}-${result.title}`}
                 result={result}
                 query={data.query}
                 category={category.id}
                 productId={resolved?.product.id}
+                variant="buy_now"
               />
             ))}
           </section>
         ) : (
           <div className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-6 text-amber-100">
-            No matching used listings found yet. Try a more specific product from autocomplete or check back after marketplace data refreshes.
+            No matching used Buy It Now listings found yet. Try a more specific product from autocomplete or check back after marketplace data refreshes.
           </div>
         )}
+
+        <section className="mt-10">
+          <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+            <div>
+              <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Auction comparison</p>
+              <h2 className="mt-2 text-2xl font-black">Ending soon</h2>
+            </div>
+            <p className="max-w-xl text-sm text-slate-400">Auctions are shown separately so they can be used for comparison without replacing the best available Buy It Now result.</p>
+          </div>
+
+          {data.auction_results.length > 0 ? (
+            <div className="mt-5 grid gap-5 md:grid-cols-2">
+              {data.auction_results.map((result) => (
+                <ResultCard
+                  key={`auction-${result.provider}-${result.title}`}
+                  result={result}
+                  query={data.query}
+                  category={category.id}
+                  productId={resolved?.product.id}
+                  variant="auction"
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-5 rounded-3xl border border-white/10 bg-white/[0.04] p-5 text-sm text-slate-400">
+              No safe auction ending soon found for this exact item.
+            </div>
+          )}
+        </section>
+
         <SiteFooter />
       </div>
     </main>

@@ -217,3 +217,38 @@ def log_outbound_click(
     )
     records = records[-MAX_CLICKS:]
     _write_json_list(_clicks_path(), records)
+
+
+def recent_outbound_clicks(limit: int = 50) -> list[dict[str, Any]]:
+    limit = max(1, min(limit, MAX_CLICKS))
+    return list(reversed(_read_json_list(_clicks_path())[-limit:]))
+
+
+def active_bad_result_reports(limit: int = 50) -> list[dict[str, Any]]:
+    limit = max(1, min(limit, MAX_REPORTS))
+    return list(reversed(_active_reports(_read_json_list(_reports_path()))[-limit:]))
+
+
+def analytics_summary() -> dict[str, Any]:
+    clicks = _read_json_list(_clicks_path())
+    reports = _active_reports(_read_json_list(_reports_path()))
+    provider_counts: dict[str, int] = {}
+    category_counts: dict[str, int] = {}
+    affiliate_clicks = 0
+
+    for click in clicks:
+        provider = click.get("provider") or "unknown"
+        category = click.get("category") or "unknown"
+        provider_counts[provider] = provider_counts.get(provider, 0) + 1
+        category_counts[category] = category_counts.get(category, 0) + 1
+        if click.get("affiliate_campaign_present"):
+            affiliate_clicks += 1
+
+    return {
+        "total_clicks": len(clicks),
+        "affiliate_clicks": affiliate_clicks,
+        "active_bad_result_reports": len(reports),
+        "provider_counts": provider_counts,
+        "category_counts": category_counts,
+        "latest_click": clicks[-1] if clicks else None,
+    }

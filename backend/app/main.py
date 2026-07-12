@@ -10,8 +10,9 @@ from app.api.search import router as search_router
 from app.api.ebay_notifications import router as ebay_notifications_router
 from app.api.outbound import router as outbound_router
 from app.api.feedback import router as feedback_router
+from app.api.analytics import router as analytics_router
 
-app = FastAPI(title="Scoutly API", version="0.4.3")
+app = FastAPI(title="Scoutly API", version="0.4.4")
 
 # Scoutly does not use cookies or browser credentials yet, so a public API CORS
 # policy is the simplest way to support localhost, Vercel production domains,
@@ -34,4 +35,5 @@ app.include_router(search_router, prefix="/api")
 app.include_router(catalog_router, prefix="/api")
 app.include_router(outbound_router, prefix="/api")
 app.include_router(feedback_router, prefix="/api")
+app.include_router(analytics_router, prefix="/api")
 app.include_router(ebay_notifications_router, prefix="/api")

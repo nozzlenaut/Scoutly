@@ -123,3 +123,19 @@ Adds a backend outbound redirect endpoint so eBay affiliate campaign parameters 
 ## v0.4.3
 
 Adds lightweight outbound click tracking and a Report bad result flow. Reported bad eBay items are hidden for the matched product/category for 72 hours so bad accessory or parts listings do not keep showing for the same search.
+
+## v0.4.4
+
+Adds a lightweight `/admin` analytics page for Scoutly click tracking and active bad-result reports. Also adds a separate auction comparison section on search results using eBay auction listings ending soon, while keeping Buy It Now as the primary result.
+
+Optional backend admin token:
+
+```env
+SCOUTLY_ADMIN_TOKEN=replace_with_private_admin_token
+```
+
+When this is set, view analytics at:
+
+```text
+/admin?token=replace_with_private_admin_token
+```
