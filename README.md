@@ -119,3 +119,7 @@ Adds a casual affiliate disclosure page/footer and makes eBay affiliate URLs saf
 ## v0.4.2
 
 Adds a backend outbound redirect endpoint so eBay affiliate campaign parameters are applied at click time. Result buttons now route through `/api/out` before redirecting to eBay.
+
+## v0.4.3
+
+Adds lightweight outbound click tracking and a Report bad result flow. Reported bad eBay items are hidden for the matched product/category for 72 hours so bad accessory or parts listings do not keep showing for the same search.

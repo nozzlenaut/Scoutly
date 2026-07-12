@@ -52,3 +52,35 @@ Example:
 ```text
 /api/search?q=sony%20a7iii&category=cameras&providers=ebay,amazon
 ```
+
+## Feedback and outbound tracking
+
+### `GET /api/out`
+
+Redirects allowed eBay URLs through Scoutly so affiliate parameters are applied and a lightweight click event is recorded.
+
+Optional metadata query params:
+
+```text
+provider=eBay
+category=cameras
+product_id=camera-sony-a7-iii-body
+q=Sony A7 III Body
+title=Sony Alpha a7 III
+```
+
+### `POST /api/results/report`
+
+Flags a marketplace result as bad for the current product/category. The link is hidden for 72 hours.
+
+```json
+{
+  "url": "https://www.ebay.com/itm/123456789012",
+  "title": "Camera Strap for Sony A7 III",
+  "provider": "eBay",
+  "category": "cameras",
+  "product_id": "camera-sony-a7-iii-body",
+  "query": "Sony A7 III Body",
+  "reason": "accessory_or_part"
+}
+```

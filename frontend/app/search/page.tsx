@@ -53,7 +53,13 @@ export default async function SearchPage({
         {data.results.length > 0 ? (
           <section className="mt-8 grid gap-5 md:grid-cols-2">
             {data.results.map((result) => (
-              <ResultCard key={`${result.provider}-${result.title}`} result={result} />
+              <ResultCard
+                key={`${result.provider}-${result.title}`}
+                result={result}
+                query={data.query}
+                category={category.id}
+                productId={resolved?.product.id}
+              />
             ))}
           </section>
         ) : (

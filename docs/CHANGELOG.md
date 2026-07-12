@@ -114,3 +114,12 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Added `/api/out` outbound redirect endpoint for eBay links.
 - Result buttons now use the backend redirect so `campid` is applied at click time even if a cached result URL was missing it.
 - Outbound redirects are restricted to eBay domains.
+
+## v0.4.3 — Click tracking and bad-result reporting
+
+- Logs outbound eBay clicks through the `/api/out` redirect before sending users to eBay.
+- Adds metadata to outbound clicks: query, category, product ID, provider, title, eBay item ID, and whether affiliate campaign tracking was present.
+- Adds `POST /api/results/report` so users can flag bad marketplace results such as accessories, straps, parts, or the wrong model.
+- Temporarily hides reported eBay item URLs for the matched product/category for 72 hours.
+- Auto-prunes report storage to active reports only and caps it at 500 entries.
+- Caps click storage at the latest 2,000 click events for lightweight MVP analytics.

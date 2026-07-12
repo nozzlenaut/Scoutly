@@ -68,6 +68,38 @@ export async function suggestProducts(query: string, category = "cameras", limit
   return response.json();
 }
 
-export function buildOutboundUrl(url: string): string {
-  return `${baseUrl}/api/out?url=${encodeURIComponent(url)}`;
+export type ReportBadResultPayload = {
+  url: string;
+  title?: string;
+  provider?: string;
+  category?: string;
+  product_id?: string;
+  query?: string;
+  reason?: string;
+};
+
+export async function reportBadResult(payload: ReportBadResultPayload): Promise<void> {
+  const response = await fetch(`${baseUrl}/api/results/report`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error("Report failed");
+  }
+}
+
+export function buildOutboundUrl(
+  url: string,
+  metadata: { query?: string; category?: string; productId?: string; provider?: string; title?: string } = {},
+): string {
+  const params = new URLSearchParams({ url });
+  if (metadata.query) params.set("q", metadata.query);
+  if (metadata.category) params.set("category", metadata.category);
+  if (metadata.productId) params.set("product_id", metadata.productId);
+  if (metadata.provider) params.set("provider", metadata.provider);
+  if (metadata.title) params.set("title", metadata.title);
+
+  return `${baseUrl}/api/out?${params.toString()}`;
 }

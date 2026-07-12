@@ -4,6 +4,7 @@ from app.models.product import ProductMatch
 from app.providers.ebay import EbayProvider, ebay_config_from_env
 from app.providers.mock import MockAmazonProvider, MockEbayProvider
 from app.ranking.scorer import best_listing
+from app.services.feedback_store import filter_reported_listings
 
 
 def _build_providers():
@@ -44,7 +45,13 @@ async def search_best_deals(
             # stable.
             continue
 
-        best = best_listing(listings, product_match.product if product_match else None)
+        product = product_match.product if product_match else None
+        listings = filter_reported_listings(
+            listings,
+            product_id=product.id if product else None,
+            category=product.category if product else category,
+        )
+        best = best_listing(listings, product)
         if best is not None:
             results.append(best)
 

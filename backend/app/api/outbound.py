@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import RedirectResponse
 
 from app.providers.ebay import _ensure_affiliate_campaign_params, ebay_config_from_env
+from app.services.feedback_store import log_outbound_click
 
 router = APIRouter(tags=["Outbound"])
 
@@ -22,12 +23,15 @@ def _is_allowed_ebay_url(url: str) -> bool:
 
 
 @router.get("/out")
-def outbound_link(url: str = Query(..., min_length=1)) -> RedirectResponse:
-    """Redirect through Scoutly so affiliate params are applied at click time.
-
-    This gives us a final backend-side safety net if an old frontend render or
-    cached search result contains an eBay URL with customid/toolid but no campid.
-    """
+def outbound_link(
+    url: str = Query(..., min_length=1),
+    provider: str | None = Query(None),
+    category: str | None = Query(None),
+    product_id: str | None = Query(None),
+    q: str | None = Query(None),
+    title: str | None = Query(None),
+) -> RedirectResponse:
+    """Redirect through Scoutly so affiliate params and click tracking happen server-side."""
 
     if not _is_allowed_ebay_url(url):
         raise HTTPException(
@@ -40,6 +44,16 @@ def outbound_link(url: str = Query(..., min_length=1)) -> RedirectResponse:
         url,
         affiliate_campaign_id=config.affiliate_campaign_id if config else None,
         affiliate_reference_id=config.affiliate_reference_id if config else None,
+    )
+
+    log_outbound_click(
+        url=url,
+        tracked_url=tracked_url,
+        provider=provider,
+        category=category,
+        product_id=product_id,
+        query=q,
+        title=title,
     )
 
     return RedirectResponse(tracked_url, status_code=status.HTTP_302_FOUND)
