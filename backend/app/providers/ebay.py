@@ -251,7 +251,9 @@ class EbayProvider(MarketplaceProvider):
         if normalized_option == "auction":
             params = {
                 "q": query,
-                "limit": "50",
+                # Auctions are loaded only after the user asks for them, so keep
+                # this call focused on the first page of ending-soon candidates.
+                "limit": "25",
                 "sort": "endingSoonest",
                 "filter": "conditions:{USED},buyingOptions:{AUCTION}",
             }
@@ -259,7 +261,10 @@ class EbayProvider(MarketplaceProvider):
         else:
             params = {
                 "q": query,
-                "limit": "50",
+                # Fetch fewer candidates now that we have stronger category and
+                # title filters. This keeps normal searches faster while still
+                # leaving enough inventory to return three good Buy It Now cards.
+                "limit": "35",
                 "sort": "price",
                 # Keep this conservative for now. Removing the condition filter caused
                 # eBay to return too many parts/accessory listings. Additional safe

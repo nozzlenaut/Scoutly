@@ -183,3 +183,14 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Homepage now includes casual affiliate-link support wording and an incognito/private-search alternative.
 - Added console accessory/partial filters for controller-only, dock-only, tablet-only, HDMI-port, power-supply, screen-only, shell-only, and similar listings.
 - Added cleanup filters for recent reports: LEGO cartridge-only listings, minifigure-code/person listings, and GPU fan-missing listings.
+
+## v0.5.1 — Performance pass
+
+- Normal search no longer requests auction results by default.
+- Search page keeps up to three Buy It Now results visible immediately.
+- Adds a **View ending-soon auctions** button that reloads the search with auction comparison enabled.
+- Keeps auctions separate from Buy It Now results and still shows up to three ending-soon auction cards when requested.
+- Reduces eBay fixed-price search candidate limit from 50 to 35.
+- Reduces eBay auction candidate limit from 50 to 25.
+- Changes result lists to a responsive card grid so desktop can scan three results side-by-side.
+- Adds lazy loading to result images.

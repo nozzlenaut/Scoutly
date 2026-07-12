@@ -126,8 +126,20 @@ export type ManualFilterRulePayload = {
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export async function searchDeals(query: string, category = "cameras", providers = "ebay"): Promise<SearchResponse> {
-  const url = `${baseUrl}/api/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&providers=${encodeURIComponent(providers)}&include_auctions=true&auction_hours=24`;
+export async function searchDeals(
+  query: string,
+  category = "cameras",
+  providers = "ebay",
+  options: { includeAuctions?: boolean; auctionHours?: number } = {},
+): Promise<SearchResponse> {
+  const params = new URLSearchParams({
+    q: query,
+    category,
+    providers,
+    include_auctions: options.includeAuctions ? "true" : "false",
+    auction_hours: String(options.auctionHours ?? 24),
+  });
+  const url = `${baseUrl}/api/search?${params.toString()}`;
   const response = await fetch(url, { cache: "no-store" });
 
   if (!response.ok) {

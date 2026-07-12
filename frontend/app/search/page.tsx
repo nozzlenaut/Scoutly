@@ -6,15 +6,30 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { searchDeals } from "@/lib/api";
 import { getCategory } from "@/lib/categoryCatalog";
 
+function isTruthy(value?: string): boolean {
+  if (!value) return false;
+  return ["1", "true", "yes", "on"].includes(value.toLowerCase());
+}
+
+function auctionLink(query: string, categoryId: string): string {
+  const params = new URLSearchParams({
+    q: query,
+    category: categoryId,
+    include_auctions: "1",
+  });
+  return `/search?${params.toString()}`;
+}
+
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string }>
+  searchParams: Promise<{ q?: string; category?: string; include_auctions?: string }>
 }) {
   const params = await searchParams;
   const category = getCategory(params.category);
   const query = params.q || category.defaultQuery;
-  const data = await searchDeals(query, category.id);
+  const includeAuctions = isTruthy(params.include_auctions);
+  const data = await searchDeals(query, category.id, "ebay", { includeAuctions, auctionHours: 24 });
   const resolved = data.resolved_product;
 
   return (
@@ -48,11 +63,11 @@ export default async function SearchPage({
               <p className="mt-3 text-sm text-amber-300">No catalog match yet. Showing keyword-based results.</p>
             )}
           </div>
-          <p className="text-sm text-slate-400">Live eBay results · Up to 3 Buy It Now options plus ending-soon auctions</p>
+          <p className="text-sm text-slate-400">Live eBay results · Up to 3 Buy It Now options</p>
         </div>
 
         {data.results.length > 0 ? (
-          <section className="mt-8 space-y-5">
+          <section className="mt-8 grid gap-5 xl:grid-cols-3">
             {data.results.map((result) => (
               <ResultCard
                 key={`buy-now-${result.provider}-${result.title}`}
@@ -70,33 +85,45 @@ export default async function SearchPage({
           </div>
         )}
 
-        <section className="mt-10">
-          <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+        <section className="mt-10 rounded-3xl border border-white/10 bg-white/[0.035] p-5">
+          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
             <div>
               <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Auction comparison</p>
               <h2 className="mt-2 text-2xl font-black">Ending soon</h2>
+              <p className="mt-2 max-w-2xl text-sm text-slate-400">
+                Auctions are optional so normal searches load faster. Use them when you want to compare against listings ending soon.
+              </p>
             </div>
-            <p className="max-w-xl text-sm text-slate-400">Auctions are shown separately so they can be used for comparison without replacing the best available Buy It Now result. Scoutly shows up to three ending soon.</p>
+            {!includeAuctions ? (
+              <Link
+                href={auctionLink(query, category.id)}
+                className="rounded-2xl border border-cyan-300/40 px-5 py-3 text-center text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/10"
+              >
+                View ending-soon auctions
+              </Link>
+            ) : null}
           </div>
 
-          {data.auction_results.length > 0 ? (
-            <div className="mt-5 space-y-5">
-              {data.auction_results.map((result) => (
-                <ResultCard
-                  key={`auction-${result.provider}-${result.title}`}
-                  result={result}
-                  query={data.query}
-                  category={category.id}
-                  productId={resolved?.product.id}
-                  variant="auction"
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="mt-5 rounded-3xl border border-white/10 bg-white/[0.04] p-5 text-sm text-slate-400">
-              No safe auction ending soon found for this exact item.
-            </div>
-          )}
+          {includeAuctions ? (
+            data.auction_results.length > 0 ? (
+              <div className="mt-5 grid gap-5 xl:grid-cols-3">
+                {data.auction_results.map((result) => (
+                  <ResultCard
+                    key={`auction-${result.provider}-${result.title}`}
+                    result={result}
+                    query={data.query}
+                    category={category.id}
+                    productId={resolved?.product.id}
+                    variant="auction"
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="mt-5 rounded-3xl border border-white/10 bg-white/[0.04] p-5 text-sm text-slate-400">
+                No safe auction ending soon found for this exact item.
+              </div>
+            )
+          ) : null}
         </section>
 
         <SiteFooter />

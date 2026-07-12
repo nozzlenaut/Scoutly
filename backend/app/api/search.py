@@ -11,7 +11,7 @@ async def search(
     q: str = Query(..., min_length=2),
     category: str | None = Query(None),
     providers: str = Query("ebay"),
-    include_auctions: bool = Query(True),
+    include_auctions: bool = Query(False),
     auction_hours: int = Query(24, ge=1, le=168),
 ) -> SearchResponse:
     provider_keys = [provider.strip() for provider in providers.split(",") if provider.strip()]
