@@ -153,3 +153,12 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Rejects LEGO listings that contain the requested set number plus additional modern 5-digit set numbers, since those are usually bundles/lots rather than the exact set.
 - Adds regression tests for RTX 4070 false rejects, Tesla P100 SMX2, and LEGO multi-set listings.
 
+
+
+## v0.4.7
+
+- Tighten LEGO incomplete/partial listing filters.
+- Reject LEGO listings with missing pieces, not complete, partial, parts/pieces-only, and minifigure-only style titles.
+- Keep normal piece-count wording valid, such as `1931 Pieces | Complete Set`.
+- Allow complete LEGO set listings that mention manuals/instructions, while still rejecting instructions-only/manual-only listings.
+- Add `Partial / incomplete` as a report reason in the result card UI.

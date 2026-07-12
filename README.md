@@ -148,3 +148,8 @@ Bundles the next search-quality and testing improvements: camera-body searches n
 
 Fixes a matching bug that caused valid RTX 4070 / 4070 Ti Super listings to show as filtered, rejects SMX typo listings for normal Tesla P100/V100 searches, and rejects LEGO listings that bundle the requested set with other set numbers.
 
+
+
+## v0.4.7
+
+Improves LEGO matching by rejecting partial/incomplete/missing-pieces listings and adds a `Partial / incomplete` bad-result report reason.

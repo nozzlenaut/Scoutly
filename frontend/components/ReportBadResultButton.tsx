@@ -6,6 +6,7 @@ import { reportBadResult, type SearchResult } from "@/lib/api";
 const REASONS = [
   { id: "wrong_item", label: "Wrong item" },
   { id: "accessory_or_part", label: "Accessory / part" },
+  { id: "partial_or_incomplete", label: "Partial / incomplete" },
   { id: "broken_or_for_parts", label: "Broken / for parts" },
   { id: "other", label: "Other" },
 ];

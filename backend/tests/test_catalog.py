@@ -328,3 +328,30 @@ def test_rejects_lego_multi_set_listing_with_requested_set_number():
         "LEGO Star Wars Millennium Falcon 75192 Complete Set",
         match.product,
     ) is True
+
+
+
+def test_rejects_incomplete_lego_listings_without_rejecting_piece_count():
+    match = match_product("LEGO Star Wars TIE Interceptor 75382", category="lego")
+    assert match is not None
+    assert listing_matches_product("LEGO Star Wars | TIE Interceptor | 1931 Pieces | Complete Set", match.product) is True
+    assert listing_matches_product("LEGO Star Wars UCS: TIE Interceptor 75382 (2024) - Partial see description", match.product) is False
+    assert listing_matches_product("LEGO Star Wars TIE Interceptor 75382 Missing Pieces", match.product) is False
+    assert listing_matches_product("LEGO Star Wars TIE Interceptor 75382 Not Complete", match.product) is False
+
+
+def test_rejects_lego_minifigure_and_parts_references_to_set_number():
+    match = match_product("LEGO Star Wars Millennium Falcon 75192", category="lego")
+    assert match is not None
+    assert listing_matches_product("Lego Star Wars Han Solo - 75192 UCS Millennium Falcon", match.product) is False
+    assert listing_matches_product("LEGO Finn Minifigure Star Wars sw0676 75192 75178 75105 B5", match.product) is False
+    assert listing_matches_product("LEGO Star Wars Millennium Falcon 75192 Complete Set with Minifigures", match.product) is True
+
+
+def test_allows_lego_complete_with_instructions_but_rejects_instructions_only():
+    match = match_product("LEGO Star Wars Republic Gunship 75309", category="lego")
+    assert match is not None
+    assert listing_matches_product("LEGO Star Wars UCS Republic Gunship 75309 Complete Set No Box/Manual", match.product) is True
+    assert listing_matches_product("LEGO Star Wars UCS Republic Gunship 75309 COMPLETE SET with all boxes", match.product) is True
+    assert listing_matches_product("LEGO Star Wars UCS Republic Gunship 75309 RETIRED - MANUAL - Bags 14-17 Unopened", match.product) is False
+    assert listing_matches_product("LEGO 75309 Star Wars Republic Gunship Instructions Only", match.product) is False

@@ -95,6 +95,84 @@ CAMERA_BODY_BUNDLE_TERMS = [
     "with lens",
 ]
 
+# LEGO complete-set listings often mention normal context like
+# "with instructions" or "manual included". Do not reject those broad
+# words by themselves; the LEGO-specific detector below rejects
+# instructions-only/manual-only listings.
+LEGO_SAFE_CONTEXT_TERMS = {"instructions", "instruction book", "manual"}
+
+LEGO_INCOMPLETE_OR_PART_TERMS = [
+    "partial",
+    "partial build",
+    "partial lot",
+    "incomplete",
+    "not complete",
+    "missing piece",
+    "missing pieces",
+    "missing minifig",
+    "missing minifigs",
+    "missing minifigure",
+    "missing minifigures",
+    "minifigures not included",
+    "minifigs not included",
+    "no minifig",
+    "no minifigs",
+    "no minifigure",
+    "no minifigures",
+    "no figures",
+    "figure only",
+    "minifig only",
+    "minifigure only",
+    "minifigures only",
+    "parts lot",
+    "parts only",
+    "pieces only",
+    "spare pieces only",
+    "spare lego pieces only",
+    "just pieces",
+]
+
+LEGO_INSTRUCTIONS_OR_BOX_ONLY_TERMS = [
+    "box only",
+    "empty box",
+    "box + instructions only",
+    "box and instructions only",
+    "instructions only",
+    "instruction book only",
+    "building instructions only",
+    "manual only",
+]
+
+LEGO_ACCESSORY_TERMS = [
+    "acrylic case",
+    "display case",
+    "light kit",
+    "led kit",
+    "lighting kit",
+    "replacement stickers",
+    "sticker sheet only",
+    "stickers only",
+    "storage case",
+    "zip bin",
+]
+
+LEGO_CHARACTER_ONLY_TERMS = [
+    "han solo",
+    "chewbacca",
+    "princess leia",
+    "luke skywalker",
+    "darth vader",
+    "finn",
+    "rey",
+    "poe dameron",
+    "r2-d2",
+    "c-3po",
+    "stormtrooper",
+    "clone trooper",
+    "minifigure",
+    "minifig",
+]
+
 
 CAMERA_PART_ACCESSORY_TERMS = [
     "accessories only",
@@ -270,6 +348,35 @@ def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
     if not set_number:
         return False
 
+    if _has_any_term(title, LEGO_INCOMPLETE_OR_PART_TERMS):
+        return True
+
+    if _has_any_term(title, LEGO_INSTRUCTIONS_OR_BOX_ONLY_TERMS):
+        return True
+
+    if _has_any_term(title, LEGO_ACCESSORY_TERMS):
+        return True
+
+    clearly_full_set = _has_any_term(
+        title,
+        ["complete", "complete set", "sealed", "new in box", "with box", "building kit"],
+    )
+
+    # A lone minifigure/person listing can reference the parent set number.
+    # Do not reject complete sets that mention included minifigures, but reject
+    # character/minifigure-style titles that are not clearly full-set listings.
+    if _has_any_term(title, LEGO_CHARACTER_ONLY_TERMS) and not clearly_full_set:
+        return True
+
+    # Mentions of manuals/instructions are fine when the title also says the set
+    # is complete. Otherwise, sellers often list only manuals or partial bags.
+    if _has_any_term(title, ["manual", "instructions", "instruction book"]) and not clearly_full_set:
+        return True
+
+    # If a title says "parts to <set>" or "pieces to <set>", it is not the set.
+    if _has_any_term(title, ["parts to", "pieces to"]):
+        return True
+
     # If a listing title includes the requested set plus other modern 5-digit
     # LEGO set numbers, it is usually a bundle/lot rather than the exact item.
     # Example: "75192 75376 75383 75386" should not win for 75192.
@@ -285,6 +392,21 @@ def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
 
     return False
 
+
+def _lego_title_matches_product(title: str, product: Product) -> bool:
+    set_number = str(product.metadata.get("set_number") or product.variant or "").strip()
+    if set_number and has_term(title, set_number):
+        return True
+
+    # Some legitimate eBay titles omit the set number but include the exact model
+    # name plus a complete-set clue. Allow those so UCS/Botanical listings do
+    # not disappear just because the seller left the number out.
+    model_terms = [term for term in normalize_text(product.model).split() if term not in {"lego", "star", "wars", "the", "and", "of"}]
+    if len(model_terms) < 2:
+        return False
+
+    model_hits = sum(1 for term in model_terms if has_term(title, term))
+    return model_hits == len(model_terms) and _has_any_term(title, ["complete", "complete set", "sealed", "new in box"])
 
 def _camera_alias_matches_title(candidate: str, title: str, title_has_brand: bool) -> bool:
     """Match compact camera aliases without letting A7R3 match A7R36.4MP."""
@@ -469,6 +591,8 @@ def listing_matches_product(title: str, product: Product) -> bool:
         # detector below catches actual rubber rings, bayonet rings, and gears.
         if product.category == "lenses" and excluded_term in LENS_SAFE_CONTEXT_TERMS:
             continue
+        if product.category == "lego" and excluded_term in LEGO_SAFE_CONTEXT_TERMS:
+            continue
         if has_term(title, excluded_term):
             return False
 
@@ -488,7 +612,9 @@ def listing_matches_product(title: str, product: Product) -> bool:
     if product.category == "cameras" and _has_any_term(title, CAMERA_PART_ACCESSORY_TERMS):
         return False
 
-    if product.category == "lego" and _looks_like_lego_bundle_or_multi_set(title, product):
-        return False
+    if product.category == "lego":
+        if _looks_like_lego_bundle_or_multi_set(title, product):
+            return False
+        return _lego_title_matches_product(title, product)
 
     return all(has_term(title, required_term) for required_term in product.required_terms)
