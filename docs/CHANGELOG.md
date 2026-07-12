@@ -144,3 +144,12 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Adds `GET /api/analytics/filtered` for recent filtered-listing debug records.
 - Adds LEGO as a lab category with eBay category filtering and 99 starter sets, focused on exact set-number matching.
 - Keeps lenses paused in the active UI.
+
+## v0.4.6 — Match-quality fixes
+
+- Fixes the short-token matching bug where `ti` could match normal words like `edition` or `condition`, causing valid RTX 4070 listings to be rejected.
+- Keeps compact matching for real compact product names like `RTX4070Ti`, `A7III`, `RX6700XT`, and `G2`.
+- Rejects `SMX` / `SMX2` typo variants for normal Tesla P100/V100 PCIe searches, in addition to SXM/SXM2.
+- Rejects LEGO listings that contain the requested set number plus additional modern 5-digit set numbers, since those are usually bundles/lots rather than the exact set.
+- Adds regression tests for RTX 4070 false rejects, Tesla P100 SMX2, and LEGO multi-set listings.
+

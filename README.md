@@ -143,3 +143,8 @@ When this is set, view analytics at:
 ## v0.4.5
 
 Bundles the next search-quality and testing improvements: camera-body searches now reject filter accessories, normal Tesla P100/V100 GPU searches reject SXM/mezzanine/module results, the results page uses a wider desktop-friendly card layout, auctions can show up to three ending-soon comparison options, `/admin` now shows recently filtered listings with rejection reasons, and LEGO is added as a lab category with exact set-number search.
+
+## v0.4.6
+
+Fixes a matching bug that caused valid RTX 4070 / 4070 Ti Super listings to show as filtered, rejects SMX typo listings for normal Tesla P100/V100 searches, and rejects LEGO listings that bundle the requested set with other set numbers.
+

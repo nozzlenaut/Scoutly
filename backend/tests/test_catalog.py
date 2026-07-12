@@ -300,3 +300,31 @@ def test_rejects_lego_box_instruction_and_light_kit_listings():
     assert listing_matches_product("LEGO 75192 Millennium Falcon Instructions Only", match.product) is False
     assert listing_matches_product("Light Kit for LEGO 75192 Millennium Falcon", match.product) is False
     assert listing_matches_product("LEGO Star Wars Millennium Falcon 75192 Complete Set", match.product) is True
+
+
+def test_accepts_real_rtx_4070_titles_without_false_ti_match():
+    match = match_product("NVIDIA RTX 4070 12GB", category="gpus")
+    assert match is not None
+    assert listing_matches_product("ASUS Dual GeForce RTX 4070 OC Edition Graphics Card", match.product) is True
+    assert listing_matches_product("PNY NVIDIA GeForce RTX 4070 12GB VERTO Dual Fan. Tested And Working", match.product) is True
+    assert listing_matches_product("NVIDIA GeForce RTX 4070 Founders Edition 12GB Graphics Card", match.product) is True
+    assert listing_matches_product("MSI GeForce RTX 4070 Ti SUPER 16GB VENTUS 2X White OC Dual Fan Card", match.product) is False
+
+
+def test_rejects_smx_typo_tesla_for_normal_pcie_search():
+    match = match_product("Tesla P100 16GB", category="gpus")
+    assert match is not None
+    assert listing_matches_product("699-2H403-0201-730 Nvidia Tesla P100 SMX2 16GB", match.product) is False
+
+
+def test_rejects_lego_multi_set_listing_with_requested_set_number():
+    match = match_product("LEGO Star Wars Millennium Falcon 75192", category="lego")
+    assert match is not None
+    assert listing_matches_product(
+        "Lego Star Wars 75192 75376 75383 75386 *** FREE SHIPPING ***",
+        match.product,
+    ) is False
+    assert listing_matches_product(
+        "LEGO Star Wars Millennium Falcon 75192 Complete Set",
+        match.product,
+    ) is True

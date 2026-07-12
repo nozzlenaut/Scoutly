@@ -101,6 +101,7 @@ CAMERA_PART_ACCESSORY_TERMS = [
     "accessory kit",
     "accessory only",
     "adapter",
+    "battery charger bundle",
     "battery door",
     "button",
     "cable",
@@ -157,12 +158,25 @@ def _looks_like_gpu_accessory(title: str, product: Product | None = None) -> boo
 
     if product is not None:
         product_name = normalize_text(product.display_name)
+        disallowed_server_form_factors = [
+            "sxm",
+            "sxm2",
+            "sxm3",
+            "sxm4",
+            # Common seller typo for SXM/SXM2 modules.
+            "smx",
+            "smx2",
+            "smx3",
+            "smx4",
+            "mezzanine",
+            "module",
+        ]
         is_normal_tesla_pcie_search = (
             product.category == "gpus"
             and (has_term(product_name, "tesla p100") or has_term(product_name, "tesla v100"))
-            and not any(has_term(product_name, term) for term in ["sxm", "sxm2", "sxm3", "sxm4"])
+            and not any(has_term(product_name, term) for term in disallowed_server_form_factors)
         )
-        if is_normal_tesla_pcie_search and _has_any_term(title, ["sxm", "sxm2", "sxm3", "sxm4", "mezzanine", "module"]):
+        if is_normal_tesla_pcie_search and _has_any_term(title, disallowed_server_form_factors):
             return True
 
     if _has_any_term(title, GPU_PART_ACCESSORY_TERMS):
@@ -249,6 +263,27 @@ def _looks_like_camera_body_accessory(title: str) -> bool:
     # words so we do not reject a rare legitimate title just because it says "for".
     accessory_words = ["bayonet", "mount", "ring", "contact", "part", "repair", "cable"]
     return normalized.startswith("for ") and _has_any_term(title, accessory_words)
+
+
+def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
+    set_number = str(product.metadata.get("set_number") or product.variant or "").strip()
+    if not set_number:
+        return False
+
+    # If a listing title includes the requested set plus other modern 5-digit
+    # LEGO set numbers, it is usually a bundle/lot rather than the exact item.
+    # Example: "75192 75376 75383 75386" should not win for 75192.
+    found_set_numbers = set(re.findall(r"(?<!\d)\d{5}(?!\d)", title))
+    other_set_numbers = found_set_numbers - {set_number}
+    if set_number in found_set_numbers and other_set_numbers:
+        return True
+
+    # Be conservative around obvious bundles/lots when another set-like number
+    # appears, while still allowing normal exact-set titles like "complete set".
+    if _has_any_term(title, ["bundle", "lot", "multiple sets"]) and other_set_numbers:
+        return True
+
+    return False
 
 
 def _camera_alias_matches_title(candidate: str, title: str, title_has_brand: bool) -> bool:
@@ -451,6 +486,9 @@ def listing_matches_product(title: str, product: Product) -> bool:
         return _has_camera_model_alias(title, product)
 
     if product.category == "cameras" and _has_any_term(title, CAMERA_PART_ACCESSORY_TERMS):
+        return False
+
+    if product.category == "lego" and _looks_like_lego_bundle_or_multi_set(title, product):
         return False
 
     return all(has_term(title, required_term) for required_term in product.required_terms)
