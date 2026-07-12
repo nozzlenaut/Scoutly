@@ -2,6 +2,7 @@ from app.catalog.catalog import GLOBAL_BAD_LISTING_TERMS, listing_matches_produc
 from app.catalog.normalizer import has_term
 from app.models.listing import Listing
 from app.models.product import Product
+from app.services.filter_rules import manual_filter_rejection_reasons
 
 BAD_TITLE_WORDS = [
     *GLOBAL_BAD_LISTING_TERMS,
@@ -32,6 +33,9 @@ def rejection_reasons(listing: Listing, product: Product | None = None) -> list[
         if word in condition:
             reasons.append(f"bad condition: {word}")
             break
+
+    manual_reasons = manual_filter_rejection_reasons(listing.title, product)
+    reasons.extend(manual_reasons)
 
     if product is not None and not listing_matches_product(listing.title, product):
         reasons.append("catalog/product match rejected")

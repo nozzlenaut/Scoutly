@@ -72,3 +72,59 @@ def test_analytics_filtered_listings_endpoint(monkeypatch, tmp_path):
     assert response.status_code == 200
     assert response.json()["filtered"][0]["title"] == "Canon EOS RP Camera UV Filter Kit"
     assert response.json()["filtered"][0]["reasons"] == ["catalog/product match rejected"]
+
+
+def test_manual_filter_rules_endpoint_and_matching(monkeypatch, tmp_path):
+    from app.models.listing import Listing
+    from app.ranking.scorer import rejection_reasons
+    from app.catalog.catalog import match_product
+
+    monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("SCOUTLY_ADMIN_TOKEN", "secret")
+    client = TestClient(app)
+
+    blocked = Listing(
+        provider="eBay",
+        title="Zotac Nvidia GeForce RTX 3060 12GB Graphics Card GPU PC FAN PROBLEM NOTES",
+        price=100,
+        shipping=0,
+        total_price=100,
+        condition="Used",
+        url="https://www.ebay.com/itm/123456789012",
+    )
+    safe = Listing(
+        provider="eBay",
+        title="Zotac Nvidia GeForce RTX 3060 12GB Graphics Card Tested No Problems",
+        price=100,
+        shipping=0,
+        total_price=100,
+        condition="Used",
+        url="https://www.ebay.com/itm/999999999999",
+    )
+
+    response = client.post(
+        "/api/analytics/filter-rules",
+        params={"token": "secret"},
+        json={
+            "phrase": "problem",
+            "category": "gpus",
+            "except_phrases": ["no problem", "no problems"],
+            "note": "testing manual rules",
+        },
+    )
+
+    assert response.status_code == 200
+    rule = response.json()
+    assert rule["phrase"] == "problem"
+
+    rules = client.get("/api/analytics/filter-rules", params={"token": "secret"})
+    assert rules.status_code == 200
+    assert rules.json()["rules"][0]["id"] == rule["id"]
+
+    product = match_product("RTX 3060 12GB", category="gpus").product
+    assert any("manual filter" in reason for reason in rejection_reasons(blocked, product))
+    assert not any("manual filter" in reason for reason in rejection_reasons(safe, product))
+
+    delete = client.delete(f"/api/analytics/filter-rules/{rule['id']}", params={"token": "secret"})
+    assert delete.status_code == 200
+    assert client.get("/api/analytics/filter-rules", params={"token": "secret"}).json()["rules"] == []

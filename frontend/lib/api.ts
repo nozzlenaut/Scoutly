@@ -53,6 +53,7 @@ export type AnalyticsSummary = {
   affiliate_clicks: number;
   active_bad_result_reports: number;
   filtered_listing_count: number;
+  manual_filter_rule_count?: number;
   provider_counts: Record<string, number>;
   category_counts: Record<string, number>;
   latest_click: ClickRecord | null;
@@ -96,6 +97,30 @@ export type BadResultReport = {
   title?: string | null;
   ebay_item_id?: string | null;
   link_key?: string;
+};
+
+
+export type ManualFilterRule = {
+  id: string;
+  phrase: string;
+  category?: string | null;
+  product_id?: string | null;
+  except_phrases: string[];
+  note?: string | null;
+  source_title?: string | null;
+  source_item_id?: string | null;
+  enabled: boolean;
+  created_at: string;
+};
+
+export type ManualFilterRulePayload = {
+  phrase: string;
+  category?: string | null;
+  product_id?: string | null;
+  except_phrases?: string[];
+  note?: string | null;
+  source_title?: string | null;
+  source_item_id?: string | null;
 };
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -192,4 +217,37 @@ export async function getRecentFilteredListings(token?: string): Promise<Filtere
   if (!response.ok) throw new Error("Filtered listing analytics failed");
   const data = await response.json();
   return data.filtered || [];
+}
+
+export async function getManualFilterRules(token?: string): Promise<ManualFilterRule[]> {
+  const response = await fetch(`${baseUrl}/api/analytics/filter-rules${adminQuery(token)}`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Manual filter rules failed");
+  const data = await response.json();
+  return data.rules || [];
+}
+
+export async function createManualFilterRule(payload: ManualFilterRulePayload, token?: string): Promise<ManualFilterRule> {
+  const query = adminQuery(token);
+  const response = await fetch(`${baseUrl}/api/analytics/filter-rules${query}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error("Could not create filter rule");
+  }
+
+  return response.json();
+}
+
+export async function deleteManualFilterRule(id: string, token?: string): Promise<void> {
+  const query = adminQuery(token);
+  const response = await fetch(`${baseUrl}/api/analytics/filter-rules/${encodeURIComponent(id)}${query}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Could not delete filter rule");
+  }
 }

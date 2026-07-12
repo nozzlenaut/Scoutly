@@ -1,3 +1,14 @@
+
+## v0.4.8 — Live filter rules
+
+- Adds admin-managed manual filter rules so bad title phrases can be rejected without redeploying.
+- Adds optional category/product scoping and exception phrases for manual rules.
+- Adds admin endpoints for listing, creating, and deleting manual rules.
+- Adds an admin UI panel for live filter rules.
+- Tightens LEGO matching to require the exact set number when a set number exists.
+- Rejects LEGO base-only / towers-only / main-build-only style partial listings.
+- Rejects GPU problem/issue listings while allowing “no problems” / “no issues” context.
+
 # Changelog
 
 ## v0.4.0 - Dropdown cleanup and eBay affiliate readiness

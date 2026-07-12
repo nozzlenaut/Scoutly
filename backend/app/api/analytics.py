@@ -1,6 +1,7 @@
 import os
 
 from fastapi import APIRouter, HTTPException, Query, status
+from pydantic import BaseModel, Field
 
 from app.services.feedback_store import (
     active_bad_result_reports,
@@ -8,8 +9,32 @@ from app.services.feedback_store import (
     recent_filtered_listings,
     recent_outbound_clicks,
 )
+from app.services.filter_rules import ManualFilterRule, add_manual_filter_rule, delete_manual_filter_rule, list_manual_filter_rules
 
 router = APIRouter(tags=["Analytics"])
+
+
+class ManualFilterRuleRequest(BaseModel):
+    phrase: str = Field(min_length=2, max_length=120)
+    category: str | None = Field(default=None, max_length=80)
+    product_id: str | None = Field(default=None, max_length=160)
+    except_phrases: list[str] = Field(default_factory=list, max_length=12)
+    note: str | None = Field(default=None, max_length=240)
+    source_title: str | None = Field(default=None, max_length=300)
+    source_item_id: str | None = Field(default=None, max_length=80)
+
+
+class ManualFilterRuleResponse(BaseModel):
+    id: str
+    phrase: str
+    category: str | None = None
+    product_id: str | None = None
+    except_phrases: list[str] = Field(default_factory=list)
+    note: str | None = None
+    source_title: str | None = None
+    source_item_id: str | None = None
+    enabled: bool = True
+    created_at: str
 
 
 def _require_admin_token(token: str | None) -> None:
@@ -43,3 +68,37 @@ def get_active_reports(limit: int = Query(50, ge=1, le=200), token: str | None =
 def get_recent_filtered(limit: int = Query(50, ge=1, le=200), token: str | None = Query(None)) -> dict:
     _require_admin_token(token)
     return {"filtered": recent_filtered_listings(limit)}
+
+
+@router.get("/analytics/filter-rules")
+def get_manual_filter_rules(token: str | None = Query(None)) -> dict:
+    _require_admin_token(token)
+    return {"rules": list(reversed(list_manual_filter_rules(include_disabled=True)))}
+
+
+@router.post("/analytics/filter-rules", response_model=ManualFilterRuleResponse)
+def create_manual_filter_rule(payload: ManualFilterRuleRequest, token: str | None = Query(None)) -> dict:
+    _require_admin_token(token)
+    try:
+        return add_manual_filter_rule(
+            ManualFilterRule(
+                phrase=payload.phrase,
+                category=payload.category,
+                product_id=payload.product_id,
+                except_phrases=payload.except_phrases,
+                note=payload.note,
+                source_title=payload.source_title,
+                source_item_id=payload.source_item_id,
+            )
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+
+
+@router.delete("/analytics/filter-rules/{rule_id}")
+def remove_manual_filter_rule(rule_id: str, token: str | None = Query(None)) -> dict:
+    _require_admin_token(token)
+    deleted = delete_manual_filter_rule(rule_id)
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Filter rule not found.")
+    return {"status": "deleted", "id": rule_id}

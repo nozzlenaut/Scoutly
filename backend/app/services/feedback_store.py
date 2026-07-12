@@ -9,6 +9,7 @@ from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
 from app.models.listing import Listing
+from app.services.filter_rules import list_manual_filter_rules
 
 REPORT_TTL_HOURS = 72
 MAX_REPORTS = 500
@@ -292,6 +293,7 @@ def analytics_summary() -> dict[str, Any]:
         "affiliate_clicks": affiliate_clicks,
         "active_bad_result_reports": len(reports),
         "filtered_listing_count": len(filtered),
+        "manual_filter_rule_count": len(list_manual_filter_rules(include_disabled=True)),
         "provider_counts": provider_counts,
         "category_counts": category_counts,
         "latest_click": clicks[-1] if clicks else None,

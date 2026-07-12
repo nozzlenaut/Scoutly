@@ -130,6 +130,13 @@ LEGO_INCOMPLETE_OR_PART_TERMS = [
     "spare pieces only",
     "spare lego pieces only",
     "just pieces",
+    "base only",
+    "towers only",
+    "base towers only",
+    "base and towers only",
+    "base & towers only",
+    "main build only",
+    "build only",
 ]
 
 LEGO_INSTRUCTIONS_OR_BOX_ONLY_TERMS = [
@@ -297,6 +304,24 @@ def _looks_like_gpu_accessory(title: str, product: Product | None = None) -> boo
         if not _has_any_term(title, strong_card_words + memory_words):
             return True
 
+    # Hardware issue notes should not win, but do not reject normal titles like
+    # "tested, no problems" or "no issues".
+    issue_terms = ["problem", "problems", "issue", "issues", "fan problem", "fan issue", "problem notes"]
+    safe_issue_context = [
+        "no problem",
+        "no problems",
+        "no issue",
+        "no issues",
+        "without issue",
+        "without issues",
+        "problem free",
+        "problem-free",
+        "issue free",
+        "issue-free",
+    ]
+    if _has_any_term(title, issue_terms) and not _has_any_term(title, safe_issue_context):
+        return True
+
     return False
 
 
@@ -395,12 +420,12 @@ def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
 
 def _lego_title_matches_product(title: str, product: Product) -> bool:
     set_number = str(product.metadata.get("set_number") or product.variant or "").strip()
-    if set_number and has_term(title, set_number):
-        return True
+    if set_number:
+        # LEGO titles are too noisy to trust model-name-only matches. Require the
+        # exact set number so "Millennium Falcon" does not match a different set
+        # or a minifigure that references the parent model.
+        return has_term(title, set_number)
 
-    # Some legitimate eBay titles omit the set number but include the exact model
-    # name plus a complete-set clue. Allow those so UCS/Botanical listings do
-    # not disappear just because the seller left the number out.
     model_terms = [term for term in normalize_text(product.model).split() if term not in {"lego", "star", "wars", "the", "and", "of"}]
     if len(model_terms) < 2:
         return False

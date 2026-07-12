@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { AdminFilterRules } from "@/components/AdminFilterRules";
 import { SiteFooter } from "@/components/SiteFooter";
-import { getActiveReports, getAnalyticsSummary, getRecentClicks, getRecentFilteredListings } from "@/lib/api";
+import { getActiveReports, getAnalyticsSummary, getManualFilterRules, getRecentClicks, getRecentFilteredListings } from "@/lib/api";
 
 function formatDate(value?: string | null): string {
   if (!value) return "—";
@@ -21,11 +22,12 @@ export default async function AdminPage({
 }) {
   const params = await searchParams;
   const token = params.token;
-  const [summary, clicks, reports, filtered] = await Promise.all([
+  const [summary, clicks, reports, filtered, manualRules] = await Promise.all([
     getAnalyticsSummary(token),
     getRecentClicks(token),
     getActiveReports(token),
     getRecentFilteredListings(token),
+    getManualFilterRules(token),
   ]);
 
   return (
@@ -41,7 +43,7 @@ export default async function AdminPage({
           </p>
         </div>
 
-        <section className="mt-8 grid gap-4 md:grid-cols-4">
+        <section className="mt-8 grid gap-4 md:grid-cols-5">
           <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
             <p className="text-sm text-slate-400">Total outbound clicks</p>
             <p className="mt-2 text-3xl font-black">{summary.total_clicks}</p>
@@ -58,7 +60,13 @@ export default async function AdminPage({
             <p className="text-sm text-slate-400">Filtered listings logged</p>
             <p className="mt-2 text-3xl font-black">{summary.filtered_listing_count ?? filtered.length}</p>
           </div>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
+            <p className="text-sm text-slate-400">Manual rules</p>
+            <p className="mt-2 text-3xl font-black">{summary.manual_filter_rule_count ?? manualRules.length}</p>
+          </div>
         </section>
+
+        <AdminFilterRules initialRules={manualRules} token={token} />
 
         <section className="mt-10 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

@@ -334,7 +334,7 @@ def test_rejects_lego_multi_set_listing_with_requested_set_number():
 def test_rejects_incomplete_lego_listings_without_rejecting_piece_count():
     match = match_product("LEGO Star Wars TIE Interceptor 75382", category="lego")
     assert match is not None
-    assert listing_matches_product("LEGO Star Wars | TIE Interceptor | 1931 Pieces | Complete Set", match.product) is True
+    assert listing_matches_product("LEGO Star Wars 75382 | TIE Interceptor | 1931 Pieces | Complete Set", match.product) is True
     assert listing_matches_product("LEGO Star Wars UCS: TIE Interceptor 75382 (2024) - Partial see description", match.product) is False
     assert listing_matches_product("LEGO Star Wars TIE Interceptor 75382 Missing Pieces", match.product) is False
     assert listing_matches_product("LEGO Star Wars TIE Interceptor 75382 Not Complete", match.product) is False
@@ -355,3 +355,38 @@ def test_allows_lego_complete_with_instructions_but_rejects_instructions_only():
     assert listing_matches_product("LEGO Star Wars UCS Republic Gunship 75309 COMPLETE SET with all boxes", match.product) is True
     assert listing_matches_product("LEGO Star Wars UCS Republic Gunship 75309 RETIRED - MANUAL - Bags 14-17 Unopened", match.product) is False
     assert listing_matches_product("LEGO 75309 Star Wars Republic Gunship Instructions Only", match.product) is False
+
+
+def test_rejects_lego_name_match_without_exact_set_number():
+    match = match_product("LEGO Star Wars Millennium Falcon 75192", category="lego")
+    assert match is not None
+    assert listing_matches_product(
+        "Used Main Build Complete Lego Star Wars 55555 Millenium (Millennium) Falcon",
+        match.product,
+    ) is False
+    assert listing_matches_product(
+        "LEGO Star Wars Millennium Falcon 75192 Complete Set",
+        match.product,
+    ) is True
+
+
+def test_rejects_lego_base_or_build_only_listings():
+    match = match_product("LEGO Super Mario The Mighty Bowser 71411", category="lego")
+    assert match is not None
+    assert listing_matches_product(
+        "LEGO 71411 Super Mario: The Mighty Bowser Base & Towers Only READ",
+        match.product,
+    ) is False
+
+
+def test_rejects_gpu_problem_notes_but_allows_no_problems():
+    match = match_product("RTX 3060 12GB", category="gpus")
+    assert match is not None
+    assert listing_matches_product(
+        "Zotac Nvidia GeForce RTX 3060 12GB Graphics Card GPU PC (FAN PROBLEM NOTES)",
+        match.product,
+    ) is False
+    assert listing_matches_product(
+        "Zotac Nvidia GeForce RTX 3060 12GB Graphics Card Tested Working No Problems",
+        match.product,
+    ) is True
