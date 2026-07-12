@@ -173,3 +173,11 @@ def test_ebay_search_adds_lego_category_id():
     asyncio.run(provider.search("LEGO 75192", category="lego"))
 
     assert provider.last_params["category_ids"] == "19006"
+
+
+def test_ebay_search_adds_console_category_id():
+    provider = _CaptureEbayProvider()
+
+    asyncio.run(provider.search("Xbox Series X", category="consoles"))
+
+    assert provider.last_params["category_ids"] == "139971"

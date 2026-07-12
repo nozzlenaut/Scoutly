@@ -185,3 +185,33 @@ async def search_best_deals_with_auctions(
         sorted(fixed_results, key=lambda item: item.total_price),
         sorted(auction_results, key=lambda item: item.item_end_date or ""),
     )
+
+
+async def search_auction_deals(
+    query: str,
+    provider_keys: list[str],
+    category: str | None = None,
+    auction_hours: int = 24,
+) -> tuple[ProductMatch | None, list[Listing]]:
+    product_match = match_product(query, category)
+    provider_query = product_match.product.display_name if product_match else query
+    product = product_match.product if product_match else None
+    search_category = product.category if product else category
+    auction_results: list[Listing] = []
+
+    for provider_key in provider_keys:
+        if provider_key.lower() != "ebay":
+            continue
+        auction_listings = await _search_provider(
+            provider_key=provider_key,
+            provider_query=provider_query,
+            category=search_category,
+            product=product,
+            buying_option="auction",
+        )
+        auction_results.extend(best_auction_listings(auction_listings, product, max_hours=auction_hours, limit=3))
+
+    return (
+        product_match,
+        sorted(auction_results, key=lambda item: item.item_end_date or ""),
+    )

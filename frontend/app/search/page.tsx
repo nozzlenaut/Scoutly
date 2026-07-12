@@ -1,60 +1,45 @@
 import Link from "next/link";
-import { CategoryTabs } from "@/components/CategoryTabs";
+import { AuctionResults } from "@/components/AuctionResults";
 import { ResultCard } from "@/components/ResultCard";
 import { SearchForm } from "@/components/SearchForm";
 import { SiteFooter } from "@/components/SiteFooter";
 import { searchDeals } from "@/lib/api";
 import { getCategory } from "@/lib/categoryCatalog";
 
-function isTruthy(value?: string): boolean {
-  if (!value) return false;
-  return ["1", "true", "yes", "on"].includes(value.toLowerCase());
-}
-
-function auctionLink(query: string, categoryId: string): string {
-  const params = new URLSearchParams({
-    q: query,
-    category: categoryId,
-    include_auctions: "1",
-  });
-  return `/search?${params.toString()}`;
-}
-
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string; include_auctions?: string }>
+  searchParams: Promise<{ q?: string; category?: string }>
 }) {
   const params = await searchParams;
   const category = getCategory(params.category);
   const query = params.q || category.defaultQuery;
-  const includeAuctions = isTruthy(params.include_auctions);
-  const data = await searchDeals(query, category.id, "ebay", { includeAuctions, auctionHours: 24 });
+  const data = await searchDeals(query, category.id, "ebay", { includeAuctions: false, auctionHours: 24 });
   const resolved = data.resolved_product;
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
       <div className="mx-auto max-w-6xl">
-        <Link href="/" className="text-sm text-cyan-200 hover:text-cyan-100">← New search</Link>
+        <div className="flex items-center justify-between gap-4">
+          <Link href="/" className="text-2xl font-black tracking-tight text-white">Scoutly</Link>
+          <Link href="/" className="text-sm text-cyan-200 hover:text-cyan-100">Home</Link>
+        </div>
 
-        <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Selected category</p>
-              <p className="mt-2 font-semibold text-emerald-100">{category.group} · {category.label}</p>
-            </div>
-            <CategoryTabs selectedId={category.id} />
+        <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 sm:p-6">
+          <div className="mb-6">
+            <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Search again</p>
+            <h1 className="mt-2 text-3xl font-black sm:text-4xl">Find another exact item</h1>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">
+              Pick a category, type the exact item, and Scoutly filters for complete used listings — not boxes, parts, broken items, or weird accessories when we can catch them.
+            </p>
           </div>
-        </div>
-
-        <div className="relative z-50 mt-6">
-          <SearchForm initialCategoryId={category.id} initialQuery={query} compact />
-        </div>
+          <SearchForm initialCategoryId={category.id} initialQuery={query} />
+        </section>
 
         <div className="mt-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Best used results</p>
-            <h1 className="mt-2 text-4xl font-black">{resolved?.product.display_name ?? data.query}</h1>
+            <h2 className="mt-2 text-4xl font-black">{resolved?.product.display_name ?? data.query}</h2>
             {resolved ? (
               <p className="mt-3 text-sm text-slate-400">
                 Resolved to {resolved.product.display_name} · {Math.round(resolved.confidence * 100)}% confidence
@@ -85,46 +70,7 @@ export default async function SearchPage({
           </div>
         )}
 
-        <section className="mt-10 rounded-3xl border border-white/10 bg-white/[0.035] p-5">
-          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
-            <div>
-              <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Auction comparison</p>
-              <h2 className="mt-2 text-2xl font-black">Ending soon</h2>
-              <p className="mt-2 max-w-2xl text-sm text-slate-400">
-                Auctions are optional so normal searches load faster. Use them when you want to compare against listings ending soon.
-              </p>
-            </div>
-            {!includeAuctions ? (
-              <Link
-                href={auctionLink(query, category.id)}
-                className="rounded-2xl border border-cyan-300/40 px-5 py-3 text-center text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/10"
-              >
-                View ending-soon auctions
-              </Link>
-            ) : null}
-          </div>
-
-          {includeAuctions ? (
-            data.auction_results.length > 0 ? (
-              <div className="mt-5 grid gap-5 xl:grid-cols-3">
-                {data.auction_results.map((result) => (
-                  <ResultCard
-                    key={`auction-${result.provider}-${result.title}`}
-                    result={result}
-                    query={data.query}
-                    category={category.id}
-                    productId={resolved?.product.id}
-                    variant="auction"
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="mt-5 rounded-3xl border border-white/10 bg-white/[0.04] p-5 text-sm text-slate-400">
-                No safe auction ending soon found for this exact item.
-              </div>
-            )
-          ) : null}
-        </section>
+        <AuctionResults query={data.query} category={category.id} productId={resolved?.product.id} />
 
         <SiteFooter />
       </div>

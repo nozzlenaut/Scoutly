@@ -469,3 +469,43 @@ def test_rejects_lego_bag_only_listing():
     falcon = match_product("LEGO Star Wars Millennium Falcon 75192", category="lego")
     assert falcon is not None
     assert listing_matches_product("75375 - Millennium Falcon - LEGO Star Wars - Bag 7 X2! Bag 7 ONLY!", falcon.product) is False
+
+
+def test_switch_2_is_paused_for_now():
+    assert match_product("Nintendo Switch 2", category="consoles") is None
+
+
+def test_rejects_ps5_accessory_noise_from_reports():
+    ps5 = match_product("PlayStation 5 Digital Edition", category="consoles")
+    ps5_disc = match_product("PlayStation 5 Disc Edition", category="consoles")
+    assert ps5 is not None
+    assert ps5_disc is not None
+
+    assert listing_matches_product("PlayStation5 Digital Edition External Drive Model CFI ZDD1 SONY", ps5.product) is False
+    assert listing_matches_product("PS5 Digital Edition 30th Anniversary Limited Edition poster only", ps5.product) is False
+    assert listing_matches_product("ps5 accessories bundle Includes Two Mirror Crome Plates ps5 Disk Edition", ps5_disc.product) is False
+
+
+def test_rejects_console_apu_and_processor_parts():
+    xbox = match_product("Xbox One X", category="consoles")
+    assert xbox is not None
+    assert listing_matches_product(
+        "Procesor GPU APU XBOX ONE X X950118-002 X950118-003 M1067253-001 X950118 002",
+        xbox.product,
+    ) is False
+
+
+def test_rejects_lego_cartridge_part_wording():
+    lego = match_product("LEGO Super Mario Bros Nintendo Entertainment System 71374", category="lego")
+    assert lego is not None
+    assert listing_matches_product("Mario Bros. Cartridge for Lego Nintendo Entertainment System NES 71374", lego.product) is False
+
+
+def test_rejects_multi_model_tesla_gpu_listing():
+    p40 = match_product("Tesla P40", category="gpus")
+    assert p40 is not None
+    assert listing_matches_product(
+        "Tesla NVIDIA P4 8GB P40 24GB K80 24GB M40 24GB P100 16GB GPU Graphics card",
+        p40.product,
+    ) is False
+    assert listing_matches_product("NVIDIA Tesla P40 24GB PCIe GPU Graphics Card", p40.product) is True

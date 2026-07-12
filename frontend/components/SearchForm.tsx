@@ -20,6 +20,7 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
   const [suggestions, setSuggestions] = useState<ProductMatch[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didMountRef = useRef(false);
@@ -85,6 +86,7 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
     if (!cleaned) return;
 
     setShowSuggestions(false);
+    setIsSubmitting(true);
     inputRef.current?.blur();
     router.push(`/search?category=${encodeURIComponent(categoryId)}&q=${encodeURIComponent(cleaned)}`);
   }
@@ -122,7 +124,10 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
               <button
                 key={category.id}
                 type="button"
-                onClick={() => setCategoryId(category.id)}
+                onClick={() => {
+                  setIsSubmitting(false);
+                  setCategoryId(category.id);
+                }}
                 className={`flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
                   isSelected
                     ? "border-white bg-white text-slate-950"
@@ -148,6 +153,7 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
             ref={inputRef}
             value={query}
             onChange={(event) => {
+              setIsSubmitting(false);
               setQuery(event.target.value);
               setShowSuggestions(false);
             }}
@@ -186,8 +192,18 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
           ) : null}
         </div>
 
-        <button className="min-h-14 rounded-2xl bg-cyan-300 px-7 font-semibold text-slate-950 transition hover:bg-cyan-200">
-          Search
+        <button
+          disabled={isSubmitting}
+          className="flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-cyan-300 px-7 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-wait disabled:opacity-80"
+        >
+          {isSubmitting ? (
+            <>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950" />
+              Searching…
+            </>
+          ) : (
+            "Search"
+          )}
         </button>
       </form>
 
@@ -196,6 +212,7 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
           ? "Search another exact item without going back."
           : "Start typing, pick the exact item from autocomplete, then Scoutly finds the best used listing."}
         {isLoading ? " Checking catalog..." : ""}
+        {isSubmitting ? " Loading results..." : ""}
       </p>
     </div>
   );

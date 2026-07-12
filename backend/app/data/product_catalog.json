@@ -25468,9 +25468,10 @@
       "missing controllers"
     ],
     "metadata": {
-      "family": "Nintendo Switch"
+      "family": "Nintendo Switch",
+      "paused_reason": "Switch 2 search is temporarily paused because eBay results are mostly games/accessories."
     },
-    "active": true
+    "active": false
   },
   {
     "id": "console-nintendo-wii-u-32gb-deluxe",

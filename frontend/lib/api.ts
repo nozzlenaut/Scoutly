@@ -149,6 +149,28 @@ export async function searchDeals(
   return response.json();
 }
 
+export async function searchAuctions(
+  query: string,
+  category = "cameras",
+  providers = "ebay",
+  options: { auctionHours?: number } = {},
+): Promise<SearchResponse> {
+  const params = new URLSearchParams({
+    q: query,
+    category,
+    providers,
+    auction_hours: String(options.auctionHours ?? 24),
+  });
+  const url = `${baseUrl}/api/search/auctions?${params.toString()}`;
+  const response = await fetch(url, { cache: "no-store" });
+
+  if (!response.ok) {
+    throw new Error("Auction search failed");
+  }
+
+  return response.json();
+}
+
 export async function suggestProducts(query: string, category = "cameras", limit = 8): Promise<ProductMatch[]> {
   if (query.trim().length < 2) return [];
 

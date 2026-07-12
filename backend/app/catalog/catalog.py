@@ -154,6 +154,8 @@ LEGO_INCOMPLETE_OR_PART_TERMS = [
     "main build only",
     "build only",
     "cartridge only",
+    "cartridge for lego",
+    "mario bros cartridge",
     "cart only",
     "bag only",
     "bags only",
@@ -281,6 +283,9 @@ CONSOLE_PART_ACCESSORY_TERMS = [
     "game disc only",
     "game only",
     "games only",
+    "game bundle",
+    "release games",
+    "console checklist",
     "heat shield",
     "heat shield frame",
     "lcd screen",
@@ -316,8 +321,17 @@ CONSOLE_PART_ACCESSORY_TERMS = [
     "controller only",
     "controllers only",
     "disc drive only",
+    "external drive",
+    "drive model",
     "dock only",
     "faceplate",
+    "face plate",
+    "face plates",
+    "plates",
+    "chrome plates",
+    "crome plates",
+    "poster only",
+    "accessories bundle",
     "for parts",
     "hdmi port",
     "housing shell",
@@ -326,6 +340,13 @@ CONSOLE_PART_ACCESSORY_TERMS = [
     "left joy con",
     "left joy-con",
     "motherboard",
+    "mainboard",
+    "processor",
+    "procesor",
+    "apu",
+    "gpu apu",
+    "cpu chip",
+    "chip only",
     "no console",
     "parts only",
     "power brick",
@@ -360,9 +381,29 @@ def _has_any_term(text: str, terms: list[str]) -> bool:
     return any(has_term(text, term) for term in terms)
 
 
+def _has_exact_code(text: str, code: str) -> bool:
+    """Match short model codes like P4 without matching P40."""
+    lowered = text.lower()
+    if len(code) >= 2 and code[0].isalpha() and code[1:].isdigit():
+        pattern = rf"(?<![a-z0-9]){re.escape(code[0].lower())}\s*{re.escape(code[1:])}(?![a-z0-9])"
+        return bool(re.search(pattern, lowered))
+    return bool(re.search(rf"(?<![a-z0-9]){re.escape(code.lower())}(?![a-z0-9])", lowered))
+
+
 def _looks_like_gpu_accessory(title: str, product: Product | None = None) -> bool:
     normalized = normalize_text(title)
     raw = title.lower()
+
+    if product is not None and product.category == "gpus":
+        product_name = product.display_name
+        datacenter_models = ["p4", "p40", "k80", "m40", "p100", "v100", "t4", "a40", "a100"]
+        searched_model = next((model for model in datacenter_models if _has_exact_code(product_name, model)), None)
+        if searched_model:
+            mentioned_models = {model for model in datacenter_models if _has_exact_code(title, model)}
+            # Generic compatibility/listing-spam titles like "P4 P40 K80 M40 P100"
+            # are usually not the exact card. Keep true single-model listings.
+            if mentioned_models - {searched_model}:
+                return True
 
     if product is not None:
         product_name = normalize_text(product.display_name)
@@ -848,6 +889,13 @@ def _score_product_candidate(query: str, product: Product) -> ProductMatch | Non
         )
         if lens_versioned and not query_has_version:
             confidence = max(0.0, confidence - 0.05)
+
+        # Switch 2 is paused for now; do not let a Switch 2 query fall back
+        # to regular Switch/OLED/Lite products just because the word Switch matches.
+        if product.category == "consoles" and (has_term(normalized_query, "switch 2") or "switch2" in compact_query):
+            product_compact = compact_text(f"{product.brand} {product.model} {product.variant or ''}", strip_filler=False)
+            if "switch2" not in product_compact:
+                confidence = 0.0
 
         if confidence > best_confidence:
             best_confidence = confidence
