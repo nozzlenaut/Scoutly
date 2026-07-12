@@ -22,6 +22,10 @@ GLOBAL_BAD_LISTING_TERMS = [
     "parts only",
     "please read",
     "read description",
+    "local pickup only",
+    "local pick up only",
+    "pickup only",
+    "pick up only",
     "repair",
     "spares",
     "untested",
@@ -79,6 +83,13 @@ GPU_PART_ACCESSORY_TERMS = [
     "gpu fan",
     "fan missing",
     "missing fan",
+    "fan problem",
+    "fan problems",
+    "fan issue",
+    "fan issues",
+    "fan not working",
+    "fan does not work",
+    "single fan missing",
     "missing fans",
     "1x fan missing",
     "one fan missing",
@@ -144,6 +155,23 @@ LEGO_INCOMPLETE_OR_PART_TERMS = [
     "build only",
     "cartridge only",
     "cart only",
+    "bag only",
+    "bags only",
+    "bag 1 only",
+    "bag 2 only",
+    "bag 3 only",
+    "bag 4 only",
+    "bag 5 only",
+    "bag 6 only",
+    "bag 7 only",
+    "bag 8 only",
+    "bag 9 only",
+    "bag 10 only",
+    "bag 11 only",
+    "bag 12 only",
+    "bag 13 only",
+    "bag 14 only",
+    "bag 15 only",
 ]
 
 LEGO_INSTRUCTIONS_OR_BOX_ONLY_TERMS = [
@@ -240,6 +268,42 @@ CAMERA_PART_ACCESSORY_TERMS = [
 ]
 
 CONSOLE_PART_ACCESSORY_TERMS = [
+    "board card",
+    "bracket",
+    "cover only",
+    "cover set",
+    "console cover",
+    "disk games",
+    "disc games",
+    "drive bracket",
+    "empty box",
+    "empty box with packing material",
+    "game disc only",
+    "game only",
+    "games only",
+    "heat shield",
+    "heat shield frame",
+    "lcd screen",
+    "local pickup only",
+    "local pick up only",
+    "metal frame",
+    "package japan used w towel",
+    "packing material",
+    "replacement",
+    "replacement part",
+    "supporters package",
+    "supporter package",
+    "tpu cover",
+    "trade",
+    "trade for",
+    "will trade",
+    "swap for",
+    "variety disk games",
+    "variety disc games",
+    "video game only",
+    "wifi board",
+    "wifi card",
+    "wifi module",
     "account only",
     "battery only",
     "blu ray drive",
@@ -465,6 +529,9 @@ def _looks_like_console_accessory(title: str, product: Product | None = None) ->
             "tablet",
             "tablet only",
             "console tablet",
+            "console only",
+            "handheld only",
+            "handheld console only",
             "dock",
             "joycon",
             "joy-con",
@@ -473,6 +540,35 @@ def _looks_like_console_accessory(title: str, product: Product | None = None) ->
             "cart only",
         ]
         if _has_any_term(title, nintendo_only_terms) and not _has_any_term(title, ["complete", "complete set", "complete console", "console bundle"]):
+            return True
+
+    # For PlayStation/Xbox, a real listing usually says console/system/unit or
+    # a storage/edition clue. Reject game/accessory-style titles that only use
+    # the platform name as compatibility metadata.
+    if product is not None and product.category == "consoles" and product.brand.lower() in {"xbox", "playstation"}:
+        console_clues = [
+            "console",
+            "system",
+            "unit",
+            "1tb",
+            "512gb",
+            "2tb",
+            "disc edition",
+            "digital edition",
+            "slim",
+            "pro",
+        ]
+        obvious_game_or_merch = [
+            "game",
+            "video game",
+            "games",
+            "disc games",
+            "disk games",
+            "towel",
+            "supporter",
+            "supporters",
+        ]
+        if _has_any_term(title, obvious_game_or_merch) and not _has_any_term(title, console_clues):
             return True
 
     return False
@@ -615,8 +711,12 @@ def _console_title_matches_product(title: str, product: Product) -> bool:
         if not has_raw("xbox"):
             return False
         if "series x" in product_text:
-            return (has_raw("series x") or "seriesx" in compact_title) and not has_raw("series s")
+            if has_raw("series s") or has_raw("xbox one") or has_raw("one x") or has_raw("one s"):
+                return False
+            return has_raw("series x") or "seriesx" in compact_title
         if "series s" in product_text:
+            if has_raw("series x") or has_raw("xbox one") or has_raw("one x") or has_raw("one s"):
+                return False
             if not (has_raw("series s") or "seriess" in compact_title):
                 return False
             if "1tb" in compact_text(product.variant or "", strip_filler=False):
@@ -625,9 +725,9 @@ def _console_title_matches_product(title: str, product: Product) -> bool:
                 return "1tb" not in compact_title
             return True
         if "one x" in product_text:
-            return has_raw("one x") or "onex" in compact_title
+            return (has_raw("one x") or "onex" in compact_title) and not has_raw("series x") and not has_raw("series s")
         if "one s" in product_text:
-            return has_raw("one s") or "ones" in compact_title
+            return (has_raw("one s") or "ones" in compact_title) and not has_raw("series x") and not has_raw("series s")
         return all(has_raw(required_term) for required_term in product.required_terms)
 
     if product.brand.lower() == "nintendo":

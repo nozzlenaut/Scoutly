@@ -31,3 +31,18 @@ def test_top_listings_returns_multiple_valid_options():
     top = top_listings(listings, product, limit=3)
     assert len(top) == 3
     assert all("Box Only" not in item.title for item in top)
+
+
+def test_rejects_zero_feedback_seller():
+    listing = Listing(
+        provider="eBay",
+        title="Microsoft Xbox Series X 1TB Video Game Console",
+        price=350,
+        shipping=0,
+        total_price=350,
+        condition="Used",
+        seller_feedback_score=0,
+        url="https://example.com/xbox",
+    )
+
+    assert is_bad_listing(listing) is True

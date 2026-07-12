@@ -10,7 +10,7 @@ def test_ebay_item_maps_to_listing():
         "condition": "Used",
         "itemWebUrl": "https://www.ebay.com/itm/1234567890",
         "image": {"imageUrl": "https://i.ebayimg.com/images/test.jpg"},
-        "seller": {"feedbackPercentage": "99.5"},
+        "seller": {"feedbackPercentage": "99.5", "feedbackScore": 42},
         "shippingOptions": [
             {"shippingCost": {"value": "14.99", "currency": "USD"}},
             {"shippingCost": {"value": "0.00", "currency": "USD"}},
@@ -26,6 +26,7 @@ def test_ebay_item_maps_to_listing():
     assert listing.shipping == 0
     assert listing.total_price == 879.99
     assert listing.seller_rating == 99.5
+    assert listing.seller_feedback_score == 42
 
 
 def test_ebay_item_prefers_affiliate_url():

@@ -9,6 +9,7 @@ class Listing(BaseModel):
     total_price: float = Field(ge=0)
     condition: str
     seller_rating: float | None = None
+    seller_feedback_score: int | None = None
     url: HttpUrl
     image_url: HttpUrl | None = None
     affiliate_url_used: bool = False

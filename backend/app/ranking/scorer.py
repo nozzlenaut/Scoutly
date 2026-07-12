@@ -34,6 +34,9 @@ def rejection_reasons(listing: Listing, product: Product | None = None) -> list[
             reasons.append(f"bad condition: {word}")
             break
 
+    if listing.seller_feedback_score == 0:
+        reasons.append("seller feedback score is zero")
+
     manual_reasons = manual_filter_rejection_reasons(listing.title, product)
     reasons.extend(manual_reasons)
 

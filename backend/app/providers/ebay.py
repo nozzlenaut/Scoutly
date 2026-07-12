@@ -166,6 +166,12 @@ def ebay_item_to_listing(
     except (TypeError, ValueError):
         seller_rating_value = None
 
+    seller_feedback = seller.get("feedbackScore")
+    try:
+        seller_feedback_score = int(seller_feedback) if seller_feedback is not None else None
+    except (TypeError, ValueError):
+        seller_feedback_score = None
+
     bid_count = item.get("bidCount")
     try:
         bid_count_value = int(bid_count) if bid_count is not None else None
@@ -180,6 +186,7 @@ def ebay_item_to_listing(
         total_price=round(price + shipping, 2),
         condition=item.get("condition") or "Unknown",
         seller_rating=seller_rating_value,
+        seller_feedback_score=seller_feedback_score,
         url=url,
         image_url=image.get("imageUrl"),
         affiliate_url_used=bool(raw_affiliate_url) or _url_has_campaign_id(url),

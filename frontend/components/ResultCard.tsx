@@ -72,6 +72,7 @@ export function ResultCard({ result, query, category, productId, variant = "buy_
         <div className="mt-4 grid gap-2 text-sm text-slate-400 sm:grid-cols-2">
           <div className="flex justify-between gap-4"><span>Condition</span><span className="text-slate-200">{result.condition}</span></div>
           <div className="flex justify-between gap-4"><span>Seller</span><span className="text-slate-200">{result.seller_rating ? `${result.seller_rating}%` : "Unknown"}</span></div>
+          <div className="flex justify-between gap-4"><span>Feedback</span><span className="text-slate-200">{result.seller_feedback_score ?? "Unknown"}</span></div>
           {isAuction ? (
             <>
               <div className="flex justify-between gap-4"><span>Bids</span><span className="text-slate-200">{result.bid_count ?? "Unknown"}</span></div>

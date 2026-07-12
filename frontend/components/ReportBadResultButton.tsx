@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { reportBadResult, type SearchResult } from "@/lib/api";
 
 const REASONS = [
@@ -21,6 +22,7 @@ type Props = {
 export function ReportBadResultButton({ result, query, category, productId }: Props) {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const router = useRouter();
 
   async function submit(reason: string) {
     setStatus("saving");
@@ -36,6 +38,10 @@ export function ReportBadResultButton({ result, query, category, productId }: Pr
       });
       setStatus("saved");
       setOpen(false);
+      router.refresh();
+      window.setTimeout(() => {
+        window.location.reload();
+      }, 450);
     } catch {
       setStatus("error");
     }
@@ -44,7 +50,7 @@ export function ReportBadResultButton({ result, query, category, productId }: Pr
   if (status === "saved") {
     return (
       <p className="mt-3 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">
-        Thanks — Scoutly will hide this result for this item for 72 hours.
+        Thanks — Scoutly will hide this result for this item for 72 hours. Refreshing results...
       </p>
     );
   }

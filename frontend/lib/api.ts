@@ -28,6 +28,7 @@ export type SearchResult = {
   total_price: number;
   condition: string;
   seller_rating: number | null;
+  seller_feedback_score: number | null;
   url: string;
   image_url: string | null;
   affiliate_url_used: boolean;

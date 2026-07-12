@@ -423,3 +423,49 @@ def test_rejects_recent_reported_gpu_and_lego_edge_cases():
     assert listing_matches_product("ASUS Nvidia GeForce RTX 3060 12GB Graphics Card GPU PC NON-LHR (1x FAN MISSING)", gpu.product) is False
     assert listing_matches_product("LEGO Super Mario Bros Nintendo Entertainment System 71374 - Cartridge Only", lego.product) is False
     assert listing_matches_product("LABRIA (sw1126) from Lego Star Wars 75290 Mos Eisley Cantina Kardue'sai'Malloc", falcon.product) is False
+
+
+def test_rejects_new_console_noise_terms():
+    switch = match_product("Nintendo Switch OLED", category="consoles")
+    ps5 = match_product("PlayStation 5 Disc Edition", category="consoles")
+    xbox = match_product("Xbox Series X", category="consoles")
+    assert switch is not None
+    assert ps5 is not None
+    assert xbox is not None
+
+    assert listing_matches_product("Nintendo switch lite Metal Heat shield frame.", switch.product) is False
+    assert listing_matches_product("Nintendo Switch OLED Model HEG-001 Handheld Console Only", switch.product) is False
+    assert listing_matches_product("Genuine Nintendo Switch Oled LCD Screen Display Replacement", switch.product) is False
+    assert listing_matches_product("PlayStation 5 Slim Disc Edition Console Cover", ps5.product) is False
+    assert listing_matches_product("PS5 Variety Disk Games Bundle", ps5.product) is False
+    assert listing_matches_product("PS5 Empty Box With Packing Material", ps5.product) is False
+    assert listing_matches_product("Sony PS5 Slim Digital Edition 1TB - Trade For Xbox Series X Digital", ps5.product) is False
+    assert listing_matches_product("Genuine OEM Xbox Series X WiFi Board Card M1090312-006 Replacement - Parts", xbox.product) is False
+
+
+def test_rejects_xbox_generation_mismatches():
+    series_x = match_product("Xbox Series X", category="consoles")
+    series_s = match_product("Xbox Series S 512GB", category="consoles")
+    one_x = match_product("Xbox One X", category="consoles")
+    assert series_x is not None
+    assert series_s is not None
+    assert one_x is not None
+
+    assert listing_matches_product("Microsoft Xbox One S With Xbox Series X Controller + Accessories", series_x.product) is False
+    assert listing_matches_product("Halo: Infinite (Microsoft Xbox One/Xbox Series X, 2021)", series_x.product) is False
+    assert listing_matches_product("Microsoft Xbox Series X 1TB Video Game Console", series_x.product) is True
+    assert listing_matches_product("Microsoft Xbox Series S 512GB Console", series_x.product) is False
+    assert listing_matches_product("Microsoft Xbox One X 1TB Console", one_x.product) is True
+    assert listing_matches_product("Microsoft Xbox Series X 1TB Console", one_x.product) is False
+
+
+def test_rejects_local_pickup_only_globally():
+    gpu = match_product("RTX 3060 12GB", category="gpus")
+    assert gpu is not None
+    assert listing_matches_product("NVIDIA RTX 3060 12GB Local Pickup Only", gpu.product) is False
+
+
+def test_rejects_lego_bag_only_listing():
+    falcon = match_product("LEGO Star Wars Millennium Falcon 75192", category="lego")
+    assert falcon is not None
+    assert listing_matches_product("75375 - Millennium Falcon - LEGO Star Wars - Bag 7 X2! Bag 7 ONLY!", falcon.product) is False
