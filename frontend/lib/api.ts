@@ -67,3 +67,7 @@ export async function suggestProducts(query: string, category = "cameras", limit
 
   return response.json();
 }
+
+export function buildOutboundUrl(url: string): string {
+  return `${baseUrl}/api/out?url=${encodeURIComponent(url)}`;
+}

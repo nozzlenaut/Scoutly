@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.catalog import router as catalog_router
 from app.api.search import router as search_router
 from app.api.ebay_notifications import router as ebay_notifications_router
+from app.api.outbound import router as outbound_router
 
 app = FastAPI(title="Scoutly API", version="0.3.1")
 
@@ -30,4 +31,5 @@ def health_check() -> dict[str, str]:
 
 app.include_router(search_router, prefix="/api")
 app.include_router(catalog_router, prefix="/api")
+app.include_router(outbound_router, prefix="/api")
 app.include_router(ebay_notifications_router, prefix="/api")

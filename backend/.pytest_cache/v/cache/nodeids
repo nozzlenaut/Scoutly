@@ -39,11 +39,15 @@
   "tests/test_catalog.py::test_suggests_multiple_3060_products",
   "tests/test_ebay_notifications.py::test_ebay_notification_challenge_response",
   "tests/test_ebay_notifications.py::test_ebay_notification_post_acknowledges",
+  "tests/test_ebay_provider.py::test_ebay_item_adds_missing_campaign_to_partial_affiliate_url",
   "tests/test_ebay_provider.py::test_ebay_item_maps_to_listing",
   "tests/test_ebay_provider.py::test_ebay_item_prefers_affiliate_url",
   "tests/test_ebay_provider.py::test_ebay_item_without_price_or_url_is_ignored",
+  "tests/test_ebay_provider.py::test_ebay_search_adds_affiliate_context_header",
   "tests/test_ebay_provider.py::test_ebay_search_adds_camera_category_id",
   "tests/test_ebay_provider.py::test_ebay_search_adds_gpu_category_id",
   "tests/test_ebay_provider.py::test_ebay_search_skips_category_id_for_non_us_marketplace",
+  "tests/test_outbound.py::test_outbound_adds_campaign_id_to_partial_ebay_url",
+  "tests/test_outbound.py::test_outbound_rejects_non_ebay_url",
   "tests/test_ranking.py::test_rejects_for_parts_condition"
 ]

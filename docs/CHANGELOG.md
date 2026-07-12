@@ -108,3 +108,9 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Keeps result-card disclosure text visible near eBay outbound links.
 - Adds affiliate-link status fields to result payloads so the UI can show when a link contains a campaign ID.
 - Adds a conservative eBay URL fallback that appends the configured `campid` if eBay returns a partial affiliate URL with `customid`/`toolid` but no visible campaign ID.
+
+## v0.4.2
+
+- Added `/api/out` outbound redirect endpoint for eBay links.
+- Result buttons now use the backend redirect so `campid` is applied at click time even if a cached result URL was missing it.
+- Outbound redirects are restricted to eBay domains.

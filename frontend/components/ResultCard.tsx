@@ -1,4 +1,5 @@
 import type { SearchResult } from "@/lib/api";
+import { buildOutboundUrl } from "@/lib/api";
 
 export function ResultCard({ result }: { result: SearchResult }) {
   return (
@@ -25,7 +26,7 @@ export function ResultCard({ result }: { result: SearchResult }) {
         <div className="flex justify-between"><span>Seller</span><span>{result.seller_rating ? `${result.seller_rating}%` : "Unknown"}</span></div>
       </div>
       <a
-        href={result.url}
+        href={buildOutboundUrl(result.url)}
         target="_blank"
         rel="sponsored noreferrer"
         className="mt-5 block rounded-2xl bg-white px-5 py-3 text-center font-semibold text-slate-950 transition hover:bg-slate-200"

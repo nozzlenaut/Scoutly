@@ -115,3 +115,7 @@ Closes autocomplete suggestions after searching or when an exact 100% catalog ma
 ## v0.4.1
 
 Adds a casual affiliate disclosure page/footer and makes eBay affiliate URLs safer by adding the configured `campid` when eBay returns a partial affiliate URL with `customid`/`toolid` but no visible campaign ID.
+
+## v0.4.2
+
+Adds a backend outbound redirect endpoint so eBay affiliate campaign parameters are applied at click time. Result buttons now route through `/api/out` before redirecting to eBay.
