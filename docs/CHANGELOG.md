@@ -132,3 +132,15 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Adds eBay auction search as a separate “Auction ending soon” comparison section.
 - Keeps Buy It Now as the primary result so auctions do not replace available-now deals.
 - Uses eBay `buyingOptions:{AUCTION}` and `sort=endingSoonest` for auction comparison searches.
+
+## v0.4.5 — Search cleanup, filtered-debug admin, and LEGO prototype
+
+- Rejects camera-body listings that are actually filters, UV/CPL/ND filters, or other filter accessories.
+- Rejects SXM/SXM2/SXM3/SXM4, mezzanine, and module results for normal Tesla P100/V100 searches so homelab users are steered toward PCIe cards.
+- Keeps legitimate PCIe Tesla cards valid, including cards that mention passive heatsinks.
+- Changes the search results page to use a more desktop-friendly horizontal result-card layout while staying mobile-friendly.
+- Shows up to three eBay auctions ending soon as comparison options instead of only one auction.
+- Adds filtered-listing logging so `/admin` can show eBay results that were rejected before ranking, including the reason.
+- Adds `GET /api/analytics/filtered` for recent filtered-listing debug records.
+- Adds LEGO as a lab category with eBay category filtering and 99 starter sets, focused on exact set-number matching.
+- Keeps lenses paused in the active UI.

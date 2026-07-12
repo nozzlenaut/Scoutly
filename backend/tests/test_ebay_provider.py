@@ -164,3 +164,11 @@ def test_ebay_auction_search_uses_auction_filter_and_ending_soonest():
     assert provider.last_params["category_ids"] == "27386"
     assert provider.last_params["filter"] == "conditions:{USED},buyingOptions:{AUCTION}"
     assert provider.last_params["sort"] == "endingSoonest"
+
+
+def test_ebay_search_adds_lego_category_id():
+    provider = _CaptureEbayProvider()
+
+    asyncio.run(provider.search("LEGO 75192", category="lego"))
+
+    assert provider.last_params["category_ids"] == "19006"

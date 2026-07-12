@@ -52,6 +52,7 @@ export type AnalyticsSummary = {
   total_clicks: number;
   affiliate_clicks: number;
   active_bad_result_reports: number;
+  filtered_listing_count: number;
   provider_counts: Record<string, number>;
   category_counts: Record<string, number>;
   latest_click: ClickRecord | null;
@@ -68,6 +69,20 @@ export type ClickRecord = {
   affiliate_campaign_present?: boolean;
   affiliate_reference?: string | null;
   tracked_url?: string;
+};
+
+
+export type FilteredListingRecord = {
+  filtered_at: string;
+  provider?: string | null;
+  category?: string | null;
+  product_id?: string | null;
+  query?: string | null;
+  title?: string | null;
+  listing_type?: string | null;
+  reasons?: string[];
+  ebay_item_id?: string | null;
+  link_key?: string;
 };
 
 export type BadResultReport = {
@@ -169,4 +184,12 @@ export async function getActiveReports(token?: string): Promise<BadResultReport[
   if (!response.ok) throw new Error("Report analytics failed");
   const data = await response.json();
   return data.reports || [];
+}
+
+export async function getRecentFilteredListings(token?: string): Promise<FilteredListingRecord[]> {
+  const separator = token ? `?token=${encodeURIComponent(token)}&limit=75` : "?limit=75";
+  const response = await fetch(`${baseUrl}/api/analytics/filtered${separator}`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Filtered listing analytics failed");
+  const data = await response.json();
+  return data.filtered || [];
 }

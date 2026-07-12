@@ -36,6 +36,15 @@ export const allCategories: SearchCategory[] = [
     placeholder: "Try RTX 5050, RX 480, RX 9070 XT, Arc A580...",
     defaultQuery: "RTX 3060 12GB",
   },
+  {
+    id: "lego",
+    label: "LEGO",
+    group: "Collectibles",
+    status: "lab",
+    description: "Prototype exact set-number search using eBay LEGO set category filtering.",
+    placeholder: "Try 75192, 21325, 10316, 76269...",
+    defaultQuery: "LEGO Millennium Falcon 75192",
+  },
 ];
 
 export const searchCategories = allCategories.filter((category) => category.status !== "coming-soon");

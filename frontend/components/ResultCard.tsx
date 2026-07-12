@@ -28,17 +28,22 @@ function formatEndDate(value: string | null): string | null {
 export function ResultCard({ result, query, category, productId, variant = "buy_now" }: Props) {
   const isAuction = variant === "auction" || result.listing_type === "auction";
   const endLabel = formatEndDate(result.item_end_date);
+  const priceLabel = isAuction ? "Current bid" : "Item price";
+  const totalLabel = isAuction ? "Current total" : "Total";
 
   return (
-    <article className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.06] shadow-2xl shadow-black/20">
-      {result.image_url ? (
-        <div className="flex h-48 items-center justify-center bg-white/[0.03]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={result.image_url} alt="" className="max-h-44 max-w-full object-contain" />
-        </div>
-      ) : null}
-      <div className="p-5">
-        <div className="mb-4 flex items-center justify-between gap-4">
+    <article className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.06] shadow-2xl shadow-black/20 lg:flex lg:min-h-[18rem]">
+      <div className="flex h-48 items-center justify-center bg-white/[0.03] lg:h-auto lg:w-72 lg:flex-none">
+        {result.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={result.image_url} alt="" className="max-h-44 max-w-full object-contain lg:max-h-64" />
+        ) : (
+          <span className="text-sm text-slate-500">No image</span>
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col p-5">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-cyan-200">
             {result.provider}
           </span>
@@ -46,36 +51,53 @@ export function ResultCard({ result, query, category, productId, variant = "buy_
             {isAuction ? "Auction" : "Buy It Now"}
           </span>
         </div>
-        <h2 className="text-xl font-semibold text-white">{result.title}</h2>
-        <div className="mt-4 grid gap-2 text-sm text-slate-300">
-          <div className="flex justify-between"><span>{isAuction ? "Current bid" : "Item price"}</span><span>${result.price.toFixed(2)}</span></div>
-          <div className="flex justify-between"><span>Shipping</span><span>${result.shipping.toFixed(2)}</span></div>
-          <div className="flex justify-between border-t border-white/10 pt-2 text-lg font-bold text-white"><span>{isAuction ? "Current total" : "Total"}</span><span>${result.total_price.toFixed(2)}</span></div>
-          <div className="flex justify-between"><span>Condition</span><span>{result.condition}</span></div>
-          <div className="flex justify-between"><span>Seller</span><span>{result.seller_rating ? `${result.seller_rating}%` : "Unknown"}</span></div>
+
+        <h2 className="text-xl font-semibold leading-snug text-white">{result.title}</h2>
+
+        <div className="mt-4 grid gap-2 text-sm text-slate-300 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="rounded-2xl bg-slate-950/35 p-3">
+            <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">{priceLabel}</span>
+            <span className="mt-1 block text-lg font-bold text-white">${result.price.toFixed(2)}</span>
+          </div>
+          <div className="rounded-2xl bg-slate-950/35 p-3">
+            <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">Shipping</span>
+            <span className="mt-1 block text-lg font-bold text-white">${result.shipping.toFixed(2)}</span>
+          </div>
+          <div className="rounded-2xl bg-slate-950/35 p-3">
+            <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">{totalLabel}</span>
+            <span className="mt-1 block text-lg font-bold text-emerald-200">${result.total_price.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-2 text-sm text-slate-400 sm:grid-cols-2">
+          <div className="flex justify-between gap-4"><span>Condition</span><span className="text-slate-200">{result.condition}</span></div>
+          <div className="flex justify-between gap-4"><span>Seller</span><span className="text-slate-200">{result.seller_rating ? `${result.seller_rating}%` : "Unknown"}</span></div>
           {isAuction ? (
             <>
-              <div className="flex justify-between"><span>Bids</span><span>{result.bid_count ?? "Unknown"}</span></div>
-              {endLabel ? <div className="flex justify-between"><span>Auction</span><span>{endLabel}</span></div> : null}
+              <div className="flex justify-between gap-4"><span>Bids</span><span className="text-slate-200">{result.bid_count ?? "Unknown"}</span></div>
+              {endLabel ? <div className="flex justify-between gap-4"><span>Auction</span><span className="text-slate-200">{endLabel}</span></div> : null}
             </>
           ) : null}
         </div>
-        <a
-          href={buildOutboundUrl(result.url, { query, category, productId, provider: result.provider, title: result.title })}
-          target="_blank"
-          rel="sponsored noreferrer"
-          className="mt-5 block rounded-2xl bg-white px-5 py-3 text-center font-semibold text-slate-950 transition hover:bg-slate-200"
-        >
-          {isAuction ? "View auction" : "View deal"}
-        </a>
-        <ReportBadResultButton result={result} query={query} category={category} productId={productId} />
-        <div className="mt-3 space-y-2 text-xs leading-5 text-slate-500">
-          <p>Scoutly may earn from qualifying purchases through affiliate links.</p>
-          {result.affiliate_url_has_campaign_id ? (
-            <p className="text-emerald-300/80">Affiliate tracking active for this eBay link.</p>
-          ) : result.affiliate_url_used ? (
-            <p className="text-amber-300/80">Affiliate URL returned, but campaign ID was not visible in the final link.</p>
-          ) : null}
+
+        <div className="mt-auto pt-5">
+          <a
+            href={buildOutboundUrl(result.url, { query, category, productId, provider: result.provider, title: result.title })}
+            target="_blank"
+            rel="sponsored noreferrer"
+            className="block rounded-2xl bg-white px-5 py-3 text-center font-semibold text-slate-950 transition hover:bg-slate-200"
+          >
+            {isAuction ? "View auction" : "View deal"}
+          </a>
+          <ReportBadResultButton result={result} query={query} category={category} productId={productId} />
+          <div className="mt-3 space-y-2 text-xs leading-5 text-slate-500">
+            <p>Scoutly may earn from qualifying purchases through affiliate links.</p>
+            {result.affiliate_url_has_campaign_id ? (
+              <p className="text-emerald-300/80">Affiliate tracking active for this eBay link.</p>
+            ) : result.affiliate_url_used ? (
+              <p className="text-amber-300/80">Affiliate URL returned, but campaign ID was not visible in the final link.</p>
+            ) : null}
+          </div>
         </div>
       </div>
     </article>

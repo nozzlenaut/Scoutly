@@ -139,3 +139,7 @@ When this is set, view analytics at:
 ```text
 /admin?token=replace_with_private_admin_token
 ```
+
+## v0.4.5
+
+Bundles the next search-quality and testing improvements: camera-body searches now reject filter accessories, normal Tesla P100/V100 GPU searches reject SXM/mezzanine/module results, the results page uses a wider desktop-friendly card layout, auctions can show up to three ending-soon comparison options, `/admin` now shows recently filtered listings with rejection reasons, and LEGO is added as a lab category with exact set-number search.

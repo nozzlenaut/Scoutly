@@ -86,6 +86,33 @@ def _lens_results(provider_name: str, query: str) -> list[Listing]:
     ]
 
 
+def _lego_results(provider_name: str, query: str) -> list[Listing]:
+    return [
+        Listing(
+            provider=provider_name,
+            title=f"LEGO {query} Complete Set Used",
+            price=249.99,
+            shipping=12.99,
+            total_price=262.98,
+            condition="Used",
+            seller_rating=99.0,
+            url="https://www.ebay.com/itm/987654321098",
+            image_url=None,
+        ),
+        Listing(
+            provider=provider_name,
+            title=f"LEGO {query} Instructions Only",
+            price=19.99,
+            shipping=4.99,
+            total_price=24.98,
+            condition="Used",
+            seller_rating=98.0,
+            url="https://www.ebay.com/itm/987654321099",
+            image_url=None,
+        ),
+    ]
+
+
 def _gpu_results(provider_name: str) -> list[Listing]:
     return [
         Listing(
@@ -137,6 +164,8 @@ class MockEbayProvider(MarketplaceProvider):
                     item_end_date="2099-01-01T00:00:00.000Z",
                 )
             ]
+        if category == "lego" or "lego" in lower:
+            return _lego_results(self.name, query)
         if any(term in lower for term in ["sony", "canon", "nikon", "fujifilm", "fuji", "a7", "eos", "z6", "x-t4", "x100v"]):
             if any(term in lower for term in ["24-70", "70-200", "35mm", "50mm", "lens", "fe ", "rf ", "xf "]):
                 return _lens_results(self.name, query)

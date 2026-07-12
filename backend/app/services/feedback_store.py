@@ -13,6 +13,7 @@ from app.models.listing import Listing
 REPORT_TTL_HOURS = 72
 MAX_REPORTS = 500
 MAX_CLICKS = 2000
+MAX_FILTERED = 3000
 
 
 def _now() -> datetime:
@@ -32,6 +33,10 @@ def _reports_path() -> Path:
 
 def _clicks_path() -> Path:
     return _data_dir() / "outbound_clicks.json"
+
+
+def _filtered_path() -> Path:
+    return _data_dir() / "filtered_listings.json"
 
 
 def _read_json_list(path: Path) -> list[dict[str, Any]]:
@@ -229,9 +234,47 @@ def active_bad_result_reports(limit: int = 50) -> list[dict[str, Any]]:
     return list(reversed(_active_reports(_read_json_list(_reports_path()))[-limit:]))
 
 
+
+def log_filtered_listing(
+    *,
+    url: str,
+    title: str | None = None,
+    provider: str | None = None,
+    category: str | None = None,
+    product_id: str | None = None,
+    query: str | None = None,
+    listing_type: str | None = None,
+    reasons: list[str] | None = None,
+) -> None:
+    records = _read_json_list(_filtered_path())
+    records.append(
+        {
+            "filtered_at": _now().isoformat(),
+            "provider": provider,
+            "category": category,
+            "product_id": product_id,
+            "query": query,
+            "title": title,
+            "listing_type": listing_type,
+            "reasons": reasons or [],
+            "link_key": _normalized_link_key(url),
+            "ebay_item_id": ebay_item_id_from_url(url),
+            "url": url,
+        }
+    )
+    records = records[-MAX_FILTERED:]
+    _write_json_list(_filtered_path(), records)
+
+
+def recent_filtered_listings(limit: int = 50) -> list[dict[str, Any]]:
+    limit = max(1, min(limit, MAX_FILTERED))
+    return list(reversed(_read_json_list(_filtered_path())[-limit:]))
+
+
 def analytics_summary() -> dict[str, Any]:
     clicks = _read_json_list(_clicks_path())
     reports = _active_reports(_read_json_list(_reports_path()))
+    filtered = _read_json_list(_filtered_path())
     provider_counts: dict[str, int] = {}
     category_counts: dict[str, int] = {}
     affiliate_clicks = 0
@@ -248,6 +291,7 @@ def analytics_summary() -> dict[str, Any]:
         "total_clicks": len(clicks),
         "affiliate_clicks": affiliate_clicks,
         "active_bad_result_reports": len(reports),
+        "filtered_listing_count": len(filtered),
         "provider_counts": provider_counts,
         "category_counts": category_counts,
         "latest_click": clicks[-1] if clicks else None,

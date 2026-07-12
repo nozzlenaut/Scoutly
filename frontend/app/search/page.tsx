@@ -19,7 +19,7 @@ export default async function SearchPage({
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-6xl">
         <Link href="/" className="text-sm text-cyan-200 hover:text-cyan-100">← New search</Link>
 
         <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-4">
@@ -48,11 +48,11 @@ export default async function SearchPage({
               <p className="mt-3 text-sm text-amber-300">No catalog match yet. Showing keyword-based results.</p>
             )}
           </div>
-          <p className="text-sm text-slate-400">Live eBay results · Buy It Now first, auctions separate</p>
+          <p className="text-sm text-slate-400">Live eBay results · Buy It Now first, up to 3 ending-soon auctions separate</p>
         </div>
 
         {data.results.length > 0 ? (
-          <section className="mt-8 grid gap-5 md:grid-cols-2">
+          <section className="mt-8 space-y-5">
             {data.results.map((result) => (
               <ResultCard
                 key={`buy-now-${result.provider}-${result.title}`}
@@ -76,11 +76,11 @@ export default async function SearchPage({
               <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Auction comparison</p>
               <h2 className="mt-2 text-2xl font-black">Ending soon</h2>
             </div>
-            <p className="max-w-xl text-sm text-slate-400">Auctions are shown separately so they can be used for comparison without replacing the best available Buy It Now result.</p>
+            <p className="max-w-xl text-sm text-slate-400">Auctions are shown separately so they can be used for comparison without replacing the best available Buy It Now result. Scoutly shows up to three ending soon.</p>
           </div>
 
           {data.auction_results.length > 0 ? (
-            <div className="mt-5 grid gap-5 md:grid-cols-2">
+            <div className="mt-5 space-y-5">
               {data.auction_results.map((result) => (
                 <ResultCard
                   key={`auction-${result.provider}-${result.title}`}

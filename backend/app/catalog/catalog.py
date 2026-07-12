@@ -112,6 +112,16 @@ CAMERA_PART_ACCESSORY_TERMS = [
     "display screen",
     "door cover",
     "dummy",
+    "filter",
+    "lens filter",
+    "uv filter",
+    "cpl filter",
+    "nd filter",
+    "variable nd",
+    "polarizer",
+    "polarizing filter",
+    "clear filter",
+    "protection filter",
     "flex",
     "flex cable",
     "hot shoe",
@@ -141,9 +151,20 @@ def _has_any_term(text: str, terms: list[str]) -> bool:
     return any(has_term(text, term) for term in terms)
 
 
-def _looks_like_gpu_accessory(title: str) -> bool:
+def _looks_like_gpu_accessory(title: str, product: Product | None = None) -> bool:
     normalized = normalize_text(title)
     raw = title.lower()
+
+    if product is not None:
+        product_name = normalize_text(product.display_name)
+        is_normal_tesla_pcie_search = (
+            product.category == "gpus"
+            and (has_term(product_name, "tesla p100") or has_term(product_name, "tesla v100"))
+            and not any(has_term(product_name, term) for term in ["sxm", "sxm2", "sxm3", "sxm4"])
+        )
+        if is_normal_tesla_pcie_search and _has_any_term(title, ["sxm", "sxm2", "sxm3", "sxm4", "mezzanine", "module"]):
+            return True
+
     if _has_any_term(title, GPU_PART_ACCESSORY_TERMS):
         return True
 
@@ -274,6 +295,11 @@ CATEGORY_ALIASES = {
     "camera-body": "cameras",
     "camera-bodies": "cameras",
     "lens": "lenses",
+    "lego": "lego",
+    "legos": "lego",
+    "lego-set": "lego",
+    "lego-sets": "lego",
+    "sets": "lego",
 }
 
 
@@ -411,7 +437,7 @@ def listing_matches_product(title: str, product: Product) -> bool:
         if has_term(title, excluded_term):
             return False
 
-    if product.category == "gpus" and _looks_like_gpu_accessory(title):
+    if product.category == "gpus" and _looks_like_gpu_accessory(title, product):
         return False
 
     if product.category == "lenses" and _looks_like_lens_accessory(title):

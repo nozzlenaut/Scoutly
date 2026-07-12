@@ -5,8 +5,8 @@ from app.models.listing import Listing
 from app.models.product import Product, ProductMatch
 from app.providers.ebay import EbayProvider, ebay_config_from_env
 from app.providers.mock import MockAmazonProvider, MockEbayProvider
-from app.ranking.scorer import best_listing, is_bad_listing, score_listing
-from app.services.feedback_store import filter_reported_listings
+from app.ranking.scorer import best_listing, is_bad_listing, rejection_reasons, score_listing
+from app.services.feedback_store import filter_reported_listings, log_filtered_listing
 
 
 def _build_providers():
@@ -55,11 +55,16 @@ def _filter_auction_window(listings: list[Listing], max_hours: int) -> list[List
     return filtered
 
 
-def best_auction_listing(listings: list[Listing], product: Product | None = None, max_hours: int = 24) -> Listing | None:
+def best_auction_listings(
+    listings: list[Listing],
+    product: Product | None = None,
+    max_hours: int = 24,
+    limit: int = 3,
+) -> list[Listing]:
     valid = [listing for listing in listings if not is_bad_listing(listing, product)]
     valid = _filter_auction_window(valid, max_hours)
     if not valid:
-        return None
+        return []
 
     for listing in valid:
         listing.score = score_listing(listing, product)
@@ -68,7 +73,7 @@ def best_auction_listing(listings: list[Listing], product: Product | None = None
         ends_at = _parse_ebay_dt(listing.item_end_date) or datetime.max.replace(tzinfo=UTC)
         return (ends_at, listing.total_price)
 
-    return min(valid, key=auction_sort_key)
+    return sorted(valid, key=auction_sort_key)[: max(1, limit)]
 
 
 async def _search_provider(
@@ -91,11 +96,27 @@ async def _search_provider(
         # stable.
         return []
 
-    return filter_reported_listings(
+    filtered_by_report = filter_reported_listings(
         listings,
         product_id=product.id if product else None,
         category=product.category if product else category,
     )
+
+    for listing in filtered_by_report:
+        reasons = rejection_reasons(listing, product)
+        if reasons:
+            log_filtered_listing(
+                url=str(listing.url),
+                title=listing.title,
+                provider=listing.provider,
+                category=product.category if product else category,
+                product_id=product.id if product else None,
+                query=provider_query,
+                listing_type=listing.listing_type,
+                reasons=reasons,
+            )
+
+    return filtered_by_report
 
 
 async def search_best_deals(
@@ -158,9 +179,8 @@ async def search_best_deals_with_auctions(
                 product=product,
                 buying_option="auction",
             )
-            auction_best = best_auction_listing(auction_listings, product, max_hours=auction_hours)
-            if auction_best is not None:
-                auction_results.append(auction_best)
+            auction_best = best_auction_listings(auction_listings, product, max_hours=auction_hours, limit=3)
+            auction_results.extend(auction_best)
 
     return (
         product_match,

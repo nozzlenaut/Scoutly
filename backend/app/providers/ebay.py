@@ -19,10 +19,12 @@ SANDBOX_AUTH_URL = "https://api.sandbox.ebay.com/identity/v1/oauth2/token"
 # Digital Cameras: https://www.ebay.com/b/Digital-Cameras/31388/bn_779
 # Camera Lenses: https://www.ebay.com/b/Camera-Lenses/3323/bn_732
 # Graphics/Video Cards: https://www.ebay.com/b/Graphics-Video-Cards/27386/bn_661796
+# LEGO Complete Sets & Packs: eBay US category 19006
 EBAY_US_CATEGORY_IDS = {
     "cameras": "31388",
     "lenses": "3323",
     "gpus": "27386",
+    "lego": "19006",
 }
 
 

@@ -49,3 +49,26 @@ def test_analytics_reports_and_optional_token(monkeypatch, tmp_path):
     response = client.get("/api/analytics/reports", params={"token": "secret"})
     assert response.status_code == 200
     assert response.json()["reports"][0]["reason"] == "wrong_item"
+
+
+def test_analytics_filtered_listings_endpoint(monkeypatch, tmp_path):
+    from app.services.feedback_store import log_filtered_listing
+
+    monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
+    client = TestClient(app)
+
+    log_filtered_listing(
+        url="https://www.ebay.com/itm/111111111111",
+        title="Canon EOS RP Camera UV Filter Kit",
+        provider="eBay",
+        category="cameras",
+        product_id="camera-canon-eos-rp-body",
+        query="Canon EOS RP Body",
+        listing_type="fixed_price",
+        reasons=["catalog/product match rejected"],
+    )
+
+    response = client.get("/api/analytics/filtered")
+    assert response.status_code == 200
+    assert response.json()["filtered"][0]["title"] == "Canon EOS RP Camera UV Filter Kit"
+    assert response.json()["filtered"][0]["reasons"] == ["catalog/product match rejected"]

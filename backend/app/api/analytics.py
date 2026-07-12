@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 from app.services.feedback_store import (
     active_bad_result_reports,
     analytics_summary,
+    recent_filtered_listings,
     recent_outbound_clicks,
 )
 
@@ -36,3 +37,9 @@ def get_recent_clicks(limit: int = Query(50, ge=1, le=200), token: str | None = 
 def get_active_reports(limit: int = Query(50, ge=1, le=200), token: str | None = Query(None)) -> dict:
     _require_admin_token(token)
     return {"reports": active_bad_result_reports(limit)}
+
+
+@router.get("/analytics/filtered")
+def get_recent_filtered(limit: int = Query(50, ge=1, le=200), token: str | None = Query(None)) -> dict:
+    _require_admin_token(token)
+    return {"filtered": recent_filtered_listings(limit)}

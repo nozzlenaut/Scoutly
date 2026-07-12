@@ -1,4 +1,5 @@
 from app.catalog.catalog import GLOBAL_BAD_LISTING_TERMS, listing_matches_product
+from app.catalog.normalizer import has_term
 from app.models.listing import Listing
 from app.models.product import Product
 
@@ -17,18 +18,29 @@ BAD_CONDITION_WORDS = [
 ]
 
 
-def is_bad_listing(listing: Listing, product: Product | None = None) -> bool:
+def rejection_reasons(listing: Listing, product: Product | None = None) -> list[str]:
     title = listing.title.lower()
     condition = listing.condition.lower()
-    if any(word in title for word in BAD_TITLE_WORDS):
-        return True
-    if any(word in condition for word in BAD_CONDITION_WORDS):
-        return True
+    reasons: list[str] = []
+
+    for word in BAD_TITLE_WORDS:
+        if word in title:
+            reasons.append(f"bad title term: {word}")
+            break
+
+    for word in BAD_CONDITION_WORDS:
+        if word in condition:
+            reasons.append(f"bad condition: {word}")
+            break
 
     if product is not None and not listing_matches_product(listing.title, product):
-        return True
+        reasons.append("catalog/product match rejected")
 
-    return False
+    return reasons
+
+
+def is_bad_listing(listing: Listing, product: Product | None = None) -> bool:
+    return bool(rejection_reasons(listing, product))
 
 
 def score_listing(listing: Listing, product: Product | None = None) -> float:

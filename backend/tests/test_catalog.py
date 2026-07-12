@@ -268,3 +268,35 @@ def test_accepts_real_tesla_v100_card_with_passive_heatsink_note():
     assert match is not None
     title = "NVIDIA Tesla V100 16GB PCIe GPU Accelerator with passive heatsink"
     assert listing_matches_product(title, match.product) is True
+
+
+def test_rejects_camera_filter_accessory():
+    match = match_product("Canon EOS RP Body", category="cameras")
+    assert match is not None
+    assert listing_matches_product("Canon EOS RP Camera UV Filter Kit", match.product) is False
+    assert listing_matches_product("Canon EOS RP Body Excellent Condition", match.product) is True
+
+
+def test_rejects_sxm_tesla_for_normal_pcie_search():
+    p100 = match_product("Tesla P100 16GB", category="gpus")
+    v100 = match_product("Tesla V100 16GB", category="gpus")
+    assert p100 is not None
+    assert v100 is not None
+    assert listing_matches_product("699-2H403-0201-730 Nvidia Tesla P100 SXM2 16GB Module", p100.product) is False
+    assert listing_matches_product("NVIDIA Tesla V100 SXM2 16GB Mezzanine Module", v100.product) is False
+    assert listing_matches_product("NVIDIA Tesla P100 16GB PCIe GPU Accelerator", p100.product) is True
+
+
+def test_resolves_lego_catalog_entries_by_set_number():
+    assert match_product("75192", category="lego").product.id.startswith("lego-75192")
+    assert match_product("LEGO Rivendell 10316", category="lego").product.id.startswith("lego-10316")
+    assert match_product("21325", category="lego").product.id.startswith("lego-21325")
+
+
+def test_rejects_lego_box_instruction_and_light_kit_listings():
+    match = match_product("LEGO Millennium Falcon 75192", category="lego")
+    assert match is not None
+    assert listing_matches_product("LEGO 75192 Millennium Falcon Box Only", match.product) is False
+    assert listing_matches_product("LEGO 75192 Millennium Falcon Instructions Only", match.product) is False
+    assert listing_matches_product("Light Kit for LEGO 75192 Millennium Falcon", match.product) is False
+    assert listing_matches_product("LEGO Star Wars Millennium Falcon 75192 Complete Set", match.product) is True
