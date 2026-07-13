@@ -16,20 +16,59 @@ function joinReasons(reasons?: string[]): string {
   return reasons.join(", ");
 }
 
+function AdminGate({ invalid = false }: { invalid?: boolean }) {
+  return (
+    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
+      <div className="mx-auto max-w-xl">
+        <Link href="/" className="text-sm text-cyan-200 hover:text-cyan-100">← Scoutly</Link>
+        <section className="mt-10 rounded-3xl border border-white/10 bg-white/[0.05] p-6">
+          <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Scoutly admin</p>
+          <h1 className="mt-2 text-3xl font-black">Admin token required</h1>
+          <p className="mt-3 text-sm text-slate-400">
+            {invalid ? "That token was not accepted. Try the private token saved in Railway." : "Enter the private token saved in Railway to open testing analytics and live filter rules."}
+          </p>
+          <form method="get" action="/admin" className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <label className="flex-1">
+              <span className="sr-only">Admin token</span>
+              <input
+                name="token"
+                type="password"
+                required
+                autoComplete="current-password"
+                placeholder="Admin token"
+                className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/60"
+              />
+            </label>
+            <button className="rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950 transition hover:bg-slate-200">Open admin</button>
+          </form>
+        </section>
+      </div>
+    </main>
+  );
+}
+
 export default async function AdminPage({
   searchParams,
 }: {
   searchParams: Promise<{ token?: string }>
 }) {
   const params = await searchParams;
-  const token = params.token;
-  const [summary, clicks, reports, filtered, manualRules] = await Promise.all([
-    getAnalyticsSummary(token),
-    getRecentClicks(token),
-    getActiveReports(token),
-    getRecentFilteredListings(token),
-    getManualFilterRules(token),
-  ]);
+  const token = params.token?.trim();
+  if (!token) return <AdminGate />;
+
+  let data;
+  try {
+    data = await Promise.all([
+      getAnalyticsSummary(token),
+      getRecentClicks(token),
+      getActiveReports(token),
+      getRecentFilteredListings(token),
+      getManualFilterRules(token),
+    ]);
+  } catch {
+    return <AdminGate invalid />;
+  }
+  const [summary, clicks, reports, filtered, manualRules] = data;
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
@@ -44,7 +83,7 @@ export default async function AdminPage({
           </p>
         </div>
 
-        <section className="mt-8 grid gap-4 md:grid-cols-5">
+        <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
           <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
             <p className="text-sm text-slate-400">Total outbound clicks</p>
             <p className="mt-2 text-3xl font-black">{summary.total_clicks}</p>
@@ -64,6 +103,12 @@ export default async function AdminPage({
           <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
             <p className="text-sm text-slate-400">Manual rules</p>
             <p className="mt-2 text-3xl font-black">{summary.manual_filter_rule_count ?? manualRules.length}</p>
+          </div>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
+            <p className="text-sm text-slate-400">Persistent storage</p>
+            <p className={`mt-2 text-lg font-black ${summary.storage?.connected ? "text-emerald-300" : "text-amber-300"}`}>
+              {summary.storage?.connected ? "PostgreSQL connected" : summary.storage?.configured ? "Database degraded" : "Local file fallback"}
+            </p>
           </div>
         </section>
 

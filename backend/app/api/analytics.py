@@ -1,4 +1,5 @@
 import os
+import secrets
 
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -40,7 +41,12 @@ class ManualFilterRuleResponse(BaseModel):
 
 def _require_admin_token(token: str | None) -> None:
     configured_token = os.getenv("SCOUTLY_ADMIN_TOKEN", "").strip()
-    if configured_token and token != configured_token:
+    if not configured_token:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Admin access is not configured.",
+        )
+    if not token or not secrets.compare_digest(token, configured_token):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing or invalid admin token.",

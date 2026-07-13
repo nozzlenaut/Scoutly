@@ -6,7 +6,7 @@ from app.models.product import Product, ProductMatch
 from app.providers.ebay import EbayProvider, ebay_config_from_env
 from app.providers.mock import MockAmazonProvider, MockEbayProvider
 from app.ranking.scorer import best_listing, is_bad_listing, rejection_reasons, score_listing, top_listings
-from app.services.feedback_store import filter_reported_listings, log_filtered_listing
+from app.services.feedback_store import filter_reported_listings, log_filtered_listings
 
 
 def _build_providers():
@@ -102,20 +102,24 @@ async def _search_provider(
         category=product.category if product else category,
     )
 
+    filtered_records: list[dict] = []
     for listing in filtered_by_report:
         reasons = rejection_reasons(listing, product)
         if reasons:
-            log_filtered_listing(
-                url=str(listing.url),
-                title=listing.title,
-                provider=listing.provider,
-                category=product.category if product else category,
-                product_id=product.id if product else None,
-                query=provider_query,
-                listing_type=listing.listing_type,
-                reasons=reasons,
+            filtered_records.append(
+                {
+                    "url": str(listing.url),
+                    "title": listing.title,
+                    "provider": listing.provider,
+                    "category": product.category if product else category,
+                    "product_id": product.id if product else None,
+                    "query": provider_query,
+                    "listing_type": listing.listing_type,
+                    "reasons": reasons,
+                }
             )
 
+    log_filtered_listings(filtered_records)
     return filtered_by_report
 
 

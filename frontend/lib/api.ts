@@ -51,6 +51,14 @@ export type SearchResponse = {
   auction_results: SearchResult[];
 };
 
+export type StorageStatus = {
+  configured: boolean;
+  connected: boolean;
+  backend: "postgresql" | "file" | "file_fallback" | string;
+  last_connected_at?: string | null;
+  error?: string | null;
+};
+
 export type AnalyticsSummary = {
   total_clicks: number;
   affiliate_clicks: number;
@@ -60,6 +68,7 @@ export type AnalyticsSummary = {
   provider_counts: Record<string, number>;
   category_counts: Record<string, number>;
   latest_click: ClickRecord | null;
+  storage?: StorageStatus;
 };
 
 export type ClickRecord = {
