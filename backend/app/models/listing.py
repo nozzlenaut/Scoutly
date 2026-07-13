@@ -20,3 +20,5 @@ class Listing(BaseModel):
     bid_count: int | None = None
     current_bid_price: float | None = None
     item_end_date: str | None = None
+    warning_labels: list[str] = Field(default_factory=list)
+    item_location: str | None = None

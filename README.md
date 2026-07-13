@@ -15,3 +15,8 @@ Validation:
 
 - Backend tests: 85 passed.
 - Frontend build was attempted but could not run in this sandbox because `node_modules` is not installed (`next: not found`).
+
+
+## v0.5.4
+
+Expands the LEGO lab catalog, tightens LEGO missing-minifig shorthand filters, improves console variant matching, and fixes empty/paused/unknown search URL states.

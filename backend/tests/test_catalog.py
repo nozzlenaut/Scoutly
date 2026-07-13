@@ -532,3 +532,30 @@ def test_rejects_lego_loose_parts_but_allows_complete_sets_with_pieces():
     assert listing_matches_product("LEGO Ideas Medieval Blacksmith 21325 Bed From Set", blacksmith.product) is False
     assert listing_matches_product("Mario Bros. Cartridge for Lego Nintendo Entertainment System NES 71374", nes.product) is False
     assert listing_matches_product("LEGO Ideas Medieval Blacksmith 21325 Complete Set 2164 Pieces", blacksmith.product) is True
+
+
+def test_rejects_lego_missing_fig_shorthand():
+    blacksmith = match_product("LEGO Medieval Blacksmith 21325", category="lego")
+    assert blacksmith is not None
+    assert listing_matches_product("LEGO Ideas Medieval Blacksmith 21325 MISSING 1 fig", blacksmith.product) is False
+    assert listing_matches_product("LEGO Ideas Medieval Blacksmith 21325 missing one figure", blacksmith.product) is False
+    assert listing_matches_product("LEGO Ideas Medieval Blacksmith 21325 Complete Set With Minifigs", blacksmith.product) is True
+
+
+def test_rejects_console_multi_variation_model_title_but_allows_console_only_for_playstation():
+    ps4_pro = match_product("PS4 Pro", category="consoles")
+    assert ps4_pro is not None
+    assert listing_matches_product("All Original, Slim, & Pro Models PlayStation 4 PS4 Console", ps4_pro.product) is False
+    assert listing_matches_product("Sony PlayStation 4 Pro 1TB Console Only", ps4_pro.product) is True
+
+
+def test_switch_console_only_still_rejected():
+    switch = match_product("Nintendo Switch OLED", category="consoles")
+    assert switch is not None
+    assert listing_matches_product("Nintendo Switch OLED Console Only", switch.product) is False
+
+
+def test_resolves_expanded_lego_catalog_entries():
+    assert match_product("76269", category="lego").product.id.startswith("lego-76269")
+    assert match_product("LEGO Titanic 10294", category="lego").product.id.startswith("lego-10294")
+    assert match_product("LEGO Hogwarts Castle 71043", category="lego").product.id.startswith("lego-71043")

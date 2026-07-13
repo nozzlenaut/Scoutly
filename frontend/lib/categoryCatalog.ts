@@ -58,6 +58,17 @@ export const allCategories: SearchCategory[] = [
 
 export const searchCategories = allCategories.filter((category) => category.status !== "coming-soon");
 
+export function getCategoryById(id?: string | null): SearchCategory | null {
+  if (!id) return null;
+  return allCategories.find((category) => category.id === id) ?? null;
+}
+
+export function getSearchCategoryById(id?: string | null): SearchCategory | null {
+  const category = getCategoryById(id);
+  if (!category || category.status === "coming-soon" || category.status === "planned") return null;
+  return category;
+}
+
 export function getCategory(id?: string | null) {
-  return searchCategories.find((category) => category.id === id) ?? searchCategories[0];
+  return getSearchCategoryById(id) ?? searchCategories[0];
 }

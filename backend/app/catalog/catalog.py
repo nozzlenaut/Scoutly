@@ -129,17 +129,32 @@ LEGO_INCOMPLETE_OR_PART_TERMS = [
     "missing minifigs",
     "missing minifigure",
     "missing minifigures",
+    "missing fig",
+    "missing figs",
+    "missing figure",
+    "missing figures",
+    "missing 1 fig",
+    "missing one fig",
+    "missing 1 figure",
+    "missing one figure",
     "minifigures not included",
     "minifigs not included",
     "no minifig",
     "no minifigs",
     "no minifigure",
     "no minifigures",
+    "no fig",
+    "no figs",
+    "no figure",
     "no figures",
     "figure only",
     "minifig only",
     "minifigure only",
     "minifigures only",
+    "fig only",
+    "figs only",
+    "figure only",
+    "figures only",
     "parts lot",
     "parts only",
     "pieces only",
@@ -321,6 +336,9 @@ CONSOLE_PART_ACCESSORY_TERMS = [
     "swap for",
     "variety disk games",
     "variety disc games",
+    "all original slim pro models",
+    "all original slim and pro models",
+    "original slim pro models",
     "video game only",
     "wifi board",
     "wifi card",
@@ -567,6 +585,9 @@ def _looks_like_console_accessory(title: str, product: Product | None = None) ->
     if _has_any_term(title, CONSOLE_PART_ACCESSORY_TERMS + CONSOLE_INCOMPLETE_TERMS):
         return True
 
+    if _looks_like_console_multi_variation_listing(title, product):
+        return True
+
     # Marketplace repair-part listings often say "for PS5/Xbox/Switch".
     # Only use that prefix as a reject signal when it is paired with part words.
     accessory_words = [
@@ -644,12 +665,36 @@ def _looks_like_console_accessory(title: str, product: Product | None = None) ->
     return False
 
 
+def _looks_like_missing_lego_figures(title: str) -> bool:
+    normalized = normalize_text(title, strip_filler=False)
+    # Catch seller shorthand such as "MISSING 1 fig", "missing one fig",
+    # "missing 2 figures", and "no figs" without rejecting normal
+    # piece-count wording.
+    return bool(
+        re.search(r"\bmissing\s+(?:\d+|one|two|a|the)?\s*(?:mini\s*)?fig(?:ure)?s?\b", normalized)
+        or re.search(r"\bno\s+(?:mini\s*)?fig(?:ure)?s?\b", normalized)
+        or re.search(r"\b(?:mini\s*)?fig(?:ure)?s?\s+missing\b", normalized)
+    )
+
+
+def _looks_like_console_multi_variation_listing(title: str, product: Product | None = None) -> bool:
+    if product is None or product.category != "consoles":
+        return False
+    normalized = normalize_text(title, strip_filler=False)
+    compact = compact_text(title, strip_filler=False)
+    if has_term(title, "original") and has_term(title, "slim") and has_term(title, "pro") and _has_any_term(title, ["model", "models"]):
+        return True
+    if "alloriginalslimpro" in compact or "originalslimpro" in compact:
+        return True
+    return False
+
+
 def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
     set_number = str(product.metadata.get("set_number") or product.variant or "").strip()
     if not set_number:
         return False
 
-    if _has_any_term(title, LEGO_INCOMPLETE_OR_PART_TERMS):
+    if _has_any_term(title, LEGO_INCOMPLETE_OR_PART_TERMS) or _looks_like_missing_lego_figures(title):
         return True
 
     if _has_any_term(title, LEGO_INSTRUCTIONS_OR_BOX_ONLY_TERMS):

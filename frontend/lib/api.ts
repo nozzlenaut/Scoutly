@@ -39,6 +39,8 @@ export type SearchResult = {
   bid_count: number | null;
   current_bid_price: number | null;
   item_end_date: string | null;
+  warning_labels: string[];
+  item_location: string | null;
 };
 
 export type SearchResponse = {

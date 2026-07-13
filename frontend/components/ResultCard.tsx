@@ -83,6 +83,12 @@ export function ResultCard({ result, query, category, productId, variant = "buy_
           </div>
         ) : null}
 
+        {result.warning_labels.length > 0 ? (
+          <div className="mt-3 rounded-2xl border border-orange-300/25 bg-orange-300/10 px-4 py-3 text-sm text-orange-100">
+            {result.warning_labels.join(" · ")}
+          </div>
+        ) : null}
+
         <div className="mt-4 grid gap-2 text-sm text-slate-300 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
           <div className="rounded-2xl bg-slate-950/35 p-3">
             <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">{priceLabel}</span>
@@ -101,6 +107,9 @@ export function ResultCard({ result, query, category, productId, variant = "buy_
         <div className="mt-4 grid gap-2 text-sm text-slate-400">
           <div className="flex justify-between gap-4"><span>Condition</span><span className="text-right text-slate-200">{result.condition}</span></div>
           <div className="flex justify-between gap-4"><span>Seller</span><span className="text-right text-slate-200">{sellerLabel(result)}</span></div>
+          {result.item_location ? (
+            <div className="flex justify-between gap-4"><span>Location</span><span className="text-right text-slate-200">{result.item_location}</span></div>
+          ) : null}
           {isAuction ? (
             <>
               <div className="flex justify-between gap-4"><span>Bids</span><span className="text-slate-200">{result.bid_count ?? "Unknown"}</span></div>

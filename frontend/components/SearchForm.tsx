@@ -16,7 +16,7 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
   const initialCategory = getCategory(initialCategoryId);
   const [categoryId, setCategoryId] = useState(initialCategory.id);
   const selectedCategory = getCategory(categoryId);
-  const [query, setQuery] = useState(initialQuery?.trim() || initialCategory.defaultQuery);
+  const [query, setQuery] = useState(initialQuery === undefined || initialQuery === null ? initialCategory.defaultQuery : initialQuery.trim());
   const [suggestions, setSuggestions] = useState<ProductMatch[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
