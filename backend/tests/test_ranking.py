@@ -46,3 +46,33 @@ def test_rejects_zero_feedback_seller():
     )
 
     assert is_bad_listing(listing) is True
+
+
+def test_low_feedback_seller_is_demoted():
+    from app.models.listing import Listing
+    from app.ranking.scorer import score_listing
+
+    high_feedback = Listing(
+        provider="eBay",
+        title="NVIDIA RTX 3060 12GB Graphics Card",
+        price=250,
+        shipping=0,
+        total_price=250,
+        condition="Used",
+        seller_rating=100,
+        seller_feedback_score=500,
+        url="https://www.ebay.com/itm/111111111111",
+    )
+    low_feedback = Listing(
+        provider="eBay",
+        title="NVIDIA RTX 3060 12GB Graphics Card",
+        price=250,
+        shipping=0,
+        total_price=250,
+        condition="Used",
+        seller_rating=100,
+        seller_feedback_score=2,
+        url="https://www.ebay.com/itm/222222222222",
+    )
+
+    assert score_listing(high_feedback) > score_listing(low_feedback)

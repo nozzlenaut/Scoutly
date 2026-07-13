@@ -25,18 +25,34 @@ function formatEndDate(value: string | null): string | null {
   return `ends in ${hours}h ${minutes}m`;
 }
 
+function sellerLabel(result: SearchResult): string {
+  const rating = result.seller_rating !== null ? `${result.seller_rating}% positive` : "Rating unknown";
+  const feedback = result.seller_feedback_score;
+  if (feedback === null) return rating;
+  return `${rating} · ${feedback.toLocaleString()} feedback`;
+}
+
+function sellerTrustLabel(result: SearchResult): string | null {
+  const feedback = result.seller_feedback_score;
+  if (feedback === null) return null;
+  if (feedback <= 5) return "New / low-feedback seller";
+  if (feedback <= 10) return "Limited seller feedback";
+  return null;
+}
+
 export function ResultCard({ result, query, category, productId, variant = "buy_now" }: Props) {
   const isAuction = variant === "auction" || result.listing_type === "auction";
   const endLabel = formatEndDate(result.item_end_date);
   const priceLabel = isAuction ? "Current bid" : "Item price";
   const totalLabel = isAuction ? "Current total" : "Total";
+  const trustLabel = sellerTrustLabel(result);
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/[0.06] shadow-2xl shadow-black/20">
       <div className="flex h-44 items-center justify-center bg-white/[0.03]">
         {result.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={result.image_url} alt="" loading="lazy" className="max-h-40 max-w-full object-contain" />
+          <img src={result.image_url} alt={result.title} loading="lazy" className="max-h-40 max-w-full object-contain" />
         ) : (
           <span className="text-sm text-slate-500">No image</span>
         )}
@@ -47,12 +63,25 @@ export function ResultCard({ result, query, category, productId, variant = "buy_
           <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-cyan-200">
             {result.provider}
           </span>
-          <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
-            {isAuction ? "Auction" : "Buy It Now"}
-          </span>
+          <div className="flex flex-wrap justify-end gap-2">
+            <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
+              {isAuction ? "Auction" : "Buy It Now"}
+            </span>
+            {result.affiliate_url_used ? (
+              <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-semibold text-emerald-100">
+                Sponsored link
+              </span>
+            ) : null}
+          </div>
         </div>
 
         <h2 className="text-lg font-semibold leading-snug text-white">{result.title}</h2>
+
+        {trustLabel ? (
+          <div className="mt-3 rounded-2xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
+            {trustLabel}. Price may be good, but check the seller carefully.
+          </div>
+        ) : null}
 
         <div className="mt-4 grid gap-2 text-sm text-slate-300 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
           <div className="rounded-2xl bg-slate-950/35 p-3">
@@ -70,9 +99,8 @@ export function ResultCard({ result, query, category, productId, variant = "buy_
         </div>
 
         <div className="mt-4 grid gap-2 text-sm text-slate-400">
-          <div className="flex justify-between gap-4"><span>Condition</span><span className="text-slate-200">{result.condition}</span></div>
-          <div className="flex justify-between gap-4"><span>Seller</span><span className="text-slate-200">{result.seller_rating ? `${result.seller_rating}%` : "Unknown"}</span></div>
-          <div className="flex justify-between gap-4"><span>Feedback</span><span className="text-slate-200">{result.seller_feedback_score ?? "Unknown"}</span></div>
+          <div className="flex justify-between gap-4"><span>Condition</span><span className="text-right text-slate-200">{result.condition}</span></div>
+          <div className="flex justify-between gap-4"><span>Seller</span><span className="text-right text-slate-200">{sellerLabel(result)}</span></div>
           {isAuction ? (
             <>
               <div className="flex justify-between gap-4"><span>Bids</span><span className="text-slate-200">{result.bid_count ?? "Unknown"}</span></div>
@@ -91,14 +119,6 @@ export function ResultCard({ result, query, category, productId, variant = "buy_
             {isAuction ? "View auction" : "View deal"}
           </a>
           <ReportBadResultButton result={result} query={query} category={category} productId={productId} />
-          <div className="mt-3 space-y-2 text-xs leading-5 text-slate-500">
-            <p>Scoutly may earn from qualifying purchases through affiliate links.</p>
-            {result.affiliate_url_has_campaign_id ? (
-              <p className="text-emerald-300/80">Affiliate tracking active for this eBay link.</p>
-            ) : result.affiliate_url_used ? (
-              <p className="text-amber-300/80">Affiliate URL returned, but campaign ID was not visible in the final link.</p>
-            ) : null}
-          </div>
         </div>
       </div>
     </article>

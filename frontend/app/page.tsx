@@ -11,7 +11,7 @@ export default function HomePage() {
         </div>
         <h1 className="text-5xl font-black tracking-tight text-white sm:text-7xl">Scoutly</h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-          Pick an active category, choose the exact item, and Scoutly looks for complete used items at the lowest useful prices — no partials, broken listings, boxes-only, or parts-only junk when we can catch it.
+          Pick an active category, choose the exact item, and Scoutly checks eBay for cleaner used listings — complete items first, not broken listings, boxes-only, parts-only junk, or sketchy matches when we can catch them.
         </p>
 
         <div className="mt-6 max-w-3xl rounded-3xl border border-white/10 bg-white/[0.06] p-5 text-left text-sm leading-6 text-slate-300">

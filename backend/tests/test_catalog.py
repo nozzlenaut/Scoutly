@@ -509,3 +509,26 @@ def test_rejects_multi_model_tesla_gpu_listing():
         p40.product,
     ) is False
     assert listing_matches_product("NVIDIA Tesla P40 24GB PCIe GPU Graphics Card", p40.product) is True
+
+
+def test_rejects_new_console_cover_game_and_stick_drift_noise():
+    ps5 = match_product("PlayStation 5 Digital Edition", category="consoles")
+    switch_lite = match_product("Nintendo Switch Lite", category="consoles")
+    assert ps5 is not None
+    assert switch_lite is not None
+
+    assert listing_matches_product("Sony CFI-16019 PS5 Digital Edition Cover Used for CFI-2000/2200 Models", ps5.product) is False
+    assert listing_matches_product("Nintendo Switch2 Final Fantasy VII Remake Game New Unopened Authentic", switch_lite.product) is False
+    assert listing_matches_product("Nintendo Switch Lite Console Stick Drift", switch_lite.product) is False
+
+
+def test_rejects_lego_loose_parts_but_allows_complete_sets_with_pieces():
+    blacksmith = match_product("LEGO Medieval Blacksmith 21325", category="lego")
+    nes = match_product("LEGO Super Mario Bros Nintendo Entertainment System 71374", category="lego")
+    assert blacksmith is not None
+    assert nes is not None
+
+    assert listing_matches_product("LEGO Ideas Medieval Blacksmith 21325 Horse Only", blacksmith.product) is False
+    assert listing_matches_product("LEGO Ideas Medieval Blacksmith 21325 Bed From Set", blacksmith.product) is False
+    assert listing_matches_product("Mario Bros. Cartridge for Lego Nintendo Entertainment System NES 71374", nes.product) is False
+    assert listing_matches_product("LEGO Ideas Medieval Blacksmith 21325 Complete Set 2164 Pieces", blacksmith.product) is True

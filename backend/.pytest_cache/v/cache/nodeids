@@ -31,6 +31,7 @@
   "tests/test_catalog.py::test_rejects_lego_base_or_build_only_listings",
   "tests/test_catalog.py::test_rejects_lego_box_instruction_and_light_kit_listings",
   "tests/test_catalog.py::test_rejects_lego_cartridge_part_wording",
+  "tests/test_catalog.py::test_rejects_lego_loose_parts_but_allows_complete_sets_with_pieces",
   "tests/test_catalog.py::test_rejects_lego_minifigure_and_parts_references_to_set_number",
   "tests/test_catalog.py::test_rejects_lego_multi_set_listing_with_requested_set_number",
   "tests/test_catalog.py::test_rejects_lego_name_match_without_exact_set_number",
@@ -39,6 +40,7 @@
   "tests/test_catalog.py::test_rejects_local_pickup_only_globally",
   "tests/test_catalog.py::test_rejects_more_lens_ring_accessories",
   "tests/test_catalog.py::test_rejects_multi_model_tesla_gpu_listing",
+  "tests/test_catalog.py::test_rejects_new_console_cover_game_and_stick_drift_noise",
   "tests/test_catalog.py::test_rejects_new_console_noise_terms",
   "tests/test_catalog.py::test_rejects_original_a7r_when_searching_a7r_iii",
   "tests/test_catalog.py::test_rejects_ps5_accessory_noise_from_reports",
@@ -87,6 +89,7 @@
   "tests/test_outbound.py::test_outbound_adds_campaign_id_to_partial_ebay_url",
   "tests/test_outbound.py::test_outbound_logs_click_metadata",
   "tests/test_outbound.py::test_outbound_rejects_non_ebay_url",
+  "tests/test_ranking.py::test_low_feedback_seller_is_demoted",
   "tests/test_ranking.py::test_rejects_for_parts_condition",
   "tests/test_ranking.py::test_rejects_zero_feedback_seller",
   "tests/test_ranking.py::test_top_listings_returns_multiple_valid_options"

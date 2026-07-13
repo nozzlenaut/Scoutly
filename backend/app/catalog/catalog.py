@@ -154,7 +154,9 @@ LEGO_INCOMPLETE_OR_PART_TERMS = [
     "main build only",
     "build only",
     "cartridge only",
+    "cartridge part",
     "cartridge for lego",
+    "cartridge for",
     "mario bros cartridge",
     "cart only",
     "bag only",
@@ -174,7 +176,21 @@ LEGO_INCOMPLETE_OR_PART_TERMS = [
     "bag 13 only",
     "bag 14 only",
     "bag 15 only",
+    "lot of 2",
+    "lot of two",
 ]
+
+LEGO_LOOSE_PART_TERMS = [
+    "horse",
+    "bed",
+    "animal",
+    "wagon",
+    "cart",
+    "tree",
+    "stand",
+    "display stand",
+]
+
 
 LEGO_INSTRUCTIONS_OR_BOX_ONLY_TERMS = [
     "box only",
@@ -332,6 +348,19 @@ CONSOLE_PART_ACCESSORY_TERMS = [
     "crome plates",
     "poster only",
     "accessories bundle",
+    "accessory bundle",
+    "cover",
+    "ps5 cover",
+    "playstation cover",
+    "digital edition cover",
+    "disc edition cover",
+    "stick drift",
+    "drift",
+    "monitor bundle",
+    "with monitor",
+    "external disc drive",
+    "external disk drive",
+    "drive only",
     "for parts",
     "hdmi port",
     "housing shell",
@@ -633,6 +662,13 @@ def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
         title,
         ["complete", "complete set", "sealed", "new in box", "with box", "building kit"],
     )
+
+    # LEGO part listings can include the exact set number or model name while
+    # selling only a horse, bed, display stand, cartridge piece, etc. Keep this
+    # gated behind "not clearly full set" so normal complete sets that mention
+    # included accessories do not get rejected.
+    if not clearly_full_set and _has_any_term(title, LEGO_LOOSE_PART_TERMS):
+        return True
 
     # A lone minifigure/person listing can reference the parent set number.
     # Do not reject complete sets that mention included minifigures, but reject

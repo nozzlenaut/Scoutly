@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { createManualFilterRule, deleteManualFilterRule, type ManualFilterRule } from "@/lib/api";
+import { allCategories } from "@/lib/categoryCatalog";
 
 type Props = {
   initialRules: ManualFilterRule[];
@@ -10,10 +11,7 @@ type Props = {
 
 const CATEGORY_OPTIONS = [
   { value: "", label: "All categories" },
-  { value: "cameras", label: "Cameras" },
-  { value: "gpus", label: "GPUs" },
-  { value: "lego", label: "LEGO" },
-  { value: "lenses", label: "Lenses" },
+  ...allCategories.map((category) => ({ value: category.id, label: category.label })),
 ];
 
 function splitExceptions(value: string): string[] {

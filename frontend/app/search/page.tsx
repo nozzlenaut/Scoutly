@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { AuctionResults } from "@/components/AuctionResults";
 import { ResultCard } from "@/components/ResultCard";
@@ -5,6 +6,20 @@ import { SearchForm } from "@/components/SearchForm";
 import { SiteFooter } from "@/components/SiteFooter";
 import { searchDeals } from "@/lib/api";
 import { getCategory } from "@/lib/categoryCatalog";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; category?: string }>;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const category = getCategory(params.category);
+  const query = params.q || category.defaultQuery;
+  return {
+    title: `${query} deals | Scoutly`,
+    description: `Cleaner eBay used-listing results for ${query}.`,
+  };
+}
 
 export default async function SearchPage({
   searchParams,
@@ -25,21 +40,14 @@ export default async function SearchPage({
           <Link href="/" className="text-sm text-cyan-200 hover:text-cyan-100">Home</Link>
         </div>
 
-        <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 sm:p-6">
-          <div className="mb-6">
-            <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Search again</p>
-            <h1 className="mt-2 text-3xl font-black sm:text-4xl">Find another exact item</h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">
-              Pick a category, type the exact item, and Scoutly filters for complete used listings — not boxes, parts, broken items, or weird accessories when we can catch them.
-            </p>
-          </div>
-          <SearchForm initialCategoryId={category.id} initialQuery={query} />
+        <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+          <SearchForm initialCategoryId={category.id} initialQuery={query} compact />
         </section>
 
         <div className="mt-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Best used results</p>
-            <h2 className="mt-2 text-4xl font-black">{resolved?.product.display_name ?? data.query}</h2>
+            <h1 className="mt-2 text-4xl font-black">{resolved?.product.display_name ?? data.query}</h1>
             {resolved ? (
               <p className="mt-3 text-sm text-slate-400">
                 Resolved to {resolved.product.display_name} · {Math.round(resolved.confidence * 100)}% confidence
@@ -52,7 +60,7 @@ export default async function SearchPage({
         </div>
 
         {data.results.length > 0 ? (
-          <section className="mt-8 grid gap-5 xl:grid-cols-3">
+          <section className="mt-8 grid gap-5 xl:grid-cols-3" aria-label="Buy It Now results">
             {data.results.map((result) => (
               <ResultCard
                 key={`buy-now-${result.provider}-${result.title}`}
@@ -65,8 +73,8 @@ export default async function SearchPage({
             ))}
           </section>
         ) : (
-          <div className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-6 text-amber-100">
-            No matching complete used Buy It Now listings found yet. Try a more specific product from autocomplete or check back after marketplace data refreshes.
+          <div className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-6 text-amber-100" role="status">
+            No safe Buy It Now listings right now for this resolved item. Scoutly is checking ending-soon auctions below, or you can try again later as eBay inventory changes.
           </div>
         )}
 

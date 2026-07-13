@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminFilterRules } from "@/components/AdminFilterRules";
+import { AdminReports } from "@/components/AdminReports";
 import { SiteFooter } from "@/components/SiteFooter";
 import { getActiveReports, getAnalyticsSummary, getManualFilterRules, getRecentClicks, getRecentFilteredListings } from "@/lib/api";
 
@@ -146,38 +147,7 @@ export default async function AdminPage({
           </div>
         </section>
 
-        <section className="mt-10 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-          <h2 className="text-2xl font-bold">Active bad-result reports</h2>
-          <div className="mt-5 overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left text-sm">
-              <thead className="text-slate-500">
-                <tr>
-                  <th className="py-2 pr-4">Reported</th>
-                  <th className="py-2 pr-4">Expires</th>
-                  <th className="py-2 pr-4">Reason</th>
-                  <th className="py-2 pr-4">Category</th>
-                  <th className="py-2 pr-4">Title</th>
-                  <th className="py-2 pr-4">Item ID</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10 text-slate-300">
-                {reports.map((report, index) => (
-                  <tr key={`${report.reported_at}-${report.link_key}-${index}`}>
-                    <td className="py-3 pr-4 text-slate-400">{formatDate(report.reported_at)}</td>
-                    <td className="py-3 pr-4 text-slate-400">{formatDate(report.expires_at)}</td>
-                    <td className="py-3 pr-4">{report.reason || "—"}</td>
-                    <td className="py-3 pr-4">{report.category || "—"}</td>
-                    <td className="py-3 pr-4">{report.title || "—"}</td>
-                    <td className="py-3 pr-4">{report.ebay_item_id || "—"}</td>
-                  </tr>
-                ))}
-                {reports.length === 0 ? (
-                  <tr><td className="py-4 text-slate-500" colSpan={6}>No active reports.</td></tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <AdminReports initialReports={reports} token={token} />
 
         <SiteFooter />
       </div>

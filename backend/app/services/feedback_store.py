@@ -235,6 +235,31 @@ def active_bad_result_reports(limit: int = 50) -> list[dict[str, Any]]:
     return list(reversed(_active_reports(_read_json_list(_reports_path()))[-limit:]))
 
 
+def delete_bad_result_report(
+    *,
+    link_key: str,
+    product_id: str | None = None,
+    category: str | None = None,
+) -> bool:
+    records = _active_reports(_read_json_list(_reports_path()))
+    kept: list[dict[str, Any]] = []
+    deleted = False
+    for record in records:
+        if record.get("link_key") != link_key:
+            kept.append(record)
+            continue
+        if product_id and record.get("product_id") != product_id:
+            kept.append(record)
+            continue
+        if category and record.get("category") != category:
+            kept.append(record)
+            continue
+        deleted = True
+
+    if deleted:
+        _write_json_list(_reports_path(), kept)
+    return deleted
+
 
 def log_filtered_listing(
     *,

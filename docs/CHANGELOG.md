@@ -194,3 +194,17 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Reduces eBay auction candidate limit from 50 to 25.
 - Changes result lists to a responsive card grid so desktop can scan three results side-by-side.
 - Adds lazy loading to result images.
+
+## v0.5.3 — Trust and polish pass
+
+- Adds stricter console cleanup for covers, accessory bundles, stick drift, monitor bundles, and game-only noise.
+- Adds stricter LEGO cleanup for loose part listings like horses, beds, cartridges, and small lots while still allowing complete sets with normal piece-count wording.
+- Demotes low-feedback sellers in ranking and shows a clearer low-feedback warning on result cards.
+- Keeps zero-feedback sellers filtered out.
+- Simplifies affiliate messaging on result cards to a small Sponsored link label while keeping the disclosure page/footer.
+- Improves empty-state copy when a resolved product has no safe Buy It Now listings.
+- Adds accessible labels, combobox/listbox roles, keyboard navigation, image alt text, and live status text for search/autocomplete.
+- Adds dynamic search page titles like “Xbox Series X deals | Scoutly.”
+- Adds Consoles to the admin live-rule category dropdown via dynamic category options.
+- Adds report restore/delete support in admin for accidental bad-result flags.
+- Adds normalizer caching to speed up catalog matching.

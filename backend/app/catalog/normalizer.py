@@ -1,4 +1,5 @@
 import re
+from functools import lru_cache
 
 FILLER_WORDS = [
     "used",
@@ -23,6 +24,7 @@ ROMAN_NUMERALS = {
 }
 
 
+@lru_cache(maxsize=50000)
 def normalize_text(value: str, *, strip_filler: bool = True) -> str:
     value = value.lower()
     value = value.replace("f/", "f ")
@@ -43,6 +45,7 @@ def normalize_text(value: str, *, strip_filler: bool = True) -> str:
     return " ".join(tokens)
 
 
+@lru_cache(maxsize=50000)
 def compact_text(value: str, *, strip_filler: bool = True) -> str:
     return normalize_text(value, strip_filler=strip_filler).replace(" ", "")
 

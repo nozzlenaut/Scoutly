@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Scoutly",
-  description: "Find the best used deals across online marketplaces.",
+  description: "Cleaner eBay used-listing search for exact items.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

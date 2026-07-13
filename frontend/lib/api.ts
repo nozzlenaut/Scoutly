@@ -286,3 +286,23 @@ export async function deleteManualFilterRule(id: string, token?: string): Promis
     throw new Error("Could not delete filter rule");
   }
 }
+
+
+export async function deleteBadResultReport(
+  linkKey: string,
+  token?: string,
+  options: { productId?: string | null; category?: string | null } = {},
+): Promise<void> {
+  const params = new URLSearchParams();
+  if (token) params.set("token", token);
+  if (options.productId) params.set("product_id", options.productId);
+  if (options.category) params.set("category", options.category);
+  const query = params.toString() ? `?${params.toString()}` : "";
+  const response = await fetch(`${baseUrl}/api/analytics/reports/${encodeURIComponent(linkKey)}${query}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Could not delete report");
+  }
+}
