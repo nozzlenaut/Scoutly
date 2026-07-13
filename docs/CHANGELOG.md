@@ -1,4 +1,10 @@
 
+## v0.5.5 — Affiliate label and LEGO catalog expansion
+
+- Renames visible result-card label from “Sponsored link” to “Affiliate link” so users do not confuse affiliate links with paid placement.
+- Expands the LEGO lab catalog from 192 to 318 sets, adding more Star Wars, Icons, Ideas, Harry Potter, Technic, Speed Champions, Disney, Ninjago, Minecraft, and Architecture sets.
+
+
 ## v0.4.8 — Live filter rules
 
 - Adds admin-managed manual filter rules so bad title phrases can be rejected without redeploying.
@@ -201,7 +207,7 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Adds stricter LEGO cleanup for loose part listings like horses, beds, cartridges, and small lots while still allowing complete sets with normal piece-count wording.
 - Demotes low-feedback sellers in ranking and shows a clearer low-feedback warning on result cards.
 - Keeps zero-feedback sellers filtered out.
-- Simplifies affiliate messaging on result cards to a small Sponsored link label while keeping the disclosure page/footer.
+- Simplifies affiliate messaging on result cards to a small Affiliate link label while keeping the disclosure page/footer.
 - Improves empty-state copy when a resolved product has no safe Buy It Now listings.
 - Adds accessible labels, combobox/listbox roles, keyboard navigation, image alt text, and live status text for search/autocomplete.
 - Adds dynamic search page titles like “Xbox Series X deals | Scoutly.”

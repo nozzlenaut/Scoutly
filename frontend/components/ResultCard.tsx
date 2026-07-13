@@ -69,7 +69,7 @@ export function ResultCard({ result, query, category, productId, variant = "buy_
             </span>
             {result.affiliate_url_used ? (
               <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-semibold text-emerald-100">
-                Sponsored link
+                Affiliate link
               </span>
             ) : null}
           </div>
