@@ -617,21 +617,45 @@ def _looks_like_console_accessory(title: str, product: Product | None = None) ->
     # the tablet/screen, dock, Joy-Con pair, or cartridge/game.
     if product is not None and product.category == "consoles" and product.brand.lower() == "nintendo":
         nintendo_only_terms = [
-            "tablet",
             "tablet only",
             "console tablet",
             "console only",
             "handheld only",
             "handheld console only",
-            "dock",
-            "joycon",
-            "joy-con",
+            "dock only",
+            "joycon only",
+            "joy-con only",
+            "joy con only",
             "game only",
             "cartridge only",
             "cart only",
         ]
         if _has_any_term(title, nintendo_only_terms) and not _has_any_term(title, ["complete", "complete set", "complete console", "console bundle"]):
             return True
+
+        product_text = normalize_text(f"{product.model} {product.variant or ''}", strip_filler=False)
+        is_full_size_switch = "switch" in product_text and "lite" not in product_text and "switch 2" not in product_text
+        if is_full_size_switch:
+            complete_controls_clues = [
+                "joy con",
+                "joy-con",
+                "joycon",
+                "with controller",
+                "with controllers",
+                "controller included",
+                "controllers included",
+                "with dock",
+                "dock included",
+                "complete",
+                "complete set",
+                "complete console",
+                "full console",
+                "full system",
+                "console bundle",
+                "system bundle",
+            ]
+            if not _has_any_term(title, complete_controls_clues):
+                return True
 
     # For PlayStation/Xbox, a real listing usually says console/system/unit or
     # a storage/edition clue. Reject game/accessory-style titles that only use
@@ -912,6 +936,64 @@ def list_products(category: str | None = None) -> list[Product]:
     return [product for product in products if product.category.lower() == normalized_category]
 
 
+STRICT_VERSION_NUMBERS = {
+    "ii": "2",
+    "iii": "3",
+    "iv": "4",
+    "v": "5",
+}
+
+
+def _version_number(value: str) -> str | None:
+    """Extract an explicit generation clue such as II or Mark II.
+
+    Keep this intentionally conservative: a normal model number like A1 or R5
+    is not itself treated as a generation suffix. This prevents "Sony A1 II"
+    from silently falling back to the original A1 while leaving ordinary model
+    numbers alone.
+    """
+
+    lowered = value.lower().replace("-", " ")
+    mark_match = re.search(r"\b(?:mark|mk)\s*(ii|iii|iv|v|2|3|4|5)\b", lowered)
+    if mark_match:
+        token = mark_match.group(1)
+        return STRICT_VERSION_NUMBERS.get(token, token)
+
+    roman_match = re.search(r"\b(ii|iii|iv|v)\b", lowered)
+    if roman_match:
+        return STRICT_VERSION_NUMBERS[roman_match.group(1)]
+    return None
+
+
+def _storage_clues(value: str) -> set[str]:
+    return {
+        f"{amount}{unit.lower()}"
+        for amount, unit in re.findall(r"(?i)(?<!\d)(\d+)\s*(gb|tb)\b", value)
+    }
+
+
+def _missing_strict_query_clue(query: str, product: Product) -> bool:
+    product_corpus = " ".join(
+        [product.display_name, product.model, product.variant or "", *product.aliases]
+    )
+
+    if product.category in {"cameras", "lenses"}:
+        query_version = _version_number(query)
+        if query_version is not None and _version_number(product_corpus) != query_version:
+            return True
+
+    if product.category == "gpus":
+        for modifier in ["ti", "super", "xtx", "xt", "gre"]:
+            if has_term(query, modifier) and not has_term(product_corpus, modifier):
+                return True
+
+    query_storage = _storage_clues(query)
+    if query_storage and not query_storage.issubset(_storage_clues(product_corpus)):
+        return True
+
+    return False
+
+
 def _score_product_candidate(query: str, product: Product) -> ProductMatch | None:
     normalized_query = normalize_text(query)
     compact_query = compact_text(query)
@@ -982,7 +1064,7 @@ def _score_product_candidate(query: str, product: Product) -> ProductMatch | Non
             best_confidence = confidence
             best_alias = candidate
 
-    if best_confidence <= 0:
+    if best_confidence <= 0 or _missing_strict_query_clue(query, product):
         return None
     return ProductMatch(product=product, confidence=round(best_confidence, 2), matched_alias=best_alias)
 

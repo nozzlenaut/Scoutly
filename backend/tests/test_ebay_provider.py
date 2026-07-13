@@ -181,3 +181,19 @@ def test_ebay_search_adds_console_category_id():
     asyncio.run(provider.search("Xbox Series X", category="consoles"))
 
     assert provider.last_params["category_ids"] == "139971"
+
+
+def test_ebay_seller_sentinel_values_become_unavailable():
+    item = {
+        "title": "Sony PlayStation 4 Pro 1TB Console",
+        "price": {"value": "149.99", "currency": "USD"},
+        "condition": "Used",
+        "itemWebUrl": "https://www.ebay.com/itm/999999999999",
+        "seller": {"feedbackPercentage": "0", "feedbackScore": -1},
+    }
+
+    listing = ebay_item_to_listing(item)
+
+    assert listing is not None
+    assert listing.seller_rating is None
+    assert listing.seller_feedback_score is None

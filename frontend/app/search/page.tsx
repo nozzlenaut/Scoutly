@@ -105,7 +105,7 @@ export default async function SearchPage({
   return (
     <PageShell>
       <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
-        <SearchForm initialCategoryId={category.id} initialQuery={rawQuery} compact />
+        <SearchForm key={`${category.id}:${rawQuery}`} initialCategoryId={category.id} initialQuery={rawQuery} compact />
       </section>
 
       <div className="mt-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -142,7 +142,7 @@ export default async function SearchPage({
         </div>
       )}
 
-      <AuctionResults query={data.query} category={category.id} productId={resolved?.product.id} />
+      <AuctionResults query={data.query} category={category.id} productId={resolved?.product.id} resolved={Boolean(resolved)} />
     </PageShell>
   );
 }

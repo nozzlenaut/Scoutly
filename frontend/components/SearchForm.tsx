@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { suggestProducts, type ProductMatch } from "@/lib/api";
 import { getCategory, searchCategories } from "@/lib/categoryCatalog";
@@ -21,7 +21,7 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didMountRef = useRef(false);
@@ -95,9 +95,10 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
 
     setShowSuggestions(false);
     setActiveSuggestionIndex(-1);
-    setIsSubmitting(true);
     inputRef.current?.blur();
-    router.push(`/search?category=${encodeURIComponent(categoryId)}&q=${encodeURIComponent(cleaned)}`);
+    startTransition(() => {
+      router.push(`/search?category=${encodeURIComponent(categoryId)}&q=${encodeURIComponent(cleaned)}`);
+    });
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -163,7 +164,6 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
                 type="button"
                 aria-pressed={isSelected}
                 onClick={() => {
-                  setIsSubmitting(false);
                   setCategoryId(category.id);
                 }}
                 className={`flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
@@ -173,7 +173,7 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
                 }`}
               >
                 <span>{category.label}</span>
-                <StatusBadge status={category.status} />
+                <StatusBadge status={category.status} selected={isSelected} />
               </button>
             );
           })}
@@ -195,7 +195,6 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
             ref={inputRef}
             value={query}
             onChange={(event) => {
-              setIsSubmitting(false);
               setQuery(event.target.value);
               setShowSuggestions(false);
               setActiveSuggestionIndex(-1);
@@ -261,10 +260,10 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
         </div>
 
         <button
-          disabled={isSubmitting}
+          disabled={isPending}
           className="flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-cyan-300 px-7 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-wait disabled:opacity-80"
         >
-          {isSubmitting ? (
+          {isPending ? (
             <>
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950" />
               Searching…
@@ -280,7 +279,7 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
           ? "Search another exact item without going back."
           : "Start typing, pick the exact item from autocomplete, then Scoutly checks eBay for cleaner used listings."}
         {isLoading ? " Checking catalog..." : ""}
-        {isSubmitting ? " Loading results..." : ""}
+        {isPending ? " Loading results..." : ""}
       </p>
     </div>
   );

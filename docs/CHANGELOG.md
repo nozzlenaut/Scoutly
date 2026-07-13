@@ -214,3 +214,15 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Adds Consoles to the admin live-rule category dropdown via dynamic category options.
 - Adds report restore/delete support in admin for accidental bad-result flags.
 - Adds normalizer caching to speed up catalog matching.
+
+## v0.5.6 — Regression and trust fixes
+
+- Replaces the sticky local submit flag with React transition state and remounts the compact form by category/query, fixing repeat searches that stayed disabled.
+- Requires positive Joy-Con/controller/dock/completeness wording for full-size Nintendo Switch and Switch OLED listings.
+- Converts invalid eBay seller sentinels (`0%` rating and negative feedback counts) to unavailable seller history.
+- Adds Sony A1 II / ILCE-1M2 and prevents explicit generation queries from falling back to earlier camera generations.
+- Tightens explicit GPU modifier/storage matching when users type clues such as Ti, XT, or 16GB.
+- Improves selected Active/Lab badge contrast.
+- Uses “affiliate links” consistently in homepage copy.
+- Uses resolved/unresolved-aware auction empty states.
+- Adds regression coverage for Sony A1 II, Switch completeness, seller sentinels, and common LEGO set aliases.

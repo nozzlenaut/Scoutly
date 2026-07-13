@@ -198,11 +198,15 @@ def ebay_item_to_listing(
         seller_rating_value = float(seller_rating) if seller_rating is not None else None
     except (TypeError, ValueError):
         seller_rating_value = None
+    if seller_rating_value is not None and not (0 < seller_rating_value <= 100):
+        seller_rating_value = None
 
     seller_feedback = seller.get("feedbackScore")
     try:
         seller_feedback_score = int(seller_feedback) if seller_feedback is not None else None
     except (TypeError, ValueError):
+        seller_feedback_score = None
+    if seller_feedback_score is not None and seller_feedback_score < 0:
         seller_feedback_score = None
 
     bid_count = item.get("bidCount")

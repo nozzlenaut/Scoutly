@@ -17,7 +17,7 @@ export function CategoryTabs({ selectedId }: { selectedId?: string }) {
               }`}
             >
               <span>{category.label}</span>
-              <StatusBadge status={category.status} />
+              <StatusBadge status={category.status} selected={selected} />
             </Link>
           );
         })}

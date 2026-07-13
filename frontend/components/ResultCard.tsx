@@ -26,9 +26,11 @@ function formatEndDate(value: string | null): string | null {
 }
 
 function sellerLabel(result: SearchResult): string {
-  const rating = result.seller_rating !== null ? `${result.seller_rating}% positive` : "Rating unknown";
+  const rating = result.seller_rating !== null ? `${result.seller_rating}% positive` : null;
   const feedback = result.seller_feedback_score;
-  if (feedback === null) return rating;
+  if (rating === null && feedback === null) return "Seller history unavailable";
+  if (rating === null) return `${feedback?.toLocaleString()} feedback · rating unavailable`;
+  if (feedback === null) return `${rating} · feedback unavailable`;
   return `${rating} · ${feedback.toLocaleString()} feedback`;
 }
 

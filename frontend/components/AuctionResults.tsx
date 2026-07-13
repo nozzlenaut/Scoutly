@@ -8,9 +8,10 @@ type Props = {
   query: string;
   category: string;
   productId?: string;
+  resolved?: boolean;
 };
 
-export function AuctionResults({ query, category, productId }: Props) {
+export function AuctionResults({ query, category, productId, resolved = false }: Props) {
   const [status, setStatus] = useState<"loading" | "done" | "error">("loading");
   const [results, setResults] = useState<SearchResult[]>([]);
 
@@ -72,7 +73,7 @@ export function AuctionResults({ query, category, productId }: Props) {
 
       {status === "done" && results.length === 0 ? (
         <div className="mt-5 rounded-3xl border border-white/10 bg-white/[0.04] p-5 text-sm text-slate-400">
-          No safe auction ending soon found for this exact item.
+          No safe auction ending soon found for {resolved ? "this resolved item" : "this query"}.
         </div>
       ) : null}
 

@@ -16,7 +16,7 @@ export default function HomePage() {
 
         <div className="mt-6 max-w-3xl rounded-3xl border border-white/10 bg-white/[0.06] p-5 text-left text-sm leading-6 text-slate-300">
           <p>
-            Scoutly is supported by referral links. If you do not want to use those, that is totally fine: use Scoutly to find the right item, then open eBay separately or in a private/incognito window and search normally.
+            Scoutly is supported by affiliate links. If you do not want to use those, that is totally fine: use Scoutly to find the right item, then open eBay separately or in a private/incognito window and search normally.
           </p>
         </div>
 

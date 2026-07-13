@@ -6121,6 +6121,66 @@
     "active": true
   },
   {
+    "id": "camera-sony-a1-ii-body",
+    "category": "cameras",
+    "category_label": "Cameras",
+    "product_type": "camera_body",
+    "brand": "Sony",
+    "model": "A1 II",
+    "variant": "Body",
+    "aliases": [
+      "Sony A1 II Body",
+      "Sony A1II Body",
+      "Sony Alpha 1 II",
+      "Sony Alpha A1 II",
+      "Sony Alpha One II",
+      "Sony A1 Mark II",
+      "Sony ILCE-1M2",
+      "ILCE-1M2",
+      "A1 II body",
+      "A1II body"
+    ],
+    "required_terms": [
+      "sony",
+      "a1",
+      "ii"
+    ],
+    "excluded_terms": [
+      "battery grip",
+      "battery only",
+      "body cap only",
+      "box only",
+      "broken",
+      "cage only",
+      "cap only",
+      "case only",
+      "charger only",
+      "dummy",
+      "empty box",
+      "for parts",
+      "grip only",
+      "hood only",
+      "lens cap only",
+      "lens only",
+      "manual only",
+      "not working",
+      "parts only",
+      "read description",
+      "repair",
+      "screen protector",
+      "shutter error",
+      "strap only",
+      "untested",
+      "water damage"
+    ],
+    "metadata": {
+      "mount": "Sony E",
+      "sensor_format": "Full frame",
+      "model_code": "ILCE-1M2"
+    },
+    "active": true
+  },
+  {
     "id": "camera-sony-a7-body",
     "category": "cameras",
     "category_label": "Cameras",
@@ -18790,7 +18850,9 @@
       "LEGO Star Wars AT-AT 75313",
       "LEGO Star Wars AT-AT 75313",
       "Star Wars AT-AT 75313",
-      "Star Wars AT-AT 75313"
+      "Star Wars AT-AT 75313",
+      "LEGO UCS AT-AT 75313",
+      "UCS AT-AT 75313"
     ],
     "required_terms": [
       "75313"
@@ -19675,7 +19737,10 @@
       "LEGO The Lord of the Rings Barad-dur 10333",
       "LEGO The Lord of the Rings Barad-dur 10333",
       "The Lord of the Rings Barad-dur 10333",
-      "The Lord of the Rings Barad-dur 10333"
+      "The Lord of the Rings Barad-dur 10333",
+      "LEGO Barad-dûr 10333",
+      "Barad-dûr 10333",
+      "LEGO Icons Barad-dûr 10333"
     ],
     "required_terms": [
       "10333"
