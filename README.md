@@ -1,17 +1,41 @@
-# Scoutly v0.5.1 Performance pass
+# Scoutly v0.5.8
 
-This update makes normal searches faster by keeping auctions optional.
+Scoutly is a cleaner exact-item eBay search tool for used products. It resolves a search to a catalog item, filters obvious broken/partial/accessory listings, and returns up to three Buy It Now options while auctions load afterward.
 
-- Normal search now loads only Buy It Now listings by default.
-- The search page still shows up to 3 Buy It Now options.
-- Auctions are now loaded only after clicking **View ending-soon auctions**.
-- Auction searches still show up to 3 ending-soon comparisons when requested.
-- eBay fixed-price candidate limit reduced from 50 to 35.
-- eBay auction candidate limit reduced from 50 to 25.
-- Result cards are now laid out as a desktop-friendly grid while staying single-column on mobile.
-- Result images lazy-load to reduce mobile/desktop rendering work.
+## Current category status
 
-Validation:
+- **Cameras:** Active
+- **GPUs:** Lab, currently reliable in testing
+- **Consoles:** Lab, active testing
+- **LEGO:** Lab / early set-number prototype
+- **Lenses:** Paused
 
-- Backend tests: 85 passed.
-- Frontend build was attempted but could not run in this sandbox because `node_modules` is not installed (`next: not found`).
+## Included in v0.5.8
+
+- Public-facing PriceSift branding for `www.pricesift.app`
+- Production metadata, favicon, manifest, robots file, and sitemap
+- Standalone title-ending `READ` risk rejection
+- LEGO catalog expanded to 395 sets
+- Internal Scoutly repository, package, database, and affiliate identifiers retained
+
+See `README-v058.md` for details.
+
+## Run locally
+
+### Backend
+
+```bash
+cd backend
+py -3.12 -m venv .venv
+source .venv/Scripts/activate
+pip install -r requirements.txt
+python -m uvicorn app.main:app --reload --port 8000
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```

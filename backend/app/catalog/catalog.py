@@ -129,17 +129,32 @@ LEGO_INCOMPLETE_OR_PART_TERMS = [
     "missing minifigs",
     "missing minifigure",
     "missing minifigures",
+    "missing fig",
+    "missing figs",
+    "missing figure",
+    "missing figures",
+    "missing 1 fig",
+    "missing one fig",
+    "missing 1 figure",
+    "missing one figure",
     "minifigures not included",
     "minifigs not included",
     "no minifig",
     "no minifigs",
     "no minifigure",
     "no minifigures",
+    "no fig",
+    "no figs",
+    "no figure",
     "no figures",
     "figure only",
     "minifig only",
     "minifigure only",
     "minifigures only",
+    "fig only",
+    "figs only",
+    "figure only",
+    "figures only",
     "parts lot",
     "parts only",
     "pieces only",
@@ -154,7 +169,9 @@ LEGO_INCOMPLETE_OR_PART_TERMS = [
     "main build only",
     "build only",
     "cartridge only",
+    "cartridge part",
     "cartridge for lego",
+    "cartridge for",
     "mario bros cartridge",
     "cart only",
     "bag only",
@@ -174,7 +191,21 @@ LEGO_INCOMPLETE_OR_PART_TERMS = [
     "bag 13 only",
     "bag 14 only",
     "bag 15 only",
+    "lot of 2",
+    "lot of two",
 ]
+
+LEGO_LOOSE_PART_TERMS = [
+    "horse",
+    "bed",
+    "animal",
+    "wagon",
+    "cart",
+    "tree",
+    "stand",
+    "display stand",
+]
+
 
 LEGO_INSTRUCTIONS_OR_BOX_ONLY_TERMS = [
     "box only",
@@ -305,6 +336,9 @@ CONSOLE_PART_ACCESSORY_TERMS = [
     "swap for",
     "variety disk games",
     "variety disc games",
+    "all original slim pro models",
+    "all original slim and pro models",
+    "original slim pro models",
     "video game only",
     "wifi board",
     "wifi card",
@@ -332,6 +366,19 @@ CONSOLE_PART_ACCESSORY_TERMS = [
     "crome plates",
     "poster only",
     "accessories bundle",
+    "accessory bundle",
+    "cover",
+    "ps5 cover",
+    "playstation cover",
+    "digital edition cover",
+    "disc edition cover",
+    "stick drift",
+    "drift",
+    "monitor bundle",
+    "with monitor",
+    "external disc drive",
+    "external disk drive",
+    "drive only",
     "for parts",
     "hdmi port",
     "housing shell",
@@ -538,6 +585,9 @@ def _looks_like_console_accessory(title: str, product: Product | None = None) ->
     if _has_any_term(title, CONSOLE_PART_ACCESSORY_TERMS + CONSOLE_INCOMPLETE_TERMS):
         return True
 
+    if _looks_like_console_multi_variation_listing(title, product):
+        return True
+
     # Marketplace repair-part listings often say "for PS5/Xbox/Switch".
     # Only use that prefix as a reject signal when it is paired with part words.
     accessory_words = [
@@ -567,21 +617,45 @@ def _looks_like_console_accessory(title: str, product: Product | None = None) ->
     # the tablet/screen, dock, Joy-Con pair, or cartridge/game.
     if product is not None and product.category == "consoles" and product.brand.lower() == "nintendo":
         nintendo_only_terms = [
-            "tablet",
             "tablet only",
             "console tablet",
             "console only",
             "handheld only",
             "handheld console only",
-            "dock",
-            "joycon",
-            "joy-con",
+            "dock only",
+            "joycon only",
+            "joy-con only",
+            "joy con only",
             "game only",
             "cartridge only",
             "cart only",
         ]
         if _has_any_term(title, nintendo_only_terms) and not _has_any_term(title, ["complete", "complete set", "complete console", "console bundle"]):
             return True
+
+        product_text = normalize_text(f"{product.model} {product.variant or ''}", strip_filler=False)
+        is_full_size_switch = "switch" in product_text and "lite" not in product_text and "switch 2" not in product_text
+        if is_full_size_switch:
+            complete_controls_clues = [
+                "joy con",
+                "joy-con",
+                "joycon",
+                "with controller",
+                "with controllers",
+                "controller included",
+                "controllers included",
+                "with dock",
+                "dock included",
+                "complete",
+                "complete set",
+                "complete console",
+                "full console",
+                "full system",
+                "console bundle",
+                "system bundle",
+            ]
+            if not _has_any_term(title, complete_controls_clues):
+                return True
 
     # For PlayStation/Xbox, a real listing usually says console/system/unit or
     # a storage/edition clue. Reject game/accessory-style titles that only use
@@ -615,12 +689,36 @@ def _looks_like_console_accessory(title: str, product: Product | None = None) ->
     return False
 
 
+def _looks_like_missing_lego_figures(title: str) -> bool:
+    normalized = normalize_text(title, strip_filler=False)
+    # Catch seller shorthand such as "MISSING 1 fig", "missing one fig",
+    # "missing 2 figures", and "no figs" without rejecting normal
+    # piece-count wording.
+    return bool(
+        re.search(r"\bmissing\s+(?:\d+|one|two|a|the)?\s*(?:mini\s*)?fig(?:ure)?s?\b", normalized)
+        or re.search(r"\bno\s+(?:mini\s*)?fig(?:ure)?s?\b", normalized)
+        or re.search(r"\b(?:mini\s*)?fig(?:ure)?s?\s+missing\b", normalized)
+    )
+
+
+def _looks_like_console_multi_variation_listing(title: str, product: Product | None = None) -> bool:
+    if product is None or product.category != "consoles":
+        return False
+    normalized = normalize_text(title, strip_filler=False)
+    compact = compact_text(title, strip_filler=False)
+    if has_term(title, "original") and has_term(title, "slim") and has_term(title, "pro") and _has_any_term(title, ["model", "models"]):
+        return True
+    if "alloriginalslimpro" in compact or "originalslimpro" in compact:
+        return True
+    return False
+
+
 def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
     set_number = str(product.metadata.get("set_number") or product.variant or "").strip()
     if not set_number:
         return False
 
-    if _has_any_term(title, LEGO_INCOMPLETE_OR_PART_TERMS):
+    if _has_any_term(title, LEGO_INCOMPLETE_OR_PART_TERMS) or _looks_like_missing_lego_figures(title):
         return True
 
     if _has_any_term(title, LEGO_INSTRUCTIONS_OR_BOX_ONLY_TERMS):
@@ -633,6 +731,13 @@ def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
         title,
         ["complete", "complete set", "sealed", "new in box", "with box", "building kit"],
     )
+
+    # LEGO part listings can include the exact set number or model name while
+    # selling only a horse, bed, display stand, cartridge piece, etc. Keep this
+    # gated behind "not clearly full set" so normal complete sets that mention
+    # included accessories do not get rejected.
+    if not clearly_full_set and _has_any_term(title, LEGO_LOOSE_PART_TERMS):
+        return True
 
     # A lone minifigure/person listing can reference the parent set number.
     # Do not reject complete sets that mention included minifigures, but reject
@@ -831,6 +936,64 @@ def list_products(category: str | None = None) -> list[Product]:
     return [product for product in products if product.category.lower() == normalized_category]
 
 
+STRICT_VERSION_NUMBERS = {
+    "ii": "2",
+    "iii": "3",
+    "iv": "4",
+    "v": "5",
+}
+
+
+def _version_number(value: str) -> str | None:
+    """Extract an explicit generation clue such as II or Mark II.
+
+    Keep this intentionally conservative: a normal model number like A1 or R5
+    is not itself treated as a generation suffix. This prevents "Sony A1 II"
+    from silently falling back to the original A1 while leaving ordinary model
+    numbers alone.
+    """
+
+    lowered = value.lower().replace("-", " ")
+    mark_match = re.search(r"\b(?:mark|mk)\s*(ii|iii|iv|v|2|3|4|5)\b", lowered)
+    if mark_match:
+        token = mark_match.group(1)
+        return STRICT_VERSION_NUMBERS.get(token, token)
+
+    roman_match = re.search(r"\b(ii|iii|iv|v)\b", lowered)
+    if roman_match:
+        return STRICT_VERSION_NUMBERS[roman_match.group(1)]
+    return None
+
+
+def _storage_clues(value: str) -> set[str]:
+    return {
+        f"{amount}{unit.lower()}"
+        for amount, unit in re.findall(r"(?i)(?<!\d)(\d+)\s*(gb|tb)\b", value)
+    }
+
+
+def _missing_strict_query_clue(query: str, product: Product) -> bool:
+    product_corpus = " ".join(
+        [product.display_name, product.model, product.variant or "", *product.aliases]
+    )
+
+    if product.category in {"cameras", "lenses"}:
+        query_version = _version_number(query)
+        if query_version is not None and _version_number(product_corpus) != query_version:
+            return True
+
+    if product.category == "gpus":
+        for modifier in ["ti", "super", "xtx", "xt", "gre"]:
+            if has_term(query, modifier) and not has_term(product_corpus, modifier):
+                return True
+
+    query_storage = _storage_clues(query)
+    if query_storage and not query_storage.issubset(_storage_clues(product_corpus)):
+        return True
+
+    return False
+
+
 def _score_product_candidate(query: str, product: Product) -> ProductMatch | None:
     normalized_query = normalize_text(query)
     compact_query = compact_text(query)
@@ -901,7 +1064,7 @@ def _score_product_candidate(query: str, product: Product) -> ProductMatch | Non
             best_confidence = confidence
             best_alias = candidate
 
-    if best_confidence <= 0:
+    if best_confidence <= 0 or _missing_strict_query_clue(query, product):
         return None
     return ProductMatch(product=product, confidence=round(best_confidence, 2), matched_alias=best_alias)
 
@@ -937,7 +1100,21 @@ def suggest_products(query: str, category: str | None = None, limit: int = 8) ->
     return matches[:limit]
 
 
+def _ends_with_read_warning(title: str) -> bool:
+    """Reject listings whose title ends with a standalone READ warning.
+
+    Bare READ is too broad to reject anywhere in a title, but a seller ending
+    the title with it is a strong condition/contents warning signal.
+    """
+
+    normalized = normalize_text(title, strip_filler=False).strip()
+    return bool(re.search(r"\bread$", normalized))
+
+
 def listing_matches_product(title: str, product: Product) -> bool:
+    if _ends_with_read_warning(title):
+        return False
+
     if _has_any_term(title, GLOBAL_BAD_LISTING_TERMS):
         return False
 

@@ -50,7 +50,7 @@ export function ReportBadResultButton({ result, query, category, productId }: Pr
   if (status === "saved") {
     return (
       <p className="mt-3 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">
-        Thanks — Scoutly will hide this result for this item for 72 hours. Refreshing results...
+        Thanks — PriceSift will hide this result for this item for 72 hours. Refreshing results...
       </p>
     );
   }

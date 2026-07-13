@@ -1,3 +1,16 @@
+# v0.5.8 — PriceSift public branding and catalog growth
+
+- Changes all public-facing site, search, disclosure, report, loading, and admin branding from Scoutly to PriceSift while retaining Scoutly for internal repository, package, database, and affiliate identifiers.
+- Adds canonical metadata for `https://www.pricesift.app`, Open Graph/Twitter metadata, a web-app manifest, favicon, robots rules, and sitemap.
+- Rejects listings whose title ends with a standalone `READ` warning, including auction results.
+- Expands the LEGO lab catalog from 318 to 395 sets with 77 additional Star Wars, Winter Village, Icons/vehicles, Ideas, Architecture, Technic, Disney, and collector sets.
+
+
+## v0.5.5 — Affiliate label and LEGO catalog expansion
+
+- Renames visible result-card label from “Sponsored link” to “Affiliate link” so users do not confuse affiliate links with paid placement.
+- Expands the LEGO lab catalog from 192 to 318 sets, adding more Star Wars, Icons, Ideas, Harry Potter, Technic, Speed Champions, Disney, Ninjago, Minecraft, and Architecture sets.
+
 
 ## v0.4.8 — Live filter rules
 
@@ -194,3 +207,29 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Reduces eBay auction candidate limit from 50 to 25.
 - Changes result lists to a responsive card grid so desktop can scan three results side-by-side.
 - Adds lazy loading to result images.
+
+## v0.5.3 — Trust and polish pass
+
+- Adds stricter console cleanup for covers, accessory bundles, stick drift, monitor bundles, and game-only noise.
+- Adds stricter LEGO cleanup for loose part listings like horses, beds, cartridges, and small lots while still allowing complete sets with normal piece-count wording.
+- Demotes low-feedback sellers in ranking and shows a clearer low-feedback warning on result cards.
+- Keeps zero-feedback sellers filtered out.
+- Simplifies affiliate messaging on result cards to a small Affiliate link label while keeping the disclosure page/footer.
+- Improves empty-state copy when a resolved product has no safe Buy It Now listings.
+- Adds accessible labels, combobox/listbox roles, keyboard navigation, image alt text, and live status text for search/autocomplete.
+- Adds dynamic search page titles like “Xbox Series X deals | Scoutly.”
+- Adds Consoles to the admin live-rule category dropdown via dynamic category options.
+- Adds report restore/delete support in admin for accidental bad-result flags.
+- Adds normalizer caching to speed up catalog matching.
+
+## v0.5.6 — Regression and trust fixes
+
+- Replaces the sticky local submit flag with React transition state and remounts the compact form by category/query, fixing repeat searches that stayed disabled.
+- Requires positive Joy-Con/controller/dock/completeness wording for full-size Nintendo Switch and Switch OLED listings.
+- Converts invalid eBay seller sentinels (`0%` rating and negative feedback counts) to unavailable seller history.
+- Adds Sony A1 II / ILCE-1M2 and prevents explicit generation queries from falling back to earlier camera generations.
+- Tightens explicit GPU modifier/storage matching when users type clues such as Ti, XT, or 16GB.
+- Improves selected Active/Lab badge contrast.
+- Uses “affiliate links” consistently in homepage copy.
+- Uses resolved/unresolved-aware auction empty states.
+- Adds regression coverage for Sony A1 II, Switch completeness, seller sentinels, and common LEGO set aliases.

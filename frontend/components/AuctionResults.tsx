@@ -8,9 +8,10 @@ type Props = {
   query: string;
   category: string;
   productId?: string;
+  resolved?: boolean;
 };
 
-export function AuctionResults({ query, category, productId }: Props) {
+export function AuctionResults({ query, category, productId, resolved = false }: Props) {
   const [status, setStatus] = useState<"loading" | "done" | "error">("loading");
   const [results, setResults] = useState<SearchResult[]>([]);
 
@@ -44,7 +45,7 @@ export function AuctionResults({ query, category, productId }: Props) {
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Auction comparison</p>
           <h2 className="mt-2 text-2xl font-black">Ending soon</h2>
           <p className="mt-2 max-w-2xl text-sm text-slate-400">
-            Buy It Now results load first. Scoutly checks auctions after that so the page stays fast.
+            Buy It Now results load first. PriceSift checks auctions after that so the page stays fast.
           </p>
         </div>
         {status === "loading" ? (
@@ -72,7 +73,7 @@ export function AuctionResults({ query, category, productId }: Props) {
 
       {status === "done" && results.length === 0 ? (
         <div className="mt-5 rounded-3xl border border-white/10 bg-white/[0.04] p-5 text-sm text-slate-400">
-          No safe auction ending soon found for this exact item.
+          No safe auction ending soon found for {resolved ? "this resolved item" : "this query"}.
         </div>
       ) : null}
 

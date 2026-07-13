@@ -509,3 +509,117 @@ def test_rejects_multi_model_tesla_gpu_listing():
         p40.product,
     ) is False
     assert listing_matches_product("NVIDIA Tesla P40 24GB PCIe GPU Graphics Card", p40.product) is True
+
+
+def test_rejects_new_console_cover_game_and_stick_drift_noise():
+    ps5 = match_product("PlayStation 5 Digital Edition", category="consoles")
+    switch_lite = match_product("Nintendo Switch Lite", category="consoles")
+    assert ps5 is not None
+    assert switch_lite is not None
+
+    assert listing_matches_product("Sony CFI-16019 PS5 Digital Edition Cover Used for CFI-2000/2200 Models", ps5.product) is False
+    assert listing_matches_product("Nintendo Switch2 Final Fantasy VII Remake Game New Unopened Authentic", switch_lite.product) is False
+    assert listing_matches_product("Nintendo Switch Lite Console Stick Drift", switch_lite.product) is False
+
+
+def test_rejects_lego_loose_parts_but_allows_complete_sets_with_pieces():
+    blacksmith = match_product("LEGO Medieval Blacksmith 21325", category="lego")
+    nes = match_product("LEGO Super Mario Bros Nintendo Entertainment System 71374", category="lego")
+    assert blacksmith is not None
+    assert nes is not None
+
+    assert listing_matches_product("LEGO Ideas Medieval Blacksmith 21325 Horse Only", blacksmith.product) is False
+    assert listing_matches_product("LEGO Ideas Medieval Blacksmith 21325 Bed From Set", blacksmith.product) is False
+    assert listing_matches_product("Mario Bros. Cartridge for Lego Nintendo Entertainment System NES 71374", nes.product) is False
+    assert listing_matches_product("LEGO Ideas Medieval Blacksmith 21325 Complete Set 2164 Pieces", blacksmith.product) is True
+
+
+def test_rejects_lego_missing_fig_shorthand():
+    blacksmith = match_product("LEGO Medieval Blacksmith 21325", category="lego")
+    assert blacksmith is not None
+    assert listing_matches_product("LEGO Ideas Medieval Blacksmith 21325 MISSING 1 fig", blacksmith.product) is False
+    assert listing_matches_product("LEGO Ideas Medieval Blacksmith 21325 missing one figure", blacksmith.product) is False
+    assert listing_matches_product("LEGO Ideas Medieval Blacksmith 21325 Complete Set With Minifigs", blacksmith.product) is True
+
+
+def test_rejects_console_multi_variation_model_title_but_allows_console_only_for_playstation():
+    ps4_pro = match_product("PS4 Pro", category="consoles")
+    assert ps4_pro is not None
+    assert listing_matches_product("All Original, Slim, & Pro Models PlayStation 4 PS4 Console", ps4_pro.product) is False
+    assert listing_matches_product("Sony PlayStation 4 Pro 1TB Console Only", ps4_pro.product) is True
+
+
+def test_switch_console_only_still_rejected():
+    switch = match_product("Nintendo Switch OLED", category="consoles")
+    assert switch is not None
+    assert listing_matches_product("Nintendo Switch OLED Console Only", switch.product) is False
+
+
+def test_resolves_expanded_lego_catalog_entries():
+    assert match_product("76269", category="lego").product.id.startswith("lego-76269")
+    assert match_product("LEGO Titanic 10294", category="lego").product.id.startswith("lego-10294")
+    assert match_product("LEGO Hogwarts Castle 71043", category="lego").product.id.startswith("lego-71043")
+
+
+def test_sony_a1_ii_resolves_exactly_and_does_not_fall_back_to_original_a1():
+    match = match_product("Sony A1 II", category="cameras")
+    assert match is not None
+    assert match.product.id == "camera-sony-a1-ii-body"
+    assert match.confidence == 1.0
+
+    suggestions = suggest_products("Sony A1 II", category="cameras")
+    ids = [item.product.id for item in suggestions]
+    assert ids[0] == "camera-sony-a1-ii-body"
+    assert "camera-sony-a1-body" not in ids
+
+
+def test_strict_generation_and_storage_clues_do_not_fall_back():
+    assert match_product("Sony A1 III", category="cameras") is None
+    gpu_match = match_product("RTX 5060 Ti 16GB", category="gpus")
+    assert gpu_match is not None
+    assert "ti" in gpu_match.product.model.lower()
+    assert "16gb" in gpu_match.product.display_name.lower().replace(" ", "")
+
+
+def test_switch_oled_requires_positive_complete_system_evidence():
+    switch = match_product("Nintendo Switch OLED", category="consoles")
+    assert switch is not None
+
+    assert listing_matches_product("Nintendo Switch OLED Model HEG-001 White", switch.product) is False
+    assert listing_matches_product("Nintendo Switch OLED with White Joy-Con and Dock", switch.product) is True
+    assert listing_matches_product("Nintendo Switch OLED Complete Console Bundle", switch.product) is True
+
+
+def test_common_lego_catalog_entries_resolve_by_number_and_name():
+    assert match_product("10333", category="lego").product.id == "lego-10333-the-lord-of-the-rings-barad-dur"
+    assert match_product("LEGO Barad-dûr 10333", category="lego").product.id == "lego-10333-the-lord-of-the-rings-barad-dur"
+    assert match_product("75313", category="lego").product.id == "lego-75313-star-wars-at-at"
+    assert match_product("LEGO UCS AT-AT 75313", category="lego").product.id == "lego-75313-star-wars-at-at"
+
+
+def test_rejects_listing_title_that_ends_with_read_warning():
+    switch = match_product("Nintendo Switch OLED", category="consoles")
+    assert switch is not None
+    assert listing_matches_product(
+        "Nintendo Switch OLED Console with Joy-Con and Dock READ",
+        switch.product,
+    ) is False
+    assert listing_matches_product(
+        "Nintendo Switch OLED Console with Joy-Con and Dock Complete",
+        switch.product,
+    ) is True
+
+
+def test_resolves_v058_lego_catalog_expansion_by_set_number():
+    expected = {
+        "75159": "Death Star",
+        "10267": "Gingerbread House",
+        "21310": "Old Fishing Store",
+        "42056": "Porsche 911 GT3 RS",
+        "75827": "Ghostbusters Firehouse Headquarters",
+    }
+    for set_number, model_clue in expected.items():
+        match = match_product(set_number, category="lego")
+        assert match is not None
+        assert match.product.metadata["set_number"] == set_number
+        assert model_clue.lower() in match.product.model.lower()

@@ -32,7 +32,7 @@ export const allCategories: SearchCategory[] = [
     label: "GPUs",
     group: "PC Parts",
     status: "lab",
-    description: "Lab category with eBay Graphics/Video Cards category filtering.",
+    description: "Active testing category with eBay Graphics/Video Cards category filtering.",
     placeholder: "Try RTX 5050, RX 480, RX 9070 XT, Arc A580...",
     defaultQuery: "RTX 3060 12GB",
   },
@@ -41,7 +41,7 @@ export const allCategories: SearchCategory[] = [
     label: "Consoles",
     group: "Gaming",
     status: "lab",
-    description: "Prototype complete-console search for Xbox, PlayStation, and Nintendo systems.",
+    description: "Active testing for complete Xbox, PlayStation, and Nintendo systems.",
     placeholder: "Try PS5 Disc, Xbox Series X, Switch OLED...",
     defaultQuery: "Xbox Series X 1TB",
   },
@@ -50,7 +50,7 @@ export const allCategories: SearchCategory[] = [
     label: "LEGO",
     group: "Collectibles",
     status: "lab",
-    description: "Prototype exact set-number search using eBay LEGO set category filtering.",
+    description: "Early lab prototype for exact LEGO set-number search.",
     placeholder: "Try 75192, 21325, 10316, 76269...",
     defaultQuery: "LEGO Millennium Falcon 75192",
   },
@@ -58,6 +58,17 @@ export const allCategories: SearchCategory[] = [
 
 export const searchCategories = allCategories.filter((category) => category.status !== "coming-soon");
 
+export function getCategoryById(id?: string | null): SearchCategory | null {
+  if (!id) return null;
+  return allCategories.find((category) => category.id === id) ?? null;
+}
+
+export function getSearchCategoryById(id?: string | null): SearchCategory | null {
+  const category = getCategoryById(id);
+  if (!category || category.status === "coming-soon" || category.status === "planned") return null;
+  return category;
+}
+
 export function getCategory(id?: string | null) {
-  return searchCategories.find((category) => category.id === id) ?? searchCategories[0];
+  return getSearchCategoryById(id) ?? searchCategories[0];
 }

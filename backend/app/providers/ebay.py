@@ -2,6 +2,7 @@ import os
 import time
 from dataclasses import dataclass
 from typing import Any
+import re
 from urllib.parse import parse_qsl, quote, urlencode, urlsplit, urlunsplit
 
 import httpx
@@ -134,6 +135,38 @@ def _ensure_affiliate_campaign_params(
     return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(params), parts.fragment))
 
 
+
+def _listing_warning_labels(title: str) -> list[str]:
+    warnings: list[str] = []
+    shutter_matches = re.findall(r"(?i)(?:shutter\s*(?:count|actuations?)?\s*[:#-]?\s*|)(\d{1,3}(?:,\d{3})+|\d{5,6})\s*(?:shutter|clicks?|actuations?|shots?)", title)
+    for raw_count in shutter_matches:
+        try:
+            count = int(raw_count.replace(",", ""))
+        except ValueError:
+            continue
+        if count >= 200000:
+            warnings.append(f"High shutter count: {count:,} shots")
+            break
+        if count >= 100000:
+            warnings.append(f"Elevated shutter count: {count:,} shots")
+            break
+    return warnings
+
+
+def _item_location_label(item: dict[str, Any]) -> str | None:
+    location = item.get("itemLocation") or {}
+    parts = []
+    city = location.get("city")
+    state = location.get("stateOrProvince")
+    country = location.get("country")
+    if city:
+        parts.append(str(city))
+    if state:
+        parts.append(str(state))
+    if country:
+        parts.append(str(country))
+    return ", ".join(parts) if parts else None
+
 def ebay_item_to_listing(
     item: dict[str, Any],
     affiliate_campaign_id: str | None = None,
@@ -165,11 +198,15 @@ def ebay_item_to_listing(
         seller_rating_value = float(seller_rating) if seller_rating is not None else None
     except (TypeError, ValueError):
         seller_rating_value = None
+    if seller_rating_value is not None and not (0 < seller_rating_value <= 100):
+        seller_rating_value = None
 
     seller_feedback = seller.get("feedbackScore")
     try:
         seller_feedback_score = int(seller_feedback) if seller_feedback is not None else None
     except (TypeError, ValueError):
+        seller_feedback_score = None
+    if seller_feedback_score is not None and seller_feedback_score < 0:
         seller_feedback_score = None
 
     bid_count = item.get("bidCount")
@@ -196,6 +233,8 @@ def ebay_item_to_listing(
         bid_count=bid_count_value,
         current_bid_price=current_bid_price if current_bid_price > 0 else None,
         item_end_date=item.get("itemEndDate"),
+        warning_labels=_listing_warning_labels(title),
+        item_location=_item_location_label(item),
     )
 
 

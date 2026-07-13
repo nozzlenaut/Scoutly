@@ -6,6 +6,7 @@ from app.services.feedback_store import BadResultReport, log_outbound_click, rep
 
 def test_analytics_summary_and_clicks(monkeypatch, tmp_path):
     monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("SCOUTLY_ADMIN_TOKEN", "secret")
     client = TestClient(app)
 
     log_outbound_click(
@@ -18,8 +19,8 @@ def test_analytics_summary_and_clicks(monkeypatch, tmp_path):
         title="NVIDIA Tesla P100 16GB",
     )
 
-    summary = client.get("/api/analytics/summary")
-    clicks = client.get("/api/analytics/clicks")
+    summary = client.get("/api/analytics/summary", params={"token": "secret"})
+    clicks = client.get("/api/analytics/clicks", params={"token": "secret"})
 
     assert summary.status_code == 200
     assert summary.json()["total_clicks"] == 1
@@ -55,6 +56,7 @@ def test_analytics_filtered_listings_endpoint(monkeypatch, tmp_path):
     from app.services.feedback_store import log_filtered_listing
 
     monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("SCOUTLY_ADMIN_TOKEN", "secret")
     client = TestClient(app)
 
     log_filtered_listing(
@@ -68,7 +70,7 @@ def test_analytics_filtered_listings_endpoint(monkeypatch, tmp_path):
         reasons=["catalog/product match rejected"],
     )
 
-    response = client.get("/api/analytics/filtered")
+    response = client.get("/api/analytics/filtered", params={"token": "secret"})
     assert response.status_code == 200
     assert response.json()["filtered"][0]["title"] == "Canon EOS RP Camera UV Filter Kit"
     assert response.json()["filtered"][0]["reasons"] == ["catalog/product match rejected"]

@@ -1,6 +1,10 @@
+import type { Metadata } from "next";
 import { CategoryStatusPanel } from "@/components/CategoryStatusPanel";
 import { SearchForm } from "@/components/SearchForm";
 import { SiteFooter } from "@/components/SiteFooter";
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default function HomePage() {
   return (
@@ -9,14 +13,14 @@ export default function HomePage() {
         <div className="mb-5 rounded-full border border-emerald-300/30 bg-emerald-300/10 px-4 py-2 text-sm font-medium text-emerald-100">
           Now testing consoles
         </div>
-        <h1 className="text-5xl font-black tracking-tight text-white sm:text-7xl">Scoutly</h1>
+        <h1 className="text-5xl font-black tracking-tight text-white sm:text-7xl">PriceSift</h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-          Pick an active category, choose the exact item, and Scoutly looks for complete used items at the lowest useful prices — no partials, broken listings, boxes-only, or parts-only junk when we can catch it.
+          Find the best price for what you already want. Pick an active category, choose the exact item, and PriceSift checks eBay for cleaner used listings — complete items first, not broken listings, boxes-only, parts-only junk, or sketchy matches when we can catch them.
         </p>
 
         <div className="mt-6 max-w-3xl rounded-3xl border border-white/10 bg-white/[0.06] p-5 text-left text-sm leading-6 text-slate-300">
           <p>
-            Scoutly is supported by referral links. If you do not want to use those, that is totally fine: use Scoutly to find the right item, then open eBay separately or in a private/incognito window and search normally.
+            PriceSift is supported by affiliate links. If you do not want to use those, that is totally fine: use PriceSift to find the right item, then open eBay separately or in a private/incognito window and search normally.
           </p>
         </div>
 

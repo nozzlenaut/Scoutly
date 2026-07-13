@@ -39,6 +39,8 @@ export type SearchResult = {
   bid_count: number | null;
   current_bid_price: number | null;
   item_end_date: string | null;
+  warning_labels: string[];
+  item_location: string | null;
 };
 
 export type SearchResponse = {
@@ -47,6 +49,14 @@ export type SearchResponse = {
   resolved_product: ProductMatch | null;
   results: SearchResult[];
   auction_results: SearchResult[];
+};
+
+export type StorageStatus = {
+  configured: boolean;
+  connected: boolean;
+  backend: "postgresql" | "file" | "file_fallback" | string;
+  last_connected_at?: string | null;
+  error?: string | null;
 };
 
 export type AnalyticsSummary = {
@@ -58,6 +68,7 @@ export type AnalyticsSummary = {
   provider_counts: Record<string, number>;
   category_counts: Record<string, number>;
   latest_click: ClickRecord | null;
+  storage?: StorageStatus;
 };
 
 export type ClickRecord = {
@@ -284,5 +295,25 @@ export async function deleteManualFilterRule(id: string, token?: string): Promis
 
   if (!response.ok) {
     throw new Error("Could not delete filter rule");
+  }
+}
+
+
+export async function deleteBadResultReport(
+  linkKey: string,
+  token?: string,
+  options: { productId?: string | null; category?: string | null } = {},
+): Promise<void> {
+  const params = new URLSearchParams();
+  if (token) params.set("token", token);
+  if (options.productId) params.set("product_id", options.productId);
+  if (options.category) params.set("category", options.category);
+  const query = params.toString() ? `?${params.toString()}` : "";
+  const response = await fetch(`${baseUrl}/api/analytics/reports/${encodeURIComponent(linkKey)}${query}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Could not delete report");
   }
 }

@@ -4,7 +4,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 
 export function CategoryTabs({ selectedId }: { selectedId?: string }) {
   return (
-    <nav aria-label="Scoutly categories" className="w-full overflow-x-auto">
+    <nav aria-label="PriceSift categories" className="w-full overflow-x-auto">
       <div className="flex w-max gap-2 rounded-2xl border border-white/10 bg-white/[0.05] p-2 backdrop-blur sm:w-fit">
         {searchCategories.map((category) => {
           const selected = category.id === selectedId;
@@ -17,7 +17,7 @@ export function CategoryTabs({ selectedId }: { selectedId?: string }) {
               }`}
             >
               <span>{category.label}</span>
-              <StatusBadge status={category.status} />
+              <StatusBadge status={category.status} selected={selected} />
             </Link>
           );
         })}

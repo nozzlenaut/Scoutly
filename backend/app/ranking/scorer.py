@@ -56,7 +56,18 @@ def score_listing(listing: Listing, product: Product | None = None) -> float:
         return 0
 
     price_score = max(0, 500 - listing.total_price)
-    seller_score = (listing.seller_rating or 90) * 0.45
+    seller_score = (listing.seller_rating if listing.seller_rating is not None else 90) * 0.45
+    seller_feedback = listing.seller_feedback_score
+    if seller_feedback is not None:
+        if 1 <= seller_feedback <= 2:
+            seller_score -= 35
+        elif seller_feedback <= 5:
+            seller_score -= 25
+        elif seller_feedback <= 10:
+            seller_score -= 12
+        elif seller_feedback >= 100:
+            seller_score += 5
+
     condition_bonus = 15 if "used" in listing.condition.lower() else 5
     shipping_bonus = 10 if listing.shipping == 0 else 0
     product_match_bonus = 35 if product is not None else 0
