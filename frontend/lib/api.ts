@@ -44,12 +44,21 @@ export type SearchResult = {
   item_group_type: string | null;
 };
 
+export type SearchDiagnostics = {
+  fixed_price_candidates: number;
+  fixed_price_filtered: number;
+  auction_candidates: number;
+  auction_filtered: number;
+};
+
 export type SearchResponse = {
   query: string;
   category: string | null;
   resolved_product: ProductMatch | null;
+  suggested_products: ProductMatch[];
   results: SearchResult[];
   auction_results: SearchResult[];
+  diagnostics: SearchDiagnostics;
 };
 
 export type StorageStatus = {

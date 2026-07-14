@@ -67,23 +67,33 @@ def score_listing(listing: Listing, product: Product | None = None) -> float:
         return 0
 
     price_score = max(0, 500 - listing.total_price)
-    seller_score = (listing.seller_rating if listing.seller_rating is not None else 90) * 0.45
+    seller_score = (listing.seller_rating if listing.seller_rating is not None else 88) * 0.45
     seller_feedback = listing.seller_feedback_score
-    if seller_feedback is not None:
-        if 1 <= seller_feedback <= 2:
-            seller_score -= 35
-        elif seller_feedback <= 5:
-            seller_score -= 25
-        elif seller_feedback <= 10:
-            seller_score -= 12
-        elif seller_feedback >= 100:
-            seller_score += 5
+    if seller_feedback is None:
+        seller_score -= 12
+    elif 1 <= seller_feedback <= 2:
+        seller_score -= 55
+    elif seller_feedback <= 5:
+        seller_score -= 40
+    elif seller_feedback <= 10:
+        seller_score -= 24
+    elif seller_feedback <= 25:
+        seller_score -= 10
+    elif seller_feedback >= 100:
+        seller_score += 5
+
+    if listing.seller_rating is not None:
+        if listing.seller_rating < 95:
+            seller_score -= 22
+        elif listing.seller_rating < 98:
+            seller_score -= 10
 
     condition_bonus = 15 if "used" in listing.condition.lower() else 5
     shipping_bonus = 10 if listing.shipping == 0 else 0
     product_match_bonus = 35 if product is not None else 0
+    bundle_penalty = 15 if "Bundle / extras included" in listing.warning_labels else 0
 
-    return round(price_score + seller_score + condition_bonus + shipping_bonus + product_match_bonus, 2)
+    return round(price_score + seller_score + condition_bonus + shipping_bonus + product_match_bonus - bundle_penalty, 2)
 
 
 def top_listings(listings: list[Listing], product: Product | None = None, limit: int = 3) -> list[Listing]:

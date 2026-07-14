@@ -212,3 +212,17 @@ def test_ebay_item_maps_seller_defined_variation_group():
 
     assert listing is not None
     assert listing.item_group_type == "SELLER_DEFINED_VARIATIONS"
+
+
+def test_ebay_bundle_titles_receive_comparison_warning():
+    item = {
+        "title": "Nintendo Switch OLED Console Bundle with Games and SD Card",
+        "price": {"value": "249.99", "currency": "USD"},
+        "condition": "Used",
+        "itemWebUrl": "https://www.ebay.com/itm/123123123123",
+    }
+
+    listing = ebay_item_to_listing(item)
+
+    assert listing is not None
+    assert "Bundle / extras included" in listing.warning_labels

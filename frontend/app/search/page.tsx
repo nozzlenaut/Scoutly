@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AuctionResults } from "@/components/AuctionResults";
 import { ResultCard } from "@/components/ResultCard";
 import { SearchForm } from "@/components/SearchForm";
+import { SearchTransitionGuard } from "@/components/SearchTransitionGuard";
 import { SiteFooter } from "@/components/SiteFooter";
 import { searchDeals } from "@/lib/api";
 import { getCategoryById, getSearchCategoryById } from "@/lib/categoryCatalog";
@@ -58,7 +59,7 @@ export async function generateMetadata({
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string }>
+  searchParams: Promise<{ q?: string; category?: string }>;
 }) {
   const params = await searchParams;
   const rawCategory = (params.category || "").trim();
@@ -93,7 +94,7 @@ export default async function SearchPage({
         </section>
         <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.05] p-6 text-slate-200" role="status">
           <h1 className="text-2xl font-black">Search needed</h1>
-          <p className="mt-3 text-sm leading-6">
+          <p className="mt-3 text-sm leading-6 text-slate-300">
             Type an exact {category.label.toLowerCase()} item above. PriceSift will not fall back to a default item from an empty URL.
           </p>
         </div>
@@ -103,7 +104,12 @@ export default async function SearchPage({
 
   const data = await searchDeals(rawQuery, category.id, "ebay", { includeAuctions: false, auctionHours: 24 });
   const resolved = data.resolved_product;
+  const likelyAlternatives = (data.suggested_products || []).filter((match) => match.confidence >= 0.8).slice(0, 4);
   const emptyTarget = resolved ? "this resolved item" : "this query";
+  const fixedPriceEmptyMessage =
+    data.diagnostics.fixed_price_candidates > 0
+      ? `No safe Buy It Now listings right now for ${emptyTarget}. PriceSift found listings, but automated checks filtered them.`
+      : `No active Buy It Now listings were found right now for ${emptyTarget}.`;
 
   return (
     <PageShell>
@@ -111,41 +117,62 @@ export default async function SearchPage({
         <SearchForm key={`${category.id}:${rawQuery}`} initialCategoryId={category.id} initialQuery={rawQuery} compact />
       </section>
 
-      <div className="mt-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Best used results</p>
-          <h1 className="mt-2 text-4xl font-black">{resolved?.product.display_name ?? data.query}</h1>
-          {resolved ? (
-            <p className="mt-3 text-sm text-slate-400">
-              Resolved to {resolved.product.display_name} · {Math.round(resolved.confidence * 100)}% confidence
-            </p>
-          ) : (
-            <p className="mt-3 text-sm text-amber-300">No catalog match yet. Showing keyword-based results for this query.</p>
-          )}
+      <SearchTransitionGuard>
+        <div className="mt-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Best used results</p>
+            <h1 className="mt-2 text-4xl font-black">{resolved?.product.display_name ?? data.query}</h1>
+            {resolved ? (
+              <p className="mt-3 text-sm text-slate-300">
+                Catalog item: {resolved.product.display_name} · Product match confidence {Math.round(resolved.confidence * 100)}%
+              </p>
+            ) : (
+              <p className="mt-3 text-sm text-amber-200">
+                No single catalog item was selected. Results use the search text as written.
+              </p>
+            )}
+          </div>
+          <p className="text-sm text-slate-300">Live eBay results · Up to 3 Buy It Now options</p>
         </div>
-        <p className="text-sm text-slate-400">Live eBay results · Up to 3 Buy It Now options</p>
-      </div>
 
-      {data.results.length > 0 ? (
-        <section className="mt-8 grid gap-5 xl:grid-cols-3" aria-label="Buy It Now results">
-          {data.results.map((result) => (
-            <ResultCard
-              key={`buy-now-${result.provider}-${result.title}`}
-              result={result}
-              query={data.query}
-              category={category.id}
-              productId={resolved?.product.id}
-              variant="buy_now"
-            />
-          ))}
-        </section>
-      ) : (
-        <div className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-6 text-amber-100" role="status">
-          No safe Buy It Now listings right now for {emptyTarget}. PriceSift is checking ending-soon auctions below, or you can try again later as eBay inventory changes.
-        </div>
-      )}
+        {!resolved && likelyAlternatives.length > 0 ? (
+          <div className="mt-5 rounded-3xl border border-cyan-300/20 bg-cyan-300/10 p-5 text-cyan-50">
+            <p className="font-semibold">Choose an exact catalog variant for stricter filtering:</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {likelyAlternatives.map((match) => (
+                <Link
+                  key={match.product.id}
+                  href={`/search?category=${encodeURIComponent(category.id)}&q=${encodeURIComponent(match.product.display_name)}`}
+                  className="rounded-full border border-cyan-200/25 bg-slate-950/35 px-4 py-2 text-sm font-semibold text-cyan-50 transition hover:bg-slate-950/55"
+                >
+                  {match.product.display_name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
-      <AuctionResults query={data.query} category={category.id} productId={resolved?.product.id} resolved={Boolean(resolved)} />
+        {data.results.length > 0 ? (
+          <section className="mt-8 grid gap-5 xl:grid-cols-3" aria-label="Buy It Now results">
+            {data.results.map((result) => (
+              <ResultCard
+                key={`buy-now-${result.provider}-${result.title}`}
+                result={result}
+                query={data.query}
+                category={category.id}
+                productId={resolved?.product.id}
+                variant="buy_now"
+              />
+            ))}
+          </section>
+        ) : (
+          <div className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-6 text-amber-100" role="status">
+            {fixedPriceEmptyMessage} PriceSift is checking ending-soon auctions below.
+          </div>
+        )}
+
+        <AuctionResults query={data.query} category={category.id} productId={resolved?.product.id} resolved={Boolean(resolved)} />
+      </SearchTransitionGuard>
     </PageShell>
   );
 }

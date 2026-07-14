@@ -699,3 +699,24 @@ def test_rejects_3ds_accessories_games_and_selection_variations():
 
 def test_wii_u_is_paused_until_complete_system_rules_are_defined():
     assert match_product("Nintendo Wii U 32GB", category="consoles") is None
+
+
+def test_rejects_titanic_packaging_only_variations():
+    titanic = match_product("LEGO Titanic 10294", category="lego")
+    assert titanic is not None
+
+    assert listing_matches_product("LEGO Titanic 10294 Empty outer box", titanic.product) is False
+    assert listing_matches_product("LEGO Titanic 10294 Inner Boxes Only", titanic.product) is False
+    assert listing_matches_product("LEGO Titanic 10294 3 Inner Boxes Only", titanic.product) is False
+    assert listing_matches_product("LEGO Titanic 10294 Complete Set", titanic.product) is True
+
+
+def test_bare_rtx_3080_query_does_not_choose_a_vram_variant():
+    assert match_product("RTX 3080", category="gpus") is None
+
+    suggestions = suggest_products("RTX 3080", category="gpus", limit=4)
+    names = {match.product.display_name for match in suggestions}
+    assert "NVIDIA RTX 3080 10GB" in names
+    assert "NVIDIA RTX 3080 12GB" in names
+    assert match_product("RTX 3080 10GB", category="gpus").product.id == "gpu-nvidia-rtx-3080-10gb"
+    assert match_product("RTX 3080 12GB", category="gpus").product.id == "gpu-nvidia-rtx-3080-12gb"

@@ -1,25 +1,28 @@
-# Scoutly v0.5.9
+# Scoutly v0.5.10
 
-Scoutly is a cleaner exact-item eBay search tool for used products. It resolves a search to a catalog item, filters obvious broken/partial/accessory listings, and returns up to three Buy It Now options while auctions load afterward.
+Scoutly is the internal project name for PriceSift, a cleaner exact-item eBay search tool for used products. It resolves searches to catalog items when possible, filters obvious broken/partial/accessory listings, and returns up to three Buy It Now options while auctions load afterward.
 
 ## Current category status
 
 - **Cameras:** Active
 - **GPUs:** Lab, currently reliable in testing
 - **Consoles:** Lab, active testing
-- **LEGO:** Lab / early set-number prototype
+- **LEGO:** Lab / exact set-number prototype
 - **Lenses:** Paused
 
-## Included in v0.5.9
+## Included in v0.5.10
 
-- Clickable listing images and titles using the tracked outbound link
-- Full page navigation for each new search to prevent stale result merging
-- Seller-defined variation-group rejection for consoles and GPUs
-- Multi-model GPU and reported accessory/part cleanup
-- Nintendo handheld filtering improvements
-- Wii U temporarily paused
+- LEGO packaging-only regression filtering
+- Clean category/search transitions with stale cards hidden immediately
+- Consistent autocomplete behavior across active categories
+- Ambiguous GPU variant handling for RTX 3080 10GB versus 12GB
+- Separate product-match and listing-check signals
+- Bundle labeling and ranking refinement
+- Stronger seller-risk ranking
+- Clearer item-plus-shipping and inventory-filtered wording
+- Improved secondary text contrast
 
-See `README-v059.md` for details.
+See `README-v0510.md` for details.
 
 ## Run locally
 

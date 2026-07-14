@@ -107,3 +107,33 @@ def test_rejects_seller_defined_variation_price_traps_for_exact_categories():
 
     assert is_bad_listing(console_listing, console) is True
     assert is_bad_listing(gpu_listing, gpu) is True
+
+
+def test_clean_console_listing_ranks_above_same_price_bundle():
+    from app.ranking.scorer import score_listing
+
+    clean = Listing(
+        provider="eBay",
+        title="Nintendo Switch OLED Console with Joy-Con and Dock",
+        price=220,
+        shipping=0,
+        total_price=220,
+        condition="Used",
+        seller_rating=99.8,
+        seller_feedback_score=250,
+        url="https://example.com/clean",
+    )
+    bundle = Listing(
+        provider="eBay",
+        title="Nintendo Switch OLED Console Bundle with Games",
+        price=220,
+        shipping=0,
+        total_price=220,
+        condition="Used",
+        seller_rating=99.8,
+        seller_feedback_score=250,
+        warning_labels=["Bundle / extras included"],
+        url="https://example.com/bundle",
+    )
+
+    assert score_listing(clean) > score_listing(bundle)

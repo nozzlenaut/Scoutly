@@ -138,6 +138,20 @@ def _ensure_affiliate_campaign_params(
 
 def _listing_warning_labels(title: str) -> list[str]:
     warnings: list[str] = []
+    normalized_title = title.lower()
+    bundle_clues = [
+        " bundle",
+        "with games",
+        "games included",
+        "with accessories",
+        "extra controller",
+        "micro sd",
+        "microsd",
+        "sd card",
+        "with monitor",
+    ]
+    if any(clue in normalized_title for clue in bundle_clues):
+        warnings.append("Bundle / extras included")
     shutter_matches = re.findall(r"(?i)(?:shutter\s*(?:count|actuations?)?\s*[:#-]?\s*|)(\d{1,3}(?:,\d{3})+|\d{5,6})\s*(?:shutter|clicks?|actuations?|shots?)", title)
     for raw_count in shutter_matches:
         try:

@@ -11,11 +11,17 @@ type SearchFormProps = {
   compact?: boolean;
 };
 
+function announceSearchStart() {
+  window.dispatchEvent(new CustomEvent("pricesift:search-start"));
+}
+
 export function SearchForm({ initialCategoryId, initialQuery, compact = false }: SearchFormProps) {
   const initialCategory = getCategory(initialCategoryId);
   const [categoryId, setCategoryId] = useState(initialCategory.id);
   const selectedCategory = getCategory(categoryId);
-  const [query, setQuery] = useState(initialQuery === undefined || initialQuery === null ? initialCategory.defaultQuery : initialQuery.trim());
+  const [query, setQuery] = useState(
+    initialQuery === undefined || initialQuery === null ? initialCategory.defaultQuery : initialQuery.trim(),
+  );
   const [suggestions, setSuggestions] = useState<ProductMatch[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
@@ -23,27 +29,12 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
   const [isNavigating, setIsNavigating] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didMountRef = useRef(false);
+  const requestSequenceRef = useRef(0);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listboxId = useId();
   const inputId = useId();
   const statusId = useId();
-
-  function normalizeMatchValue(value: string | null | undefined) {
-    return (value || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
-  }
-
-  function hasExactSuggestion(value: string, matches: ProductMatch[]) {
-    const normalizedValue = normalizeMatchValue(value);
-    if (!normalizedValue) return false;
-
-    return matches.some((match) => {
-      if (match.confidence < 0.999) return false;
-      return [match.product.display_name, match.matched_alias].some((candidate) =>
-        normalizeMatchValue(candidate) === normalizedValue
-      );
-    });
-  }
 
   useEffect(() => {
     if (!didMountRef.current) {
@@ -58,48 +49,64 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
   }, [selectedCategory.defaultQuery]);
 
   useEffect(() => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
 
     const cleaned = query.trim();
     if (cleaned.length < 2) {
+      requestSequenceRef.current += 1;
       setSuggestions([]);
       setShowSuggestions(false);
       setActiveSuggestionIndex(-1);
+      setIsLoading(false);
       return;
     }
+
+    const requestSequence = requestSequenceRef.current + 1;
+    requestSequenceRef.current = requestSequence;
 
     debounceRef.current = setTimeout(async () => {
       setIsLoading(true);
       const matches = await suggestProducts(cleaned, categoryId);
-      const shouldShow = matches.length > 0 && !hasExactSuggestion(cleaned, matches);
+      if (requestSequence !== requestSequenceRef.current) return;
+
       setSuggestions(matches);
-      setShowSuggestions(shouldShow);
-      setActiveSuggestionIndex(shouldShow ? 0 : -1);
+      setShowSuggestions(matches.length > 0);
+      setActiveSuggestionIndex(matches.length > 0 ? 0 : -1);
       setIsLoading(false);
     }, 180);
 
     return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
+      if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [categoryId, query]);
+
+  function navigate(destination: string) {
+    setShowSuggestions(false);
+    setActiveSuggestionIndex(-1);
+    inputRef.current?.blur();
+    setIsNavigating(true);
+    announceSearchStart();
+    window.location.assign(destination);
+  }
 
   function submitSearch(value = query) {
     const cleaned = value.trim();
     if (!cleaned) return;
 
-    setShowSuggestions(false);
-    setActiveSuggestionIndex(-1);
-    inputRef.current?.blur();
-    setIsNavigating(true);
-    const destination = `/search?category=${encodeURIComponent(categoryId)}&q=${encodeURIComponent(cleaned)}`;
-    // Use a full navigation for every search. This guarantees that fixed-price
-    // and auction state from an earlier query cannot survive and append to the
-    // next result set.
-    window.location.assign(destination);
+    navigate(`/search?category=${encodeURIComponent(categoryId)}&q=${encodeURIComponent(cleaned)}`);
+  }
+
+  function handleCategoryChange(nextCategoryId: string) {
+    if (nextCategoryId === categoryId) return;
+
+    if (compact) {
+      // A results page must never show cards from one category while another
+      // category is selected. Start a clean category page immediately.
+      navigate(`/search?category=${encodeURIComponent(nextCategoryId)}&q=`);
+      return;
+    }
+
+    setCategoryId(nextCategoryId);
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -110,8 +117,6 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
   function pickSuggestion(match: ProductMatch) {
     const value = match.product.display_name;
     setQuery(value);
-    setShowSuggestions(false);
-    setActiveSuggestionIndex(-1);
     submitSearch(value);
   }
 
@@ -155,7 +160,7 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
       }`}
     >
       <div className={compact ? "mb-3" : "mb-4"}>
-        <p className="mb-2 text-xs uppercase tracking-[0.22em] text-slate-500">Choose a category</p>
+        <p className="mb-2 text-xs uppercase tracking-[0.22em] text-slate-400">Choose a category</p>
         <div className="flex flex-wrap gap-2" role="group" aria-label="Search category">
           {searchCategories.map((category) => {
             const isSelected = category.id === categoryId;
@@ -164,13 +169,12 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
                 key={category.id}
                 type="button"
                 aria-pressed={isSelected}
-                onClick={() => {
-                  setCategoryId(category.id);
-                }}
-                className={`flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                disabled={isNavigating}
+                onClick={() => handleCategoryChange(category.id)}
+                className={`flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition disabled:cursor-wait disabled:opacity-70 ${
                   isSelected
                     ? "border-white bg-white text-slate-950"
-                    : "border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]"
+                    : "border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]"
                 }`}
               >
                 <span>{category.label}</span>
@@ -180,7 +184,7 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
           })}
         </div>
         {!compact ? (
-          <p className="mt-3 text-sm text-slate-400">
+          <p className="mt-3 text-sm text-slate-300">
             {selectedCategory.group} · {selectedCategory.description}
           </p>
         ) : null}
@@ -201,7 +205,7 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
               setActiveSuggestionIndex(-1);
             }}
             onFocus={() => {
-              const shouldShow = suggestions.length > 0 && !hasExactSuggestion(query.trim(), suggestions);
+              const shouldShow = suggestions.length > 0;
               setShowSuggestions(shouldShow);
               setActiveSuggestionIndex(shouldShow ? Math.max(activeSuggestionIndex, 0) : -1);
             }}
@@ -225,8 +229,8 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
               aria-label={`Matching ${selectedCategory.label}`}
               className="absolute left-0 right-0 top-16 z-[100] max-h-80 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/95 text-left shadow-2xl shadow-black/50 backdrop-blur"
             >
-              <div className="border-b border-white/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-                Matching {selectedCategory.label.toLowerCase()}
+              <div className="border-b border-white/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-400">
+                Catalog matches for {selectedCategory.label.toLowerCase()}
               </div>
               {suggestions.map((match, index) => {
                 const selected = index === activeSuggestionIndex;
@@ -246,12 +250,12 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
                   >
                     <span>
                       <span className="block font-semibold text-white">{match.product.display_name}</span>
-                      <span className="text-xs text-slate-400">
-                        {match.product.category_label} · {match.product.product_type.replace("_", " ")}
+                      <span className="text-xs text-slate-300">
+                        Exact catalog item · {match.product.product_type.replace("_", " ")}
                       </span>
                     </span>
-                    <span className="rounded-full bg-cyan-300/10 px-2 py-1 text-xs font-medium text-cyan-200">
-                      {Math.round(match.confidence * 100)}%
+                    <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-1 text-xs font-medium text-cyan-100">
+                      Product match {Math.round(match.confidence * 100)}%
                     </span>
                   </button>
                 );
@@ -275,12 +279,10 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
         </button>
       </form>
 
-      <p id={statusId} aria-live="polite" className="mt-3 text-sm text-slate-400">
-        {compact
-          ? "Search another exact item without going back."
-          : "Start typing, pick the exact item from autocomplete, then PriceSift checks eBay for cleaner used listings."}
-        {isLoading ? " Checking catalog..." : ""}
-        {isNavigating ? " Loading results..." : ""}
+      <p id={statusId} aria-live="polite" className="mt-3 text-sm text-slate-300">
+        Pick a catalog item for exact filtering, or search the text as written.
+        {isLoading ? " Checking catalog…" : ""}
+        {isNavigating ? " Loading fresh results…" : ""}
       </p>
     </div>
   );

@@ -222,6 +222,10 @@ LEGO_LOOSE_PART_TERMS = [
 LEGO_INSTRUCTIONS_OR_BOX_ONLY_TERMS = [
     "box only",
     "empty box",
+    "empty outer box",
+    "outer box only",
+    "inner box only",
+    "inner boxes only",
     "box + instructions only",
     "box and instructions only",
     "instructions only",
@@ -329,7 +333,6 @@ CONSOLE_PART_ACCESSORY_TERMS = [
     "game disc only",
     "game only",
     "games only",
-    "game bundle",
     "release games",
     "console checklist",
     "heat shield",
@@ -382,8 +385,6 @@ CONSOLE_PART_ACCESSORY_TERMS = [
     "chrome plates",
     "crome plates",
     "poster only",
-    "accessories bundle",
-    "accessory bundle",
     "cover",
     "ps5 cover",
     "playstation cover",
@@ -391,8 +392,6 @@ CONSOLE_PART_ACCESSORY_TERMS = [
     "disc edition cover",
     "stick drift",
     "drift",
-    "monitor bundle",
-    "with monitor",
     "external disc drive",
     "external disk drive",
     "drive only",
@@ -646,6 +645,22 @@ def _looks_like_console_accessory(title: str, product: Product | None = None) ->
     if _looks_like_console_multi_variation_listing(title, product):
         return True
 
+    # Bundles with games, accessories, storage, or a monitor can still be a
+    # legitimate complete-console sale. Keep them when the title positively
+    # identifies the console/system; reject bundle titles that only use a
+    # platform name as compatibility metadata.
+    accessory_bundle_terms = [
+        "accessory bundle",
+        "accessories bundle",
+        "with accessories",
+        "monitor bundle",
+        "with monitor",
+    ]
+    if _has_any_term(title, accessory_bundle_terms):
+        console_identity_terms = ["console", "system", "unit", "complete"]
+        if not _has_any_term(title, console_identity_terms):
+            return True
+
     # Marketplace repair-part listings often say "for PS5/Xbox/Switch".
     # Only use that prefix as a reject signal when it is paired with part words.
     accessory_words = [
@@ -824,6 +839,16 @@ def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
         return True
 
     if _has_any_term(title, LEGO_INSTRUCTIONS_OR_BOX_ONLY_TERMS):
+        return True
+
+    # Sellers use several packaging-only variations that do not contain the
+    # exact phrase "box only", including "3 Inner Boxes Only". Treat any
+    # numbered or inner/outer packaging-only title as junk for complete-set
+    # searches.
+    raw_normalized = normalize_text(title, strip_filler=False)
+    if re.search(r"\b(?:empty\s+)?(?:inner|outer)\s+boxes?\s+only\b", raw_normalized):
+        return True
+    if re.search(r"\b\d+\s+(?:inner|outer)\s+boxes?\s+only\b", raw_normalized):
         return True
 
     if _has_any_term(title, LEGO_ACCESSORY_TERMS):
@@ -1171,12 +1196,46 @@ def _score_product_candidate(query: str, product: Product) -> ProductMatch | Non
     return ProductMatch(product=product, confidence=round(best_confidence, 2), matched_alias=best_alias)
 
 
+def _gpu_variant_resolution_is_ambiguous(query: str, matches: list[ProductMatch]) -> bool:
+    """Do not silently choose one VRAM variant for a shared GPU model.
+
+    RTX 3080 is the main current example: the 10GB and 12GB products share
+    common aliases, so a bare query can otherwise resolve whichever catalog
+    row sorts first at 100%. A storage clue makes the choice explicit.
+    """
+
+    if not matches or _storage_clues(query):
+        return False
+
+    best = matches[0]
+    if best.product.category != "gpus":
+        return False
+
+    siblings = [
+        match
+        for match in matches
+        if match.confidence >= max(0.7, best.confidence - 0.04)
+        and match.product.category == best.product.category
+        and match.product.brand.lower() == best.product.brand.lower()
+        and normalize_text(match.product.model, strip_filler=False)
+        == normalize_text(best.product.model, strip_filler=False)
+    ]
+    vram_values = {
+        str(match.product.metadata.get("vram_gb") or "").strip()
+        for match in siblings
+        if match.product.metadata.get("vram_gb") is not None
+    }
+    return len(vram_values) > 1
+
+
 def match_product(query: str, category: str | None = None) -> ProductMatch | None:
-    matches = suggest_products(query, category=category, limit=1)
+    matches = suggest_products(query, category=category, limit=8)
     if not matches:
         return None
     best_match = matches[0]
     if best_match.confidence < 0.7:
+        return None
+    if _gpu_variant_resolution_is_ambiguous(query, matches):
         return None
     return best_match
 

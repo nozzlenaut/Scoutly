@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Query
 
+from app.catalog.catalog import suggest_products
 from app.models.search import SearchResponse
 from app.services.search_service import search_auction_deals, search_best_deals_with_auctions
 
@@ -15,7 +16,7 @@ async def search(
     auction_hours: int = Query(24, ge=1, le=168),
 ) -> SearchResponse:
     provider_keys = [provider.strip() for provider in providers.split(",") if provider.strip()]
-    resolved_product, results, auction_results = await search_best_deals_with_auctions(
+    resolved_product, results, auction_results, diagnostics = await search_best_deals_with_auctions(
         q,
         provider_keys,
         category,
@@ -26,8 +27,10 @@ async def search(
         query=q,
         category=category,
         resolved_product=resolved_product,
+        suggested_products=suggest_products(q, category, limit=5),
         results=results,
         auction_results=auction_results,
+        diagnostics=diagnostics,
     )
 
 
@@ -39,7 +42,7 @@ async def search_auctions(
     auction_hours: int = Query(24, ge=1, le=168),
 ) -> SearchResponse:
     provider_keys = [provider.strip() for provider in providers.split(",") if provider.strip()]
-    resolved_product, auction_results = await search_auction_deals(
+    resolved_product, auction_results, diagnostics = await search_auction_deals(
         q,
         provider_keys,
         category,
@@ -49,6 +52,8 @@ async def search_auctions(
         query=q,
         category=category,
         resolved_product=resolved_product,
+        suggested_products=suggest_products(q, category, limit=5),
         results=[],
         auction_results=auction_results,
+        diagnostics=diagnostics,
     )

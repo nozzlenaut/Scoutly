@@ -1,3 +1,15 @@
+# v0.5.10 — Search consistency and trust cleanup
+
+- Rejects LEGO empty outer-box, inner-box-only, and numbered inner-box packaging listings.
+- Clears stale result cards immediately when searches or result-page categories change.
+- Shows autocomplete consistently across active categories and clarifies catalog selection versus raw-text search.
+- Keeps ambiguous RTX 3080 searches unresolved until 10GB or 12GB is selected.
+- Separates product-match confidence from automated listing-quality checks.
+- Allows and labels legitimate console bundles while ranking equivalent clean listings first.
+- Strengthens seller-risk ranking and clarifies item-plus-shipping totals, taxes, and import-charge limitations.
+- Distinguishes absent inventory from candidates removed by automated filters.
+- Improves secondary text contrast.
+
 # v0.5.8 — PriceSift public branding and catalog growth
 
 - Changes all public-facing site, search, disclosure, report, loading, and admin branding from Scoutly to PriceSift while retaining Scoutly for internal repository, package, database, and affiliate identifiers.
