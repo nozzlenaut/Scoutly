@@ -231,29 +231,29 @@ const consoleFamilyMap: Record<string, SpecOption[]> = {
 const consoleModelMap: Record<string, SpecOption[]> = {
   "nintendo-3ds-xl": [{ id: "", label: "Any 3DS XL" }],
   "nintendo-switch": [
-    { id: "", label: "Any Switch model" },
+    { id: "", label: "All Switch models" },
     { id: "standard", label: "Standard Switch" },
     { id: "oled", label: "Switch OLED" },
     { id: "lite", label: "Switch Lite" },
   ],
   "playstation-4": [
-    { id: "", label: "Any PS4 model" },
+    { id: "", label: "All PS4 models" },
     { id: "slim", label: "PS4 Slim" },
     { id: "pro", label: "PS4 Pro" },
   ],
   "playstation-5": [
-    { id: "", label: "Any PS5 model" },
+    { id: "", label: "All PS5 models" },
     { id: "standard", label: "Standard PS5" },
     { id: "slim", label: "PS5 Slim" },
     { id: "pro", label: "PS5 Pro" },
   ],
   "xbox-one": [
-    { id: "", label: "Any Xbox One model" },
+    { id: "", label: "All Xbox One models" },
     { id: "One S", label: "Xbox One S" },
     { id: "One X", label: "Xbox One X" },
   ],
   "xbox-series": [
-    { id: "", label: "Any Xbox Series model" },
+    { id: "", label: "All Xbox Series models" },
     { id: "Series S", label: "Xbox Series S" },
     { id: "Series X", label: "Xbox Series X" },
   ],

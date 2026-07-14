@@ -13,23 +13,3 @@ Scoutly remains the internal project name. This patch makes an unrefined console
 - Builder labels and explanatory copy now describe the combined-search behavior.
 
 No Railway, PostgreSQL, Vercel, domain, or environment changes are required.
-
-## Run locally
-
-### Backend
-
-```bash
-cd backend
-py -3.12 -m venv .venv
-source .venv/Scripts/activate
-pip install -r requirements.txt
-python -m uvicorn app.main:app --reload --port 8000
-```
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```

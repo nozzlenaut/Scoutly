@@ -125,9 +125,9 @@ export function ConsoleSearchBuilder({
             Build your console search
           </p>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
-            Pick a brand and console family to see results. Model, storage, and
-            edition are optional refinements—leave them open when the cheapest
-            complete console matters more than a specific version.
+            Pick a brand and console family to see results. Leaving model open
+            searches every active model in that family, then combines the best
+            valid listings. Storage and edition remain optional refinements.
           </p>
         </div>
         <span className="w-fit rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1 text-xs font-semibold text-emerald-100">

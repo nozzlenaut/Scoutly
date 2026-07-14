@@ -43,6 +43,14 @@ def rejection_reasons(listing: Listing, product: Product | None = None) -> list[
                 reasons.append(f"bad GPU form factor: {word}")
                 break
 
+    if (
+        product is not None
+        and product.category == "consoles"
+        and (has_term(listing.title, "controller") or has_term(listing.title, "controllers"))
+        and not has_term(listing.title, "console")
+    ):
+        reasons.append("controller listing without console evidence")
+
     if listing.seller_feedback_score == 0:
         reasons.append("seller feedback score is zero")
 

@@ -39,6 +39,7 @@ GLOBAL_BAD_LISTING_TERMS = [
     "repair",
     "salvage",
     "no power",
+    "service",
     "spares",
     "untested",
 ]

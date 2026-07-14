@@ -125,11 +125,7 @@ def parse_console_query(query: str) -> ConsoleSpec | None:
     )
 
 
-def console_product_match(query: str) -> ProductMatch | None:
-    spec = parse_console_query(query)
-    if spec is None:
-        return None
-
+def _console_product_from_spec(spec: ConsoleSpec) -> Product:
     if spec.brand == "Xbox":
         model = "Series" if spec.family == "xbox-series" else "One"
         if spec.model:
@@ -162,7 +158,7 @@ def console_product_match(query: str) -> ProductMatch | None:
         variant_parts.append("Digital Edition")
 
     canonical = spec.canonical_query
-    product = Product(
+    return Product(
         id=(
             "console-builder-"
             + re.sub(r"[^a-z0-9]+", "-", canonical.lower()).strip("-")
@@ -183,7 +179,72 @@ def console_product_match(query: str) -> ProductMatch | None:
             "provider_query": spec.provider_query,
         },
     )
-    return ProductMatch(product=product, confidence=1.0, matched_alias=canonical)
+
+
+def console_product_match(query: str) -> ProductMatch | None:
+    spec = parse_console_query(query)
+    if spec is None:
+        return None
+
+    product = _console_product_from_spec(spec)
+    return ProductMatch(product=product, confidence=1.0, matched_alias=spec.canonical_query)
+
+
+_FAMILY_MODEL_SCOPES: dict[str, tuple[str, ...]] = {
+    "xbox-series": ("Series S", "Series X"),
+    "xbox-one": ("One S", "One X"),
+    "playstation-5": ("standard", "slim", "pro"),
+    "playstation-4": ("standard", "slim", "pro"),
+    "nintendo-switch": ("standard", "oled", "lite"),
+}
+
+_MODEL_STORAGE_SUPPORT: dict[tuple[str, str], set[str]] = {
+    ("xbox-series", "Series S"): {"512GB", "1TB"},
+    ("xbox-series", "Series X"): {"1TB"},
+    ("xbox-one", "One S"): {"1TB"},
+    ("xbox-one", "One X"): {"1TB"},
+    ("playstation-5", "standard"): {"825GB"},
+    ("playstation-5", "slim"): {"1TB"},
+    ("playstation-5", "pro"): {"2TB"},
+}
+
+
+def console_search_products(product: Product) -> list[Product]:
+    """Expand an unrefined console family into exact model searches.
+
+    A builder selection such as "Xbox Series" should not rely on one broad
+    marketplace query. Each active model is searched independently, filtered
+    with its own exact product rules, then merged by the search service.
+    """
+    if product.category != "consoles" or product.metadata.get("builder") != "consoles":
+        return [product]
+
+    family = str(product.metadata.get("family") or "")
+    model_scope = product.metadata.get("model_scope")
+    if model_scope or family not in _FAMILY_MODEL_SCOPES:
+        return [product]
+
+    storage = str(product.metadata.get("storage") or "") or None
+    edition = str(product.metadata.get("edition") or "") or None
+    expanded: list[Product] = []
+    for model in _FAMILY_MODEL_SCOPES[family]:
+        supported_storage = _MODEL_STORAGE_SUPPORT.get((family, model))
+        if storage and supported_storage is not None and storage not in supported_storage:
+            continue
+        # PS5 Pro does not expose a builder-level disc-edition option. A disc
+        # family search should cover the standard and slim disc models instead.
+        if family == "playstation-5" and model == "pro" and edition == "disc":
+            continue
+        spec = ConsoleSpec(
+            brand=product.brand,
+            family=family,
+            model=model,
+            storage=storage,
+            edition=edition,
+        )
+        expanded.append(_console_product_from_spec(spec))
+
+    return expanded or [product]
 
 
 def console_provider_query(product: Product) -> str:
