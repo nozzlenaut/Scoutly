@@ -124,7 +124,7 @@ GET /api/qa/evaluations?limit=200
 POST /api/qa/evaluations
 ```
 
-`GET /api/qa/cases` returns the seeded regression cases, each case's latest saved evaluation, attempt counts, and aggregate summary metrics.
+`GET /api/qa/cases` returns the seeded regression cases, each case's latest saved evaluation, attempt counts, and aggregate summary metrics. `quality_rate` measures usable top-three results only among cases with eligible inventory; `overall_rate` includes safe no-inventory outcomes, and `available_inventory_cases` exposes the denominator used for quality.
 
 Example evaluation payload:
 

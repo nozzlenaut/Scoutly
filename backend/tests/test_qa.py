@@ -77,3 +77,31 @@ def test_qa_endpoints_require_token_and_save(monkeypatch, tmp_path):
         case for case in refreshed.json()["cases"] if case["id"] == "console-model-v2-switch"
     )
     assert switch_case["latest_evaluation"]["outcome"] == "pass"
+
+
+def test_qa_quality_rate_excludes_safe_no_inventory(monkeypatch, tmp_path):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
+
+    passed = _evaluation_payload()
+    save_qa_evaluation(passed)
+
+    no_inventory = {
+        **_evaluation_payload(),
+        "case_id": "console-model-v2-ps5",
+        "query": "PlayStation 5",
+        "expected_product_id": "console-playstation-5",
+        "expected_label": "PlayStation 5",
+        "resolved_product_id": "console-playstation-5",
+        "resolved_label": "PlayStation 5",
+        "outcome": "no_inventory",
+        "notes": "Resolved correctly; all live listings were filtered safely.",
+        "result_titles": [],
+    }
+    save_qa_evaluation(no_inventory)
+
+    summary = qa_summary()
+    assert summary["tested_cases"] == 2
+    assert summary["available_inventory_cases"] == 1
+    assert summary["quality_rate"] == 100.0
+    assert summary["overall_rate"] == 50.0

@@ -185,9 +185,11 @@ export type QaCase = {
 export type QaSummary = {
   total_cases: number;
   tested_cases: number;
+  available_inventory_cases: number;
   counts: Record<QaOutcome | "untested", number>;
   category_counts: Record<string, Record<QaOutcome | "untested", number>>;
   quality_rate: number | null;
+  overall_rate: number | null;
 };
 
 export type QaCasesResponse = {

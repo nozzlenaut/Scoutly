@@ -221,11 +221,18 @@ def qa_summary() -> dict[str, Any]:
         category_counts[category][outcome] += 1
 
     tested = len(cases) - counts["untested"]
+    available_inventory_cases = counts["pass"] + counts["top3_only"] + counts["fail"]
     quality_passes = counts["pass"] + counts["top3_only"]
     return {
         "total_cases": len(cases),
         "tested_cases": tested,
+        "available_inventory_cases": available_inventory_cases,
         "counts": counts,
         "category_counts": category_counts,
-        "quality_rate": round((quality_passes / tested) * 100, 1) if tested else None,
+        "quality_rate": (
+            round((quality_passes / available_inventory_cases) * 100, 1)
+            if available_inventory_cases
+            else None
+        ),
+        "overall_rate": round((quality_passes / tested) * 100, 1) if tested else None,
     }

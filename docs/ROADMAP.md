@@ -83,6 +83,14 @@ Show the best used result
 - Expand the QA workbench to Cameras, GPUs, RAM, CPUs, Consoles, and LEGO
 - Preserve existing Console and LEGO evaluation history
 
+## v0.6.12 - Cross-category quality cleanup
+
+- Reject faulty/partially functional electronics and mixed-speed RAM kits
+- Require LEGO set-number and canonical-name agreement
+- Reject LEGO sub-build, manual-only, and individual-brick listings
+- Separate inventory-adjusted QA quality from availability and overall outcomes
+- Preserve the 88-case regression suite for periodic full sweeps
+
 ## Later
 
 - Price history

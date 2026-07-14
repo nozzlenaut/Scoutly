@@ -1047,3 +1047,47 @@ def test_ram_selected_brand_rejects_mixed_brand_kits():
         "SK Hynix + A-Tech Pair 32GB 2x16GB DDR4 3200 UDIMM Desktop RAM",
         match.product,
     ) is False
+
+
+def test_ram_rejects_mixed_speed_kit_for_exact_speed_search():
+    match = match_product("DDR4 Desktop 16GB 2x8GB 3200 MT/s", category="ram")
+    assert match is not None
+    assert listing_matches_product(
+        "16GB 2x8GB DDR4 Desktop RAM Mixed 2666 3200MHz UDIMM",
+        match.product,
+    ) is False
+    assert listing_matches_product(
+        "16GB 2x8GB DDR4 3200MHz Desktop UDIMM Memory Kit",
+        match.product,
+    ) is True
+
+
+def test_lego_requires_canonical_name_and_rejects_partial_set_patterns():
+    cases = [
+        (
+            "LEGO AT-AT 75313",
+            "LEGO Star Wars Dark Trooper Helmet 75313 Complete",
+            "LEGO Star Wars UCS AT-AT 75313 Complete Set",
+        ),
+        (
+            "PAC-MAN Arcade 10323",
+            "LEGO PAC-MAN 10323 Blinky Clyde Ghosts Only",
+            "LEGO Icons PAC-MAN Arcade 10323 Complete Set",
+        ),
+        (
+            "Horizon Tallneck 76989",
+            "LEGO Horizon Forbidden West Tallneck 76989 Instruction Manual Set",
+            "LEGO Horizon Forbidden West Tallneck 76989 Complete",
+        ),
+        (
+            "Assembly Square 10255",
+            "LEGO 10255 Assembly Square 2 Brick 1x4 Replacement Pieces",
+            "LEGO Creator Expert Assembly Square 10255 Complete Set",
+        ),
+    ]
+
+    for query, rejected_title, accepted_title in cases:
+        match = match_product(query, category="lego")
+        assert match is not None, query
+        assert listing_matches_product(rejected_title, match.product) is False, rejected_title
+        assert listing_matches_product(accepted_title, match.product) is True, accepted_title

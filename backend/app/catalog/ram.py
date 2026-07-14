@@ -270,6 +270,15 @@ def _conflicting_configurations(title: str, selected_count: int, selected_capaci
     return any(config != (selected_count, selected_capacity) for config in configurations)
 
 
+def _mentioned_ram_speeds(title: str, generation: str) -> set[int]:
+    mentioned: set[int] = set()
+    for speed in RAM_SPEEDS.get(generation, set()):
+        clues = [str(speed), *PC_SPEED_EQUIVALENTS.get((generation, speed), [])]
+        if any(has_term(title, clue) for clue in clues):
+            mentioned.add(speed)
+    return mentioned
+
+
 def ram_title_matches_product(title: str, product: Product) -> bool:
     metadata = product.metadata
     generation = str(metadata.get("generation") or "")
@@ -333,6 +342,11 @@ def ram_title_matches_product(title: str, product: Product) -> bool:
         speed_value = int(speed)
         speed_clues = [str(speed_value), *PC_SPEED_EQUIVALENTS.get((generation, speed_value), [])]
         if not any(has_term(title, clue) for clue in speed_clues):
+            return False
+        mentioned_speeds = _mentioned_ram_speeds(title, generation)
+        if mentioned_speeds - {speed_value}:
+            return False
+        if has_term(title, "mixed") and len(mentioned_speeds) > 1:
             return False
 
     if brand:

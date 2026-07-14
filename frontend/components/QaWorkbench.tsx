@@ -110,13 +110,16 @@ function buildSummary(cases: QaCase[]): QaSummary {
     categoryCounts[testCase.category][outcome] += 1;
   }
   const tested = cases.length - counts.untested;
+  const availableInventoryCases = counts.pass + counts.top3_only + counts.fail;
   const quality = counts.pass + counts.top3_only;
   return {
     total_cases: cases.length,
     tested_cases: tested,
+    available_inventory_cases: availableInventoryCases,
     counts,
     category_counts: categoryCounts,
-    quality_rate: tested ? Math.round((quality / tested) * 1000) / 10 : null,
+    quality_rate: availableInventoryCases ? Math.round((quality / availableInventoryCases) * 1000) / 10 : null,
+    overall_rate: tested ? Math.round((quality / tested) * 1000) / 10 : null,
   };
 }
 
@@ -263,9 +266,19 @@ export function QaWorkbench({ initialCases, initialSummary, token }: Props) {
           <p className="text-sm text-rose-100/70">Failures</p>
           <p className="mt-2 text-3xl font-black text-rose-200">{summary.counts.fail}</p>
         </div>
+        <div className="rounded-3xl border border-slate-300/15 bg-slate-300/[0.04] p-5">
+          <p className="text-sm text-slate-400">No inventory</p>
+          <p className="mt-2 text-3xl font-black text-slate-200">{summary.counts.no_inventory}</p>
+        </div>
         <div className="rounded-3xl border border-white/10 bg-white/[0.05] p-5">
-          <p className="text-sm text-slate-400">Usable top-three rate</p>
+          <p className="text-sm text-slate-400">Usable top-three · inventory available</p>
           <p className="mt-2 text-3xl font-black">{summary.quality_rate === null ? "—" : `${summary.quality_rate}%`}</p>
+          <p className="mt-1 text-xs text-slate-600">{summary.available_inventory_cases} cases with eligible inventory</p>
+        </div>
+        <div className="rounded-3xl border border-white/10 bg-white/[0.05] p-5">
+          <p className="text-sm text-slate-400">Overall usable outcomes</p>
+          <p className="mt-2 text-3xl font-black">{summary.overall_rate === null ? "—" : `${summary.overall_rate}%`}</p>
+          <p className="mt-1 text-xs text-slate-600">Includes safe no-inventory cases</p>
         </div>
       </section>
 

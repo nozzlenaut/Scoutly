@@ -15,6 +15,6 @@ Scoutly remains the internal repository and infrastructure name.
 - Seed suite: 88 cases across Cameras, GPUs, RAM, CPUs, Consoles, and LEGO
 - Outcome tracking: Pass, Top-3 only, Fail, No inventory
 - Persistence: PostgreSQL production storage with local JSON fallback
-- Current build: v0.6.11 CPU builder and full-category QA
-- Next milestone: Run the 16 CPU cases first, then use the expanded suite for periodic regression passes across all categories
+- Current build: v0.6.12 cross-category quality cleanup
+- Next milestone: Rerun the seven affected QA cases, then decide between product features, broader marketplace coverage, and the next category
 

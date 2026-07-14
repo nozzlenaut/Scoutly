@@ -24,6 +24,14 @@ GLOBAL_BAD_LISTING_TERMS = [
     "damaged",
     "does not work",
     "error please read",
+    "faulty",
+    "partially functional",
+    "partially working",
+    "partial function",
+    "only displayport works",
+    "only display port works",
+    "only hdmi works",
+    "one port works",
     "for parts",
     "not working",
     "parts only",
@@ -133,6 +141,10 @@ GPU_PART_ACCESSORY_TERMS = [
     "displayport failed",
     "display port failed",
     "hdmi failed",
+    "only displayport works",
+    "only display port works",
+    "only hdmi works",
+    "one port works",
 ]
 
 LENS_SAFE_CONTEXT_TERMS = {"aperture ring", "focus ring", "zoom ring"}
@@ -232,6 +244,10 @@ LEGO_INCOMPLETE_OR_PART_TERMS = [
     "lot of two",
     "taxi only",
     "taxi cab only",
+    "ghost only",
+    "ghosts only",
+    "sub build only",
+    "sub-build only",
     "loose bricks",
     "random pieces",
     "bulk lot",
@@ -267,6 +283,8 @@ LEGO_INSTRUCTIONS_OR_BOX_ONLY_TERMS = [
     "box no bricks",
     "packaging only",
     "instructions only",
+    "instruction manual set",
+    "instructions manual set",
     "instruction book only",
     "building instructions only",
     "instructions no bricks",
@@ -1265,6 +1283,9 @@ def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
     if _has_any_term(title, LEGO_ACCESSORY_TERMS):
         return True
 
+    if _looks_like_lego_individual_bricks(title):
+        return True
+
     if _has_any_term(title, LEGO_UNAUTHENTIC_TERMS):
         return True
 
@@ -1316,13 +1337,96 @@ def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
     return False
 
 
+LEGO_GENERIC_NAME_TOKENS = {
+    "lego",
+    "star",
+    "wars",
+    "creator",
+    "expert",
+    "icons",
+    "ideas",
+    "technic",
+    "architecture",
+    "marvel",
+    "disney",
+    "super",
+    "heroes",
+    "ultimate",
+    "collector",
+    "series",
+    "building",
+    "set",
+    "the",
+    "and",
+    "of",
+}
+
+
+def _lego_has_canonical_name_agreement(title: str, product: Product) -> bool:
+    """Require the set number *and* meaningful agreement with the set name.
+
+    eBay titles sometimes contain a parent set number while selling a helmet,
+    minifigure, sub-build, or compatibility item. The set number remains the
+    primary identity, but it cannot be the only identity signal.
+    """
+    title_normalized = normalize_text(title, strip_filler=False)
+    model_tokens = [
+        token
+        for token in normalize_text(product.model, strip_filler=False).split()
+        if token not in LEGO_GENERIC_NAME_TOKENS
+    ]
+    if not model_tokens:
+        return False
+
+    # Hyphenated names such as AT-AT normalize to repeated short tokens.
+    # Require the phrase/compact form rather than treating a lone "at" as proof.
+    if len(model_tokens) >= 2 and len(set(model_tokens)) == 1 and len(model_tokens[0]) <= 2:
+        phrase = " ".join(model_tokens)
+        return phrase in title_normalized or "".join(model_tokens) in compact_text(title, strip_filler=False)
+
+    hits = sum(1 for token in model_tokens if has_term(title, token))
+    if len(model_tokens) == 1:
+        return hits == 1
+    if len(model_tokens) == 2:
+        return hits == 2
+
+    # For longer names, require the final identifying token plus at least half
+    # of the meaningful name. This accepts shortened but recognizable titles
+    # like "Horizon Tallneck" while rejecting "PAC-MAN Ghosts" for the arcade.
+    anchor = model_tokens[-1]
+    required_hits = max(2, (len(model_tokens) + 1) // 2)
+    return has_term(title, anchor) and hits >= required_hits
+
+
+def _looks_like_lego_individual_bricks(title: str) -> bool:
+    normalized = normalize_text(title, strip_filler=False)
+    part_noun = bool(re.search(r"\b(?:brick|bricks|plate|plates|tile|tiles|piece|pieces)\b", normalized))
+    if not part_noun:
+        return False
+
+    has_dimension = bool(re.search(r"\b\d{1,2}\s*[x×]\s*\d{1,2}\b", title.lower()))
+    has_small_quantity = bool(
+        re.search(
+            r"\b(?:one|two|three|four|five|six|seven|eight|nine|ten|[1-9]|10)\s+(?:loose\s+)?(?:lego\s+)?(?:brick|bricks|plate|plates|tile|tiles|piece|pieces)\b",
+            normalized,
+        )
+    )
+    part_only = bool(
+        re.search(
+            r"\b(?:brick|bricks|plate|plates|tile|tiles|piece|pieces)\s+only\b",
+            normalized,
+        )
+    )
+    return has_dimension or has_small_quantity or part_only
+
+
 def _lego_title_matches_product(title: str, product: Product) -> bool:
     set_number = str(product.metadata.get("set_number") or product.variant or "").strip()
     if set_number:
         # LEGO titles are too noisy to trust model-name-only matches. Require the
         # exact set number so "Millennium Falcon" does not match a different set
         # or a minifigure that references the parent model.
-        return has_term(title, set_number)
+        return has_term(title, set_number) and _lego_has_canonical_name_agreement(title, product)
 
     model_terms = [term for term in normalize_text(product.model).split() if term not in {"lego", "star", "wars", "the", "and", "of"}]
     if len(model_terms) < 2:

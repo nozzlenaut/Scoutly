@@ -154,3 +154,42 @@ def test_rejects_seller_defined_variations_for_ram():
         item_group_type="SELLER_DEFINED_VARIATIONS",
     )
     assert is_bad_listing(listing, product) is True
+
+
+def test_rejects_faulty_cpu_and_partial_function_gpu_titles():
+    from app.catalog.catalog import match_product
+
+    cpu = match_product("Intel Core i9-9900K", category="cpus").product
+    gpu = match_product("RTX 3070 8GB", category="gpus").product
+
+    faulty_cpu = Listing(
+        provider="eBay",
+        title="Intel Core i9-9900K 3.6GHz Desktop Processor FAULTY",
+        price=80,
+        shipping=0,
+        total_price=80,
+        condition="Used",
+        url="https://example.com/faulty-cpu",
+    )
+    partial_gpu = Listing(
+        provider="eBay",
+        title="NVIDIA GeForce RTX 3070 8GB Only DisplayPort Works",
+        price=160,
+        shipping=0,
+        total_price=160,
+        condition="Used",
+        url="https://example.com/partial-gpu",
+    )
+    clean_cpu = Listing(
+        provider="eBay",
+        title="Intel Core i9-9900K Desktop Processor Tested Working",
+        price=180,
+        shipping=0,
+        total_price=180,
+        condition="Used",
+        url="https://example.com/clean-cpu",
+    )
+
+    assert is_bad_listing(faulty_cpu, cpu) is True
+    assert is_bad_listing(partial_gpu, gpu) is True
+    assert is_bad_listing(clean_cpu, cpu) is False

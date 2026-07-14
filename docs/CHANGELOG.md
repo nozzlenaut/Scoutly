@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.12
+
+- Rejects faulty and partially functional electronics, including single-working-port GPU listings.
+- Rejects mixed/conflicting-speed RAM kits for exact-speed searches.
+- Requires LEGO set numbers to agree meaningfully with the canonical set name.
+- Rejects LEGO sub-builds, instruction-manual sets, and small individual-brick listings.
+- Separates inventory-adjusted QA quality from safe no-inventory and overall outcome rates.
+- Adds four focused regression tests, bringing the backend suite to 167 passing tests.
+
 ## v0.6.11
 
 - Adds an active CPU builder covering 161 consumer desktop processors across AMD AM4/AM5 and Intel LGA1151/LGA1200/LGA1700/LGA1851.
