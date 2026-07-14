@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.6.10
+
+- Requires standard Nintendo Switch results to show explicit complete-system language or both Joy-Con and dock evidence.
+- Rejects bare HAC-001 / tested-working titles that may describe tablet-only hardware.
+- Deduplicates final results by marketplace URL and normalized visible title so repeated listings cannot occupy the full top three.
+- Adds duplicate-collapsed diagnostics to the QA workbench.
+- Adds exact Switch-completeness and duplicate-title regression cases, bringing the backend suite to 156 passing tests.
+
 ## v0.6.9
 
 - Adds a stricter console listing-eligibility layer for standalone drives, shells, frames, cooling parts, cases, packaging/manual-only listings, docks, and incomplete hardware.
@@ -84,6 +92,14 @@
 - Rejects GPU problem/issue listings while allowing “no problems” / “no issues” context.
 
 # Changelog
+
+## v0.6.10
+
+- Requires standard Nintendo Switch results to show explicit complete-system language or both Joy-Con and dock evidence.
+- Rejects bare HAC-001 / tested-working titles that may describe tablet-only hardware.
+- Deduplicates final results by marketplace URL and normalized visible title so repeated listings cannot occupy the full top three.
+- Adds duplicate-collapsed diagnostics to the QA workbench.
+- Adds exact Switch-completeness and duplicate-title regression cases, bringing the backend suite to 156 passing tests.
 
 ## v0.4.0 - Dropdown cleanup and eBay affiliate readiness
 

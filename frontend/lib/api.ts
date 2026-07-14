@@ -48,10 +48,12 @@ export type SearchDiagnostics = {
   fixed_price_candidates: number;
   fixed_price_filtered: number;
   fixed_price_eligible: number;
+  fixed_price_duplicates_removed: number;
   fixed_price_rejection_reasons: Record<string, number>;
   auction_candidates: number;
   auction_filtered: number;
   auction_eligible: number;
+  auction_duplicates_removed: number;
   auction_rejection_reasons: Record<string, number>;
 };
 

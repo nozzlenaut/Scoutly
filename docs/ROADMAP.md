@@ -68,6 +68,13 @@ Show the best used result
 - Expose eligible counts and rejection-reason diagnostics in the QA workbench
 - Rerun the unchanged 16 core-model Console benchmark before adding categories or variant narrowing
 
+## v0.6.10 - Switch completeness and result deduplication
+
+- Require evidence that standard Nintendo Switch listings include a complete V1/V2 system
+- Collapse duplicate item URLs and duplicate visible titles before selecting the top three
+- Expose duplicate-collapsed counts in QA diagnostics
+- Run the final unchanged 16-case Console benchmark before expanding categories
+
 ## Later
 
 - Price history

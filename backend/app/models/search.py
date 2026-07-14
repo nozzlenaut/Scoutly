@@ -8,10 +8,12 @@ class SearchDiagnostics(BaseModel):
     fixed_price_candidates: int = 0
     fixed_price_filtered: int = 0
     fixed_price_eligible: int = 0
+    fixed_price_duplicates_removed: int = 0
     fixed_price_rejection_reasons: dict[str, int] = Field(default_factory=dict)
     auction_candidates: int = 0
     auction_filtered: int = 0
     auction_eligible: int = 0
+    auction_duplicates_removed: int = 0
     auction_rejection_reasons: dict[str, int] = Field(default_factory=dict)
 
 

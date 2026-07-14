@@ -171,7 +171,7 @@ class RecordingSwitchProvider:
             return [
                 Listing(
                     provider="eBay",
-                    title="Nintendo Switch V2 HAC-001(-01) Console Neon Tested",
+                    title="Nintendo Switch V2 HAC-001(-01) Complete System Neon Tested",
                     price=179.99,
                     shipping=0,
                     total_price=179.99,
@@ -185,7 +185,7 @@ class RecordingSwitchProvider:
             return [
                 Listing(
                     provider="eBay",
-                    title="Nintendo Switch Console HAC-001 Gray Tested",
+                    title="Nintendo Switch Console HAC-001 Gray Complete System Tested",
                     price=159.99,
                     shipping=0,
                     total_price=159.99,
@@ -249,8 +249,8 @@ def test_original_switch_combines_revision_results(monkeypatch):
         "Nintendo Switch console",
     ]
     assert [listing.title for listing in results] == [
-        "Nintendo Switch Console HAC-001 Gray Tested",
-        "Nintendo Switch V2 HAC-001(-01) Console Neon Tested",
+        "Nintendo Switch Console HAC-001 Gray Complete System Tested",
+        "Nintendo Switch V2 HAC-001(-01) Complete System Neon Tested",
     ]
     assert auctions == []
     assert diagnostics.fixed_price_candidates == 2
@@ -259,16 +259,18 @@ def test_original_switch_combines_revision_results(monkeypatch):
 def test_original_switch_accepts_v1_v2_hac_and_rejects_other_models():
     product = match_product("Nintendo Switch V1", category="consoles").product
     valid_titles = [
-        "Nintendo Switch V1 Console Tested",
-        "Nintendo Switch V2 Console Tested",
-        "Nintendo Switch Console HAC-001 Gray Tested",
-        "Nintendo Switch HAC-001(-01) Console Neon Tested",
+        "Nintendo Switch V1 Complete System Tested",
+        "Nintendo Switch V2 Console with Joy-Con and Dock Tested",
+        "Nintendo Switch Console HAC-001 Gray Complete System Tested",
+        "Nintendo Switch HAC-001(-01) Console Bundle Neon Tested",
         "Nintendo Switch Standard Console Complete",
     ]
     rejected_titles = [
         "Nintendo Switch OLED Console Complete",
         "Nintendo Switch Lite Console Yellow",
         "Nintendo Switch 2 Console",
+        "Nintendo Switch HAC-001 Video Game Console Tested Working W/ Screen Protector",
+        "Nintendo Switch V1 Console Tested",
         "Nintendo Switch V2 Tablet Only",
         "Nintendo Switch Dock Only",
         "Nintendo Switch Joy-Con Only",
@@ -419,4 +421,68 @@ def test_console_search_preserves_quality_ranking_and_exposes_filter_reasons(mon
     assert diagnostics.fixed_price_eligible == 2
     assert diagnostics.fixed_price_filtered == 1
     assert diagnostics.fixed_price_rejection_reasons["console accessory/part/incomplete"] == 1
+    assert auctions == []
+
+
+class DuplicateTitleSwitchProvider:
+    name = "eBay"
+
+    def __init__(self) -> None:
+        self.call_number = 0
+
+    async def search(
+        self,
+        query: str,
+        category: str | None = None,
+        buying_option: str = "fixed_price",
+    ) -> list[Listing]:
+        if buying_option == "auction":
+            return []
+        self.call_number += 1
+        offset = self.call_number * 10
+        return [
+            Listing(
+                provider="eBay",
+                title="Nintendo Switch HAC-001 Complete System Tested Working",
+                price=170 + self.call_number,
+                shipping=0,
+                total_price=170 + self.call_number,
+                condition="Used",
+                seller_rating=99.8,
+                seller_feedback_score=500,
+                url=f"https://www.ebay.com/itm/{200000000000 + offset}",
+            ),
+            Listing(
+                provider="eBay",
+                title="Nintendo Switch V2 Console with Joy-Con and Dock Tested",
+                price=180 + self.call_number,
+                shipping=0,
+                total_price=180 + self.call_number,
+                condition="Used",
+                seller_rating=99.7,
+                seller_feedback_score=400,
+                url=f"https://www.ebay.com/itm/{200000000001 + offset}",
+            ),
+        ]
+
+
+def test_console_top_three_collapses_identical_titles_across_marketplace_items(monkeypatch):
+    provider = DuplicateTitleSwitchProvider()
+    monkeypatch.setitem(search_service.PROVIDERS, "ebay", provider)
+
+    resolved, results, auctions, diagnostics = asyncio.run(
+        search_service.search_best_deals_with_auctions(
+            "Nintendo Switch",
+            ["ebay"],
+            "consoles",
+            include_auctions=False,
+        )
+    )
+
+    assert resolved is not None
+    assert [listing.title for listing in results] == [
+        "Nintendo Switch HAC-001 Complete System Tested Working",
+        "Nintendo Switch V2 Console with Joy-Con and Dock Tested",
+    ]
+    assert diagnostics.fixed_price_duplicates_removed >= 10
     assert auctions == []

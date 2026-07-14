@@ -987,7 +987,43 @@ def _looks_like_console_accessory(title: str, product: Product | None = None) ->
             and "switch 2" not in product_text
             and not is_console_builder_family
         )
-        if is_full_size_switch:
+        is_standard_switch = is_full_size_switch and "oled" not in product_text
+        if is_standard_switch:
+            # The original Switch is frequently sold as a bare tablet while the
+            # title still says "console" and includes HAC-001. For the default
+            # complete-system search, require explicit completeness language or
+            # evidence that both the controls and dock are included.
+            explicit_complete_clues = [
+                "complete",
+                "complete set",
+                "complete console",
+                "complete system",
+                "full console",
+                "full system",
+                "console bundle",
+                "system bundle",
+                "all original accessories",
+                "original accessories included",
+            ]
+            joycon_clues = [
+                "with joy con",
+                "with joy-con",
+                "with joycon",
+                "joy con included",
+                "joy-con included",
+                "joycon included",
+                "joy cons included",
+                "joy-cons included",
+            ]
+            dock_clues = [
+                "dock",
+                "docking station",
+            ]
+            has_complete_claim = _has_any_term(title, explicit_complete_clues)
+            has_controls_and_dock = _has_any_term(title, joycon_clues) and _has_any_term(title, dock_clues)
+            if not has_complete_claim and not has_controls_and_dock:
+                return True
+        elif is_full_size_switch:
             complete_controls_clues = [
                 "joy con",
                 "joy-con",

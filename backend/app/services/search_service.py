@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 from collections import Counter
 
 from app.catalog.catalog import match_product, normalize_category
+from app.catalog.normalizer import normalize_text
 from app.catalog.ram import ram_provider_query
 from app.catalog.consoles import console_provider_queries, console_search_products
 from app.models.listing import Listing
@@ -68,11 +69,40 @@ def _listing_identity(listing: Listing) -> str:
     return str(listing.url).split("?", 1)[0]
 
 
-def _top_scored_listings(listings: list[Listing], limit: int = 3) -> list[Listing]:
-    deduped: dict[str, Listing] = {}
+def _listing_title_identity(listing: Listing) -> str:
+    # Different marketplace item IDs can still represent duplicate listings
+    # with the exact same visible title. Normalize punctuation/casing so those
+    # duplicates cannot occupy every slot in the buyer-facing top three.
+    return normalize_text(listing.title, strip_filler=False)
+
+
+def _top_scored_listings_with_stats(
+    listings: list[Listing],
+    limit: int = 3,
+) -> tuple[list[Listing], int]:
+    selected: list[Listing] = []
+    seen_urls: set[str] = set()
+    seen_titles: set[str] = set()
+    duplicates_removed = 0
+
     for listing in sorted(listings, key=lambda item: item.score, reverse=True):
-        deduped.setdefault(_listing_identity(listing), listing)
-    return list(deduped.values())[: max(1, limit)]
+        url_key = _listing_identity(listing)
+        title_key = _listing_title_identity(listing)
+        if url_key in seen_urls or (title_key and title_key in seen_titles):
+            duplicates_removed += 1
+            continue
+        seen_urls.add(url_key)
+        if title_key:
+            seen_titles.add(title_key)
+        if len(selected) < max(1, limit):
+            selected.append(listing)
+
+    return selected, duplicates_removed
+
+
+def _top_scored_listings(listings: list[Listing], limit: int = 3) -> list[Listing]:
+    selected, _duplicates_removed = _top_scored_listings_with_stats(listings, limit=limit)
+    return selected
 
 
 def _listing_rejection_summary(
@@ -103,11 +133,33 @@ def _auction_sort_key(listing: Listing) -> tuple[int, datetime, float]:
     return (bundle_rank, ends_at, listing.total_price)
 
 
-def _top_combined_auctions(listings: list[Listing], limit: int = 3) -> list[Listing]:
-    deduped: dict[str, Listing] = {}
+def _top_combined_auctions_with_stats(
+    listings: list[Listing],
+    limit: int = 3,
+) -> tuple[list[Listing], int]:
+    selected: list[Listing] = []
+    seen_urls: set[str] = set()
+    seen_titles: set[str] = set()
+    duplicates_removed = 0
+
     for listing in sorted(listings, key=_auction_sort_key):
-        deduped.setdefault(_listing_identity(listing), listing)
-    return list(deduped.values())[: max(1, limit)]
+        url_key = _listing_identity(listing)
+        title_key = _listing_title_identity(listing)
+        if url_key in seen_urls or (title_key and title_key in seen_titles):
+            duplicates_removed += 1
+            continue
+        seen_urls.add(url_key)
+        if title_key:
+            seen_titles.add(title_key)
+        if len(selected) < max(1, limit):
+            selected.append(listing)
+
+    return selected, duplicates_removed
+
+
+def _top_combined_auctions(listings: list[Listing], limit: int = 3) -> list[Listing]:
+    selected, _duplicates_removed = _top_combined_auctions_with_stats(listings, limit=limit)
+    return selected
 
 
 def _structured_product_required_but_missing(category: str | None, product_match: ProductMatch | None) -> bool:
@@ -305,13 +357,23 @@ async def search_best_deals_with_auctions(
                         )
                     )
 
-        fixed_results.extend(_top_scored_listings(provider_fixed_candidates, limit=3))
-        auction_results.extend(_top_combined_auctions(provider_auction_candidates, limit=3))
+        provider_fixed_results, fixed_duplicates = _top_scored_listings_with_stats(provider_fixed_candidates, limit=3)
+        diagnostics.fixed_price_duplicates_removed += fixed_duplicates
+        fixed_results.extend(provider_fixed_results)
+
+        provider_auction_results, auction_duplicates = _top_combined_auctions_with_stats(provider_auction_candidates, limit=3)
+        diagnostics.auction_duplicates_removed += auction_duplicates
+        auction_results.extend(provider_auction_results)
+
+    final_fixed_results, fixed_duplicates = _top_scored_listings_with_stats(fixed_results, limit=3)
+    diagnostics.fixed_price_duplicates_removed += fixed_duplicates
+    final_auction_results, auction_duplicates = _top_combined_auctions_with_stats(auction_results, limit=3)
+    diagnostics.auction_duplicates_removed += auction_duplicates
 
     return (
         product_match,
-        _top_scored_listings(fixed_results, limit=3),
-        sorted(_top_combined_auctions(auction_results, limit=3), key=lambda item: item.item_end_date or ""),
+        final_fixed_results,
+        sorted(final_auction_results, key=lambda item: item.item_end_date or ""),
         diagnostics,
     )
 
@@ -360,10 +422,15 @@ async def search_auction_deals(
                     limit=3,
                 )
             )
-        auction_results.extend(_top_combined_auctions(provider_auction_candidates, limit=3))
+        provider_auction_results, auction_duplicates = _top_combined_auctions_with_stats(provider_auction_candidates, limit=3)
+        diagnostics.auction_duplicates_removed += auction_duplicates
+        auction_results.extend(provider_auction_results)
+
+    final_auction_results, auction_duplicates = _top_combined_auctions_with_stats(auction_results, limit=3)
+    diagnostics.auction_duplicates_removed += auction_duplicates
 
     return (
         product_match,
-        sorted(_top_combined_auctions(auction_results, limit=3), key=lambda item: item.item_end_date or ""),
+        sorted(final_auction_results, key=lambda item: item.item_end_date or ""),
         diagnostics,
     )

@@ -384,6 +384,9 @@ export function QaWorkbench({ initialCases, initialSummary, token }: Props) {
                     <h3 className="text-xl font-bold">Top live results</h3>
                     <p className="mt-1 text-sm text-slate-500">
                       {searchData.diagnostics.fixed_price_candidates} candidates · {searchData.diagnostics.fixed_price_eligible} eligible · {searchData.diagnostics.fixed_price_filtered} filtered
+                      {searchData.diagnostics.fixed_price_duplicates_removed
+                        ? ` · ${searchData.diagnostics.fixed_price_duplicates_removed} duplicates collapsed`
+                        : ""}
                     </p>
                   </div>
                   <p className="text-xs text-slate-600">Links open directly so QA clicks do not pollute normal click analytics.</p>
