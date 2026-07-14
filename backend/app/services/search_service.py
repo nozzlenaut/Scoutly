@@ -2,7 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 from app.catalog.catalog import match_product, normalize_category
 from app.catalog.ram import ram_provider_query
-from app.catalog.consoles import console_provider_query, console_search_products
+from app.catalog.consoles import console_provider_queries, console_search_products
 from app.models.listing import Listing
 from app.models.product import Product, ProductMatch
 from app.models.search import SearchDiagnostics
@@ -28,14 +28,19 @@ def _build_providers():
 PROVIDERS = _build_providers()
 
 
-def _provider_query_for_product(query: str, product: Product | None) -> str:
+def _provider_queries_for_product(query: str, product: Product | None) -> list[str]:
     if product is None:
-        return query
+        return [query]
     if product.category == "ram":
-        return ram_provider_query(product)
-    if product.metadata.get("builder") == "consoles":
-        return console_provider_query(product)
-    return product.display_name
+        return [ram_provider_query(product)]
+    if product.category == "consoles":
+        return console_provider_queries(product)
+    return [product.display_name]
+
+
+def _provider_query_for_product(query: str, product: Product | None) -> str:
+    """Backward-compatible single-query helper used by older tests/callers."""
+    return _provider_queries_for_product(query, product)[0]
 
 
 def _search_product_scopes(product: Product | None) -> list[Product | None]:
@@ -196,15 +201,15 @@ async def search_best_deals(
     for provider_key in provider_keys:
         provider_candidates: list[Listing] = []
         for scoped_product in search_products:
-            provider_query = _provider_query_for_product(query, scoped_product)
-            listings, _candidate_count = await _search_provider(
-                provider_key=provider_key,
-                provider_query=provider_query,
-                category=search_category,
-                product=scoped_product,
-                buying_option="fixed_price",
-            )
-            provider_candidates.extend(top_listings(listings, scoped_product, limit=3))
+            for provider_query in _provider_queries_for_product(query, scoped_product):
+                listings, _candidate_count = await _search_provider(
+                    provider_key=provider_key,
+                    provider_query=provider_query,
+                    category=search_category,
+                    product=scoped_product,
+                    buying_option="fixed_price",
+                )
+                provider_candidates.extend(top_listings(listings, scoped_product, limit=3))
         best_candidates = _top_scored_listings(provider_candidates, limit=1)
         if best_candidates:
             results.append(best_candidates[0])
@@ -234,42 +239,42 @@ async def search_best_deals_with_auctions(
         provider_auction_candidates: list[Listing] = []
 
         for scoped_product in search_products:
-            provider_query = _provider_query_for_product(query, scoped_product)
-            fixed_listings, fixed_candidate_count = await _search_provider(
-                provider_key=provider_key,
-                provider_query=provider_query,
-                category=search_category,
-                product=scoped_product,
-                buying_option="fixed_price",
-            )
-            diagnostics.fixed_price_candidates += fixed_candidate_count
-            diagnostics.fixed_price_filtered += max(0, fixed_candidate_count - len(fixed_listings))
-            diagnostics.fixed_price_filtered += sum(
-                1 for listing in fixed_listings if is_bad_listing(listing, scoped_product)
-            )
-            provider_fixed_candidates.extend(top_listings(fixed_listings, scoped_product, limit=3))
-
-            if include_auctions and provider_key.lower() == "ebay":
-                auction_listings, auction_candidate_count = await _search_provider(
+            for provider_query in _provider_queries_for_product(query, scoped_product):
+                fixed_listings, fixed_candidate_count = await _search_provider(
                     provider_key=provider_key,
                     provider_query=provider_query,
                     category=search_category,
                     product=scoped_product,
-                    buying_option="auction",
+                    buying_option="fixed_price",
                 )
-                diagnostics.auction_candidates += auction_candidate_count
-                diagnostics.auction_filtered += max(0, auction_candidate_count - len(auction_listings))
-                diagnostics.auction_filtered += sum(
-                    1 for listing in auction_listings if is_bad_listing(listing, scoped_product)
+                diagnostics.fixed_price_candidates += fixed_candidate_count
+                diagnostics.fixed_price_filtered += max(0, fixed_candidate_count - len(fixed_listings))
+                diagnostics.fixed_price_filtered += sum(
+                    1 for listing in fixed_listings if is_bad_listing(listing, scoped_product)
                 )
-                provider_auction_candidates.extend(
-                    best_auction_listings(
-                        auction_listings,
-                        scoped_product,
-                        max_hours=auction_hours,
-                        limit=3,
+                provider_fixed_candidates.extend(top_listings(fixed_listings, scoped_product, limit=3))
+
+                if include_auctions and provider_key.lower() == "ebay":
+                    auction_listings, auction_candidate_count = await _search_provider(
+                        provider_key=provider_key,
+                        provider_query=provider_query,
+                        category=search_category,
+                        product=scoped_product,
+                        buying_option="auction",
                     )
-                )
+                    diagnostics.auction_candidates += auction_candidate_count
+                    diagnostics.auction_filtered += max(0, auction_candidate_count - len(auction_listings))
+                    diagnostics.auction_filtered += sum(
+                        1 for listing in auction_listings if is_bad_listing(listing, scoped_product)
+                    )
+                    provider_auction_candidates.extend(
+                        best_auction_listings(
+                            auction_listings,
+                            scoped_product,
+                            max_hours=auction_hours,
+                            limit=3,
+                        )
+                    )
 
         fixed_results.extend(_top_scored_listings(provider_fixed_candidates, limit=3))
         auction_results.extend(_top_combined_auctions(provider_auction_candidates, limit=3))

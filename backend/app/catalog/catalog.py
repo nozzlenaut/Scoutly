@@ -810,8 +810,22 @@ def _looks_like_console_accessory(title: str, product: Product | None = None) ->
                 "console bundle",
                 "system bundle",
             ]
-            if not _has_any_term(title, complete_controls_clues):
-                return True
+            standard_switch_identity = [
+                "console",
+                "system",
+                "standard",
+                "v1",
+                "v2",
+                "hac 001",
+                "hac-001",
+                "hac 001 01",
+                "hac-001-01",
+                "hac-001(-01)",
+            ]
+            if not _has_any_term(title, complete_controls_clues + standard_switch_identity):
+                title_compact = compact_text(title, strip_filler=False)
+                if "hac001" not in title_compact and "hac00101" not in title_compact:
+                    return True
 
     # For PlayStation/Xbox, a real listing usually says console/system/unit or
     # a storage/edition clue. Reject game/accessory-style titles that only use

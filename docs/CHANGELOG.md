@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.4
+
+- Fixes Standard Nintendo Switch searches that could return no results because the marketplace query used the uncommon combined phrase `Nintendo Switch V1/V2`.
+- Searches V1, V2, HAC-001, HAC-001(-01), Standard, and generic Nintendo Switch console wording separately, then merges and deduplicates valid listings.
+- Relaxes positive title evidence for Standard Switch consoles while retaining strict tablet-only, dock-only, Joy-Con-only, OLED, Lite, Switch 2, game, and accessory exclusions.
+- Labels the builder option `Standard Switch (V1/V2)`.
+
 ## v0.6.1
 
 - Adds a guided Console builder: brand → family/generation → results, with optional model, storage, and edition/drive refinements.

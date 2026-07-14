@@ -232,7 +232,7 @@ const consoleModelMap: Record<string, SpecOption[]> = {
   "nintendo-3ds-xl": [{ id: "", label: "Any 3DS XL" }],
   "nintendo-switch": [
     { id: "", label: "All Switch models" },
-    { id: "standard", label: "Standard Switch" },
+    { id: "standard", label: "Standard Switch (V1/V2)" },
     { id: "oled", label: "Switch OLED" },
     { id: "lite", label: "Switch Lite" },
   ],

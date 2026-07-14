@@ -1,16 +1,20 @@
-# Scoutly v0.6.3 / PriceSift console family search fix
+# Scoutly v0.6.4 / PriceSift Nintendo Switch Standard search fix
 
-Scoutly remains the internal project name. This patch makes an unrefined console family search run one exact marketplace search per active model, merge the valid results, remove duplicates, and rank the combined set.
+Scoutly remains the internal project name. This patch fixes the Console builder's Standard Nintendo Switch option, which previously resolved to a single marketplace query for `Nintendo Switch V1/V2` and could return no results.
 
 ## Included
 
-- `All models` now truly searches every active model in the selected console family.
-- Exact model selections still perform only one model-specific search.
-- Storage refinements only search compatible models.
-- Family-level fixed-price and auction results are merged and deduplicated.
-- Console listings containing `controller`/`controllers` require the word `console`.
-- Listings containing `service` are rejected globally.
-- Builder labels and explanatory copy now describe the combined-search behavior.
+- `Standard Switch (V1/V2)` now runs separate searches for:
+  - Nintendo Switch V1
+  - Nintendo Switch V2
+  - HAC-001
+  - HAC-001(-01)
+  - Nintendo Switch Standard
+  - generic Nintendo Switch console listings
+- Valid results are merged and deduplicated before ranking.
+- Standard Switch titles can qualify through V1/V2/HAC/Standard or normal console/system identity.
+- OLED, Lite, Switch 2, tablet-only, dock-only, Joy-Con-only, game-only, and accessory listings remain excluded.
+- The frontend label now reads `Standard Switch (V1/V2)`.
 
 No Railway, PostgreSQL, Vercel, domain, or environment changes are required.
 

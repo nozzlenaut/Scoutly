@@ -252,6 +252,43 @@ def console_provider_query(product: Product) -> str:
     return str(value) if value else product.display_name
 
 
+def _is_standard_switch_product(product: Product) -> bool:
+    family = str(product.metadata.get("family") or "").lower()
+    model_scope = str(product.metadata.get("model_scope") or "").lower()
+    product_identity = compact_text(
+        f"{product.id} {product.brand} {product.model} {product.variant or ''}",
+        strip_filler=False,
+    )
+    return (
+        product.category == "consoles"
+        and product.brand.lower() == "nintendo"
+        and (
+            (family == "nintendo-switch" and model_scope == "standard")
+            or "switchv1v2" in product_identity
+            or product.id == "console-nintendo-switch-v1-v2"
+        )
+    )
+
+
+def console_provider_queries(product: Product) -> list[str]:
+    """Return every marketplace query needed for a console product scope.
+
+    Standard Nintendo Switch sellers use inconsistent revision wording. Search
+    V1, V2, both HAC model numbers, the builder's Standard label, and a generic
+    console query, then let the exact title filters merge and deduplicate them.
+    """
+    if _is_standard_switch_product(product):
+        return [
+            "Nintendo Switch V1 console",
+            "Nintendo Switch V2 console",
+            "Nintendo Switch HAC-001 console",
+            "Nintendo Switch HAC-001(-01) console",
+            "Nintendo Switch Standard console",
+            "Nintendo Switch console",
+        ]
+    return [console_provider_query(product)]
+
+
 def _has_storage(title: str, storage: str) -> bool:
     compact = compact_text(title, strip_filler=False)
     return storage.lower() in compact
@@ -277,6 +314,28 @@ def _switch_has_complete_controls(title: str) -> bool:
         "system bundle",
     ]
     return any(has_term(title, clue) for clue in clues)
+
+
+def _switch_has_standard_identity(title: str) -> bool:
+    compact = compact_text(title, strip_filler=False)
+    revision_clues = [
+        "v1",
+        "v2",
+        "standard",
+        "hac 001",
+        "hac-001",
+        "hac 001 01",
+        "hac-001-01",
+        "hac-001(-01)",
+    ]
+    has_revision = any(has_term(title, clue) for clue in revision_clues) or any(
+        clue in compact for clue in ["hac001", "hac00101"]
+    )
+    has_console_identity = any(
+        has_term(title, clue)
+        for clue in ["console", "system", "complete console", "full system"]
+    )
+    return has_revision or has_console_identity or _switch_has_complete_controls(title)
 
 
 def console_builder_title_matches_product(title: str, product: Product) -> bool:
@@ -348,9 +407,14 @@ def console_builder_title_matches_product(title: str, product: Product) -> bool:
             return False
         if model == "standard" and (is_oled or is_lite):
             return False
-        # Standard and OLED units need detachable controls/dock evidence.
-        # Lite has integrated controls and does not need Joy-Con evidence.
-        if not is_lite and not _switch_has_complete_controls(title):
+        # Standard Switch listings are inconsistently titled. Accept V1/V2,
+        # HAC model codes, the word Standard, or normal console/system wording,
+        # while the accessory detector still rejects tablet-only, dock-only,
+        # Joy-Con-only, games, and other incomplete listings. OLED keeps the
+        # stronger detachable-controls/dock evidence requirement.
+        if model == "standard" and not _switch_has_standard_identity(title):
+            return False
+        if model == "oled" and not _switch_has_complete_controls(title):
             return False
         return True
 
