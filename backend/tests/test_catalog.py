@@ -601,13 +601,13 @@ def test_common_lego_catalog_entries_resolve_by_number_and_name():
     assert match_product("LEGO UCS AT-AT 75313", category="lego").product.id == "lego-75313-star-wars-at-at"
 
 
-def test_rejects_listing_title_that_ends_with_read_warning():
+def test_read_language_is_review_only_when_the_product_is_otherwise_valid():
     switch = match_product("Nintendo Switch OLED", category="consoles")
     assert switch is not None
     assert listing_matches_product(
         "Nintendo Switch OLED Console with Joy-Con and Dock READ",
         switch.product,
-    ) is False
+    ) is True
     assert listing_matches_product(
         "Nintendo Switch OLED Console with Joy-Con and Dock Complete",
         switch.product,
@@ -863,3 +863,137 @@ def test_lego_rejects_requested_incomplete_unauthentic_and_bulk_phrases():
         "LEGO Titanic 10294 Complete Set With Original Box and Instructions",
         titanic.product,
     ) is True
+
+
+def test_playstation_digital_edition_survives_builder_resolution_and_rejects_disc_units():
+    slim = match_product(
+        "PlayStation 5 Slim 1TB Digital Edition", category="consoles"
+    )
+    standard = match_product(
+        "PlayStation 5 Standard 825GB Digital Edition", category="consoles"
+    )
+
+    assert slim is not None
+    assert standard is not None
+    assert "Digital Edition" in slim.product.display_name
+    assert "Digital Edition" in standard.product.display_name
+    assert listing_matches_product(
+        "Sony PS5 Slim Digital Edition Console 1TB", slim.product
+    ) is True
+    assert listing_matches_product(
+        "Sony PS5 Slim Disc Edition Console 1TB", slim.product
+    ) is False
+    assert listing_matches_product(
+        "Sony PS5 Digital Edition Console 825GB", standard.product
+    ) is True
+    assert listing_matches_product(
+        "Sony PS5 Slim Digital Edition Console 1TB", standard.product
+    ) is False
+    assert listing_matches_product(
+        "Sony PS5 Disc Edition Console 825GB", standard.product
+    ) is False
+
+
+def test_lego_complete_set_search_rejects_partial_components_and_percentages():
+    examples = [
+        ("LEGO Daily Bugle 76178", "LEGO Marvel Daily Bugle 76178 Taxi Cab Only"),
+        ("LEGO AT-AT 75313", "LEGO Star Wars 75313 AT-AT Driver Minifigure"),
+        ("LEGO Loop Coaster 10303", "LEGO 10303 Loop Coaster Two Loose Fence Pieces"),
+        ("LEGO Hogwarts Castle 71043", "LEGO 71043 Hogwarts Castle Missing Some 99% Complete"),
+        ("LEGO Porsche 911 10295", "LEGO 10295 Porsche 911 Missing Roof"),
+        ("LEGO Mighty Bowser 71411", "LEGO 71411 Mighty Bowser Near Complete"),
+        ("LEGO Mos Eisley Cantina 75290", "LEGO 75290 Mos Eisley Cantina 98% Complete"),
+        ("LEGO Old Trafford 10272", "LEGO 10272 Old Trafford 99% Complete"),
+    ]
+
+    for query, title in examples:
+        match = match_product(query, category="lego")
+        assert match is not None, query
+        assert listing_matches_product(title, match.product) is False, title
+
+    complete = match_product("LEGO Hogwarts Castle 71043", category="lego")
+    assert complete is not None
+    assert listing_matches_product(
+        "LEGO 71043 Hogwarts Castle 100% Complete No Missing Pieces",
+        complete.product,
+    ) is True
+
+
+def test_lego_query_with_unknown_reissue_number_does_not_resolve_older_set():
+    assert match_product("LEGO NASA Apollo Saturn V 92176", category="lego") is None
+    original = match_product("LEGO NASA Apollo Saturn V 21309", category="lego")
+    assert original is not None
+    assert original.product.metadata["set_number"] == "21309"
+
+
+def test_older_console_searches_require_hardware_evidence_and_reject_parts():
+    rejected = [
+        ("PlayStation 4", "Sony PlayStation 4 Base Shell Housing"),
+        ("PlayStation 4", "Sony PS4 Mid-Frame Fan Heat Sink"),
+        ("PlayStation 4", "PlayStation 4 Game Disc Only"),
+        ("PlayStation 4 Pro", "PS4 Pro Astro MixAmp Headset"),
+        ("Xbox One S", "Xbox One S Standalone Disc Drive"),
+        ("Nintendo 3DS XL", "Nintendo 3DS XL Box and Manuals Only"),
+        ("Nintendo 3DS XL", "Pokemon Sun Nintendo 3DS XL"),
+    ]
+    for query, title in rejected:
+        match = match_product(query, category="consoles")
+        assert match is not None, query
+        assert listing_matches_product(title, match.product) is False, title
+
+    accepted = [
+        ("PlayStation 4", "Sony PlayStation 4 Console 500GB Tested"),
+        ("PlayStation 4", "Sony PlayStation 4 CUH-1215A 500GB Tested"),
+        ("Xbox One S", "Microsoft Xbox One S Console 1TB Tested"),
+        ("Nintendo 3DS XL", "New Nintendo 3DS XL RED-001 Tested"),
+    ]
+    for query, title in accepted:
+        match = match_product(query, category="consoles")
+        assert match is not None, query
+        assert listing_matches_product(title, match.product) is True, title
+
+
+def test_gpu_suffix_conflicts_and_hardware_failure_language_are_rejected():
+    rx_xt = match_product("RX 5700 XT 8GB", category="gpus")
+    super_card = match_product("RTX 4080 Super 16GB", category="gpus")
+    ti_super = match_product("RTX 4070 Ti Super 16GB", category="gpus")
+    assert rx_xt is not None
+    assert super_card is not None
+    assert ti_super is not None
+
+    assert listing_matches_product(
+        "AMD Radeon RX 5700 XT 8GB Graphics Card", rx_xt.product
+    ) is True
+    assert listing_matches_product(
+        "AMD Radeon RX 5700 NON-XT 8GB Graphics Card", rx_xt.product
+    ) is False
+    assert listing_matches_product(
+        "NVIDIA RTX 4080 Super 16GB Read! PARTS", super_card.product
+    ) is False
+    assert listing_matches_product(
+        "NVIDIA RTX 4080 Super 16GB 3x PORTS FAILED", super_card.product
+    ) is False
+    assert listing_matches_product(
+        "NVIDIA RTX 4080 16GB Graphics Card", super_card.product
+    ) is False
+    assert listing_matches_product(
+        "NVIDIA RTX 4070 Ti 12GB Graphics Card", ti_super.product
+    ) is False
+    assert listing_matches_product(
+        "NVIDIA RTX 4070 Ti Super 16GB Graphics Card", ti_super.product
+    ) is True
+
+
+def test_ram_selected_brand_rejects_mixed_brand_kits():
+    match = match_product(
+        "DDR4 Desktop 32GB 2x16GB 3200 MT/s SK Hynix", category="ram"
+    )
+    assert match is not None
+    assert listing_matches_product(
+        "SK Hynix 32GB Kit 2x16GB DDR4 3200 UDIMM Desktop RAM",
+        match.product,
+    ) is True
+    assert listing_matches_product(
+        "SK Hynix + A-Tech Pair 32GB 2x16GB DDR4 3200 UDIMM Desktop RAM",
+        match.product,
+    ) is False

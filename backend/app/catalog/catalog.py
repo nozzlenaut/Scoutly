@@ -30,8 +30,6 @@ GLOBAL_BAD_LISTING_TERMS = [
     "for parts",
     "not working",
     "parts only",
-    "please read",
-    "read description",
     "local pickup only",
     "local pick up only",
     "pickup only",
@@ -42,6 +40,14 @@ GLOBAL_BAD_LISTING_TERMS = [
     "service",
     "spares",
     "untested",
+]
+
+REVIEW_ONLY_TITLE_TERMS = [
+    "read",
+    "read desc",
+    "read description",
+    "see description",
+    "please read",
 ]
 
 LENS_PART_ACCESSORY_TERMS = [
@@ -121,6 +127,15 @@ GPU_PART_ACCESSORY_TERMS = [
     "shroud only",
     "water block",
     "waterblock",
+    "parts",
+    "failed",
+    "port failed",
+    "ports failed",
+    "dead port",
+    "dead ports",
+    "displayport failed",
+    "display port failed",
+    "hdmi failed",
 ]
 
 LENS_SAFE_CONTEXT_TERMS = {"aperture ring", "focus ring", "zoom ring"}
@@ -218,6 +233,8 @@ LEGO_INCOMPLETE_OR_PART_TERMS = [
     "bag 15 only",
     "lot of 2",
     "lot of two",
+    "taxi only",
+    "taxi cab only",
     "loose bricks",
     "random pieces",
     "bulk lot",
@@ -234,6 +251,9 @@ LEGO_LOOSE_PART_TERMS = [
     "tree",
     "stand",
     "display stand",
+    "fence",
+    "barrier",
+    "driver",
 ]
 
 
@@ -254,6 +274,20 @@ LEGO_INSTRUCTIONS_OR_BOX_ONLY_TERMS = [
     "building instructions only",
     "instructions no bricks",
     "manual only",
+    "manuals only",
+    "box with manuals only",
+    "box and manuals only",
+    "base shell",
+    "mid frame",
+    "mid-frame",
+    "heat sink",
+    "heat sync",
+    "disc drive",
+    "optical drive",
+    "disc only",
+    "disk only",
+    "mixamp",
+    "headset",
 ]
 
 LEGO_ACCESSORY_TERMS = [
@@ -495,6 +529,14 @@ def _has_any_term(text: str, terms: list[str]) -> bool:
     return any(has_term(text, term) for term in terms)
 
 
+def _raw_has_term(text: str, term: str) -> bool:
+    normalized = normalize_text(text, strip_filler=False)
+    normalized_term = normalize_text(term, strip_filler=False)
+    if not normalized_term:
+        return False
+    return bool(re.search(rf"(^|\s){re.escape(normalized_term)}($|\s)", normalized))
+
+
 def _has_exact_code(text: str, code: str) -> bool:
     """Match short model codes like P4 without matching P40."""
     lowered = text.lower()
@@ -504,11 +546,57 @@ def _has_exact_code(text: str, code: str) -> bool:
     return bool(re.search(rf"(?<![a-z0-9]){re.escape(code.lower())}(?![a-z0-9])", lowered))
 
 
+def _gpu_modifier_conflicts(title: str, product: Product) -> bool:
+    """Reject explicit GPU suffix conflicts for an exact selected model."""
+
+    product_raw = normalize_text(
+        f"{product.model} {product.variant or ''}", strip_filler=False
+    )
+    title_raw = normalize_text(title, strip_filler=False)
+    product_compact = compact_text(product_raw, strip_filler=False)
+    title_compact = compact_text(title_raw, strip_filler=False)
+
+    product_has_ti = bool(re.search(r"(^|\s)ti($|\s)", product_raw)) or "tisuper" in product_compact
+    product_has_super = _raw_has_term(product_raw, "super") or "tisuper" in product_compact
+    title_has_ti = bool(re.search(r"(^|\s)ti($|\s)", title_raw)) or "tisuper" in title_compact
+    title_has_super = _raw_has_term(title_raw, "super") or "tisuper" in title_compact
+
+    if _raw_has_term(title_raw, "non ti") or "nonti" in title_compact:
+        if product_has_ti:
+            return True
+    if _raw_has_term(title_raw, "non super") or "nonsuper" in title_compact:
+        if product_has_super:
+            return True
+
+    # NVIDIA suffixes are mutually exclusive exact identities.
+    if product_has_ti != title_has_ti or product_has_super != title_has_super:
+        if any(token in product_compact for token in ["rtx", "gtx"]):
+            return True
+
+    product_has_xtx = bool(re.search(r"(^|\s)xtx($|\s)", product_raw)) or "xtx" in product_compact
+    product_has_xt = (bool(re.search(r"(^|\s)xt($|\s)", product_raw)) or product_compact.endswith("xt")) and not product_has_xtx
+    title_has_xtx = bool(re.search(r"(^|\s)xtx($|\s)", title_raw)) or "xtx" in title_compact
+    title_has_xt = (bool(re.search(r"(^|\s)xt($|\s)", title_raw)) or title_compact.endswith("xt")) and not title_has_xtx
+    title_says_non_xt = bool(re.search(r"\bnon[ -]?xt\b", title.lower())) or "nonxt" in title_compact
+
+    if title_says_non_xt:
+        if product_has_xt or product_has_xtx:
+            return True
+        title_has_xt = False
+        title_has_xtx = False
+    if "rx" in product_compact and (product_has_xt != title_has_xt or product_has_xtx != title_has_xtx):
+        return True
+
+    return False
+
+
 def _looks_like_gpu_accessory(title: str, product: Product | None = None) -> bool:
     normalized = normalize_text(title)
     raw = title.lower()
 
     if product is not None and product.category == "gpus":
+        if _gpu_modifier_conflicts(title, product):
+            return True
         product_name = product.display_name
 
         # Consumer desktop cards should not silently resolve to passive server
@@ -713,6 +801,31 @@ def _looks_like_camera_body_accessory(title: str) -> bool:
     return normalized.startswith("for ") and _has_any_term(title, accessory_words)
 
 
+def _older_console_needs_hardware_evidence(product: Product) -> bool:
+    family = compact_text(str(product.metadata.get("family") or ""), strip_filler=False)
+    identity = compact_text(
+        f"{product.brand} {product.model} {product.variant or ''}", strip_filler=False
+    )
+    combined = f"{family} {identity}"
+    return any(
+        marker in combined
+        for marker in ["playstation4", "ps4", "xboxone", "nintendo3dsxl", "3dsxl"]
+    )
+
+
+def _console_has_hardware_evidence(title: str) -> bool:
+    if _has_any_term(title, ["console", "system", "handheld", "unit"]):
+        return True
+
+    raw = title.lower()
+    model_code_patterns = [
+        r"\bcuh[-\s]?\d{4}[a-z]?\b",  # PlayStation 4
+        r"\b(?:model\s*)?(?:1540|1681|1787)\b",  # Xbox One revisions
+        r"\b(?:spr|red|ktr)[-\s]?001\b",  # Nintendo 3DS XL families
+    ]
+    return any(re.search(pattern, raw, re.I) for pattern in model_code_patterns)
+
+
 def _looks_like_console_accessory(title: str, product: Product | None = None) -> bool:
     normalized = normalize_text(title)
 
@@ -880,6 +993,14 @@ def _looks_like_console_accessory(title: str, product: Product | None = None) ->
         if _has_any_term(title, obvious_game_or_merch) and not _has_any_term(title, console_clues):
             return True
 
+    if (
+        product is not None
+        and product.category == "consoles"
+        and _older_console_needs_hardware_evidence(product)
+        and not _console_has_hardware_evidence(title)
+    ):
+        return True
+
     return False
 
 
@@ -927,12 +1048,53 @@ def _looks_like_console_multi_variation_listing(title: str, product: Product | N
     return False
 
 
+def _lego_missing_is_explicitly_negated(title: str) -> bool:
+    normalized = normalize_text(title, strip_filler=False)
+    return bool(
+        re.search(
+            r"\b(?:no|zero|nothing)\s+(?:parts?|pieces?|bricks?|figs?|figures?|minifigs?|minifigures?)?\s*missing\b",
+            normalized,
+        )
+        or re.search(r"\bnot\s+missing\b", normalized)
+    )
+
+
+def _looks_like_lego_completeness_issue(title: str) -> bool:
+    normalized = normalize_text(title, strip_filler=False)
+
+    if re.search(r"\b(?:near|nearly|almost|mostly)\s+complete\b", normalized):
+        return True
+
+    for percentage in re.findall(
+        r"(?<!\d)(\d{1,3})(?:\.\d+)?\s*%\s*(?:complete|completeness)\b",
+        title.lower(),
+    ):
+        if int(percentage) < 100:
+            return True
+
+    # Missing-part titles are incomplete, but phrases such as "no missing
+    # pieces" are positive completeness evidence and should remain eligible.
+    safe_missing_context = _lego_missing_is_explicitly_negated(title)
+    if re.search(r"\bmissing\b", normalized) and not safe_missing_context:
+        return True
+
+    return False
+
+
 def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
     set_number = str(product.metadata.get("set_number") or product.variant or "").strip()
     if not set_number:
         return False
 
-    if _has_any_term(title, LEGO_INCOMPLETE_OR_PART_TERMS) or _looks_like_missing_lego_figures(title):
+    safe_missing_context = _lego_missing_is_explicitly_negated(title)
+    incomplete_terms = LEGO_INCOMPLETE_OR_PART_TERMS
+    if safe_missing_context:
+        incomplete_terms = [term for term in incomplete_terms if "missing" not in term]
+    if (
+        _has_any_term(title, incomplete_terms)
+        or (_looks_like_missing_lego_figures(title) and not safe_missing_context)
+        or _looks_like_lego_completeness_issue(title)
+    ):
         return True
 
     if _has_any_term(title, LEGO_INSTRUCTIONS_OR_BOX_ONLY_TERMS):
@@ -1087,7 +1249,7 @@ def _console_title_matches_product(title: str, product: Product) -> bool:
     product_text = normalize_text(f"{product.brand} {product.model} {product.variant or ''}", strip_filler=False)
 
     def has_raw(term: str) -> bool:
-        return has_term(title, term)
+        return _raw_has_term(title, term)
 
     if product.brand.lower() == "playstation":
         is_ps5 = any(marker in compact_text(alias, strip_filler=False) for alias in product.aliases + [product.display_name] for marker in ["ps5", "playstation5"])
@@ -1100,8 +1262,15 @@ def _console_title_matches_product(title: str, product: Product) -> bool:
             return False
         if "slim" in product_text and not has_raw("slim"):
             return False
+        is_base_generation = not any(term in product_text for term in ["slim", "pro"])
+        if is_base_generation and (has_raw("slim") or has_raw("pro")):
+            return False
         if "digital" in product_text:
-            return has_raw("digital") or "digitaledition" in compact_title
+            if not (has_raw("digital") or "digitaledition" in compact_title):
+                return False
+            if has_raw("disc edition") or has_raw("disk edition"):
+                return False
+            return True
         # Disc edition/default PS5 should not return Digital Edition units.
         if "disc" in product_text and (has_raw("digital") or "digitaledition" in compact_title) and not has_raw("disc"):
             return False
@@ -1231,7 +1400,14 @@ def _storage_clues(value: str) -> set[str]:
 
 def _missing_strict_query_clue(query: str, product: Product) -> bool:
     product_corpus = " ".join(
-        [product.display_name, product.model, product.variant or "", *product.aliases]
+        [
+            product.display_name,
+            product.model,
+            product.variant or "",
+            str(product.metadata.get("storage") or ""),
+            str(product.metadata.get("drive") or ""),
+            *product.aliases,
+        ]
     )
 
     if product.category in {"cameras", "lenses"}:
@@ -1243,6 +1419,22 @@ def _missing_strict_query_clue(query: str, product: Product) -> bool:
         for modifier in ["ti", "super", "xtx", "xt", "gre"]:
             if has_term(query, modifier) and not has_term(product_corpus, modifier):
                 return True
+
+    if product.category == "lego":
+        query_set_numbers = set(re.findall(r"(?<!\d)\d{5}(?!\d)", query))
+        selected_set_number = str(product.metadata.get("set_number") or product.variant or "").strip()
+        if query_set_numbers and selected_set_number not in query_set_numbers:
+            return True
+
+    if product.category == "consoles":
+        query_raw = normalize_text(query, strip_filler=False)
+        product_raw = normalize_text(product_corpus, strip_filler=False)
+        if re.search(r"\bdigital(?:\s+edition)?\b", query_raw) and "digital" not in product_raw:
+            return True
+        if re.search(r"\b(?:disc|disk)\s+edition\b", query_raw) and not re.search(
+            r"\b(?:disc|disk)\b", product_raw
+        ):
+            return True
 
     query_storage = _storage_clues(query)
     if query_storage and not query_storage.issubset(_storage_clues(product_corpus)):
@@ -1417,25 +1609,13 @@ def suggest_products(query: str, category: str | None = None, limit: int = 8) ->
     return matches[:limit]
 
 
-def _ends_with_read_warning(title: str) -> bool:
-    """Reject listings whose title ends with a standalone READ warning.
-
-    Bare READ is too broad to reject anywhere in a title, but a seller ending
-    the title with it is a strong condition/contents warning signal.
-    """
-
-    normalized = normalize_text(title, strip_filler=False).strip()
-    return bool(re.search(r"\bread$", normalized))
-
-
 def listing_matches_product(title: str, product: Product) -> bool:
-    if _ends_with_read_warning(title):
-        return False
-
     if _has_any_term(title, GLOBAL_BAD_LISTING_TERMS):
         return False
 
     for excluded_term in product.excluded_terms:
+        if excluded_term in REVIEW_ONLY_TITLE_TERMS:
+            continue
         # Real lens condition notes often say things like "smooth focus ring".
         # Do not reject those broad terms by themselves; the lens accessory
         # detector below catches actual rubber rings, bayonet rings, and gears.

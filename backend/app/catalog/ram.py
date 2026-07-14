@@ -22,6 +22,7 @@ RAM_BRANDS = {
     "micron": ["micron"],
     "patriot": ["patriot", "viper"],
     "adata": ["adata", "xpg"],
+    "a-tech": ["a tech", "a-tech", "atech"],
 }
 
 PC_SPEED_EQUIVALENTS = {
@@ -335,8 +336,17 @@ def ram_title_matches_product(title: str, product: Product) -> bool:
             return False
 
     if brand:
-        aliases = RAM_BRANDS.get(str(brand).lower(), [str(brand)])
+        selected_brand_key = str(brand).lower()
+        aliases = RAM_BRANDS.get(selected_brand_key, [str(brand)])
         if not any(has_term(title, alias) for alias in aliases):
+            return False
+
+        mentioned_brands = {
+            brand_key
+            for brand_key, brand_aliases in RAM_BRANDS.items()
+            if any(has_term(title, alias) for alias in brand_aliases)
+        }
+        if mentioned_brands - {selected_brand_key}:
             return False
 
     return True

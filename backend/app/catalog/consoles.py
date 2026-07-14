@@ -54,6 +54,14 @@ class ConsoleSpec:
 _STORAGE_PATTERN = re.compile(r"(?<!\d)(512\s*gb|825\s*gb|1\s*tb|2\s*tb)(?!\d)", re.I)
 
 
+def _raw_has_term(text: str, term: str) -> bool:
+    normalized = normalize_text(text, strip_filler=False)
+    normalized_term = normalize_text(term, strip_filler=False)
+    if not normalized_term:
+        return False
+    return bool(re.search(rf"(^|\s){re.escape(normalized_term)}($|\s)", normalized))
+
+
 def parse_console_query(query: str) -> ConsoleSpec | None:
     normalized = normalize_text(query, strip_filler=False)
     compact = compact_text(query, strip_filler=False)
@@ -90,9 +98,9 @@ def parse_console_query(query: str) -> ConsoleSpec | None:
                 model = "slim"
             elif has_term(query, "standard"):
                 model = "standard"
-            if has_term(query, "digital"):
+            if _raw_has_term(query, "digital") or "digitaledition" in compact:
                 edition = "digital"
-            elif has_term(query, "disc") or has_term(query, "disk"):
+            elif _raw_has_term(query, "disc") or _raw_has_term(query, "disk"):
                 edition = "disc"
     elif "nintendo" in compact or "switch" in compact or "3ds" in compact:
         brand = "Nintendo"
@@ -387,12 +395,17 @@ def console_builder_title_matches_product(title: str, product: Product) -> bool:
             return False
         if model == "standard" and (has_slim or has_pro):
             return False
-        if edition == "digital" and not has_term(title, "digital"):
-            return False
-        if edition == "disc":
-            if has_term(title, "digital") and not (has_term(title, "disc") or has_term(title, "disk")):
+        title_has_digital = _raw_has_term(title, "digital") or "digitaledition" in compact
+        title_has_disc = _raw_has_term(title, "disc") or _raw_has_term(title, "disk")
+        if edition == "digital":
+            if not title_has_digital:
                 return False
-            if not (has_term(title, "disc") or has_term(title, "disk")):
+            if _raw_has_term(title, "disc edition") or _raw_has_term(title, "disk edition"):
+                return False
+        if edition == "disc":
+            if title_has_digital and not title_has_disc:
+                return False
+            if not title_has_disc:
                 return False
         return True
 

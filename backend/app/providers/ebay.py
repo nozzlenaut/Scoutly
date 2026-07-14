@@ -154,6 +154,10 @@ def _listing_warning_labels(title: str) -> list[str]:
     ]
     if any(clue in normalized_title for clue in bundle_clues):
         warnings.append("Bundle / extras included")
+    if re.search(r"\b(?:please\s+)?read(?:\s+(?:desc|description))?\b", normalized_title) or re.search(
+        r"\bsee\s+description\b", normalized_title
+    ):
+        warnings.append("Seller asks you to review the description")
     compact_title = re.sub(r"[^a-z0-9]+", "", normalized_title)
     if "ddr3l" in compact_title or "pc3l" in compact_title:
         warnings.append("DDR3L — verify voltage compatibility")

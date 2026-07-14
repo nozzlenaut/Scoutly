@@ -244,3 +244,25 @@ def test_ddr3l_listing_gets_voltage_compatibility_warning():
     listing = ebay_item_to_listing(item)
     assert listing is not None
     assert "DDR3L — verify voltage compatibility" in listing.warning_labels
+
+
+def test_ebay_item_flags_description_review_language_without_rejecting_listing():
+    variants = [
+        "Sony A7R IV Camera Body *Read",
+        "Sony A7R IV Camera Body Read Desc",
+        "Sony A7R IV Camera Body Read Description",
+        "Sony A7R IV Camera Body See Description",
+    ]
+    for index, title in enumerate(variants, start=1):
+        listing = ebay_item_to_listing(
+            {
+                "title": title,
+                "price": {"value": "999.00", "currency": "USD"},
+                "condition": "Used",
+                "itemWebUrl": f"https://www.ebay.com/itm/90000000000{index}",
+                "seller": {},
+                "shippingOptions": [],
+            }
+        )
+        assert listing is not None
+        assert "Seller asks you to review the description" in listing.warning_labels
