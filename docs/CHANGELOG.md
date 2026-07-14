@@ -256,3 +256,14 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Tightens Nintendo handheld filtering for accessory-only, game/manual, charger-only, and seller-selection listings while preserving complete console bundles that include chargers.
 - Pauses Wii U until complete console + GamePad requirements are defined.
 - Adds regression coverage for all newly reported titles and eBay variation metadata.
+
+## v0.6.0
+
+- Added the first reusable specification-builder flow with strict RAM searches.
+- Added DDR3/DDR4/DDR5, desktop/laptop, total-capacity, stick-configuration, optional-speed, and optional-brand choices.
+- Added dynamic RAM product resolution and category-specific eBay filtering.
+- Added strict RAM conflict, ECC/server, unclear-kit, and seller-variation rejection.
+- Promoted GPUs and Consoles to Active alongside Cameras.
+- Rejected passive/server and external/eGPU variants for consumer desktop GPU searches.
+- Strengthened LEGO packaging-only filtering and common EMPTY typo handling.
+- Added transparent empty states with a broader tracked eBay Buy It Now search.

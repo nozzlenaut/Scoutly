@@ -226,3 +226,9 @@ def test_ebay_bundle_titles_receive_comparison_warning():
 
     assert listing is not None
     assert "Bundle / extras included" in listing.warning_labels
+
+
+def test_ebay_search_adds_ram_category_id():
+    provider = _CaptureEbayProvider()
+    asyncio.run(provider.search("DDR4 32GB 2x16GB UDIMM RAM", category="ram"))
+    assert provider.last_params["category_ids"] == "170083"

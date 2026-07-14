@@ -94,7 +94,6 @@ export type ClickRecord = {
   tracked_url?: string;
 };
 
-
 export type FilteredListingRecord = {
   filtered_at: string;
   provider?: string | null;
@@ -120,7 +119,6 @@ export type BadResultReport = {
   ebay_item_id?: string | null;
   link_key?: string;
 };
-
 
 export type ManualFilterRule = {
   id: string;
@@ -192,7 +190,11 @@ export async function searchAuctions(
   return response.json();
 }
 
-export async function suggestProducts(query: string, category = "cameras", limit = 8): Promise<ProductMatch[]> {
+export async function suggestProducts(
+  query: string,
+  category = "cameras",
+  limit = 8,
+): Promise<ProductMatch[]> {
   if (query.trim().length < 2) return [];
 
   const url = `${baseUrl}/api/products/suggest?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&limit=${limit}`;
@@ -215,7 +217,9 @@ export type ReportBadResultPayload = {
   reason?: string;
 };
 
-export async function reportBadResult(payload: ReportBadResultPayload): Promise<void> {
+export async function reportBadResult(
+  payload: ReportBadResultPayload,
+): Promise<void> {
   const response = await fetch(`${baseUrl}/api/results/report`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -229,7 +233,13 @@ export async function reportBadResult(payload: ReportBadResultPayload): Promise<
 
 export function buildOutboundUrl(
   url: string,
-  metadata: { query?: string; category?: string; productId?: string; provider?: string; title?: string } = {},
+  metadata: {
+    query?: string;
+    category?: string;
+    productId?: string;
+    provider?: string;
+    title?: string;
+  } = {},
 ): string {
   const params = new URLSearchParams({ url });
   if (metadata.query) params.set("q", metadata.query);
@@ -245,50 +255,83 @@ function adminQuery(token?: string): string {
   return token ? `?token=${encodeURIComponent(token)}` : "";
 }
 
-export async function getAnalyticsSummary(token?: string): Promise<AnalyticsSummary> {
-  const response = await fetch(`${baseUrl}/api/analytics/summary${adminQuery(token)}`, { cache: "no-store" });
+export async function getAnalyticsSummary(
+  token?: string,
+): Promise<AnalyticsSummary> {
+  const response = await fetch(
+    `${baseUrl}/api/analytics/summary${adminQuery(token)}`,
+    { cache: "no-store" },
+  );
   if (!response.ok) throw new Error("Analytics summary failed");
   return response.json();
 }
 
 export async function getRecentClicks(token?: string): Promise<ClickRecord[]> {
-  const separator = token ? `?token=${encodeURIComponent(token)}&limit=50` : "?limit=50";
-  const response = await fetch(`${baseUrl}/api/analytics/clicks${separator}`, { cache: "no-store" });
+  const separator = token
+    ? `?token=${encodeURIComponent(token)}&limit=50`
+    : "?limit=50";
+  const response = await fetch(`${baseUrl}/api/analytics/clicks${separator}`, {
+    cache: "no-store",
+  });
   if (!response.ok) throw new Error("Click analytics failed");
   const data = await response.json();
   return data.clicks || [];
 }
 
-export async function getActiveReports(token?: string): Promise<BadResultReport[]> {
-  const separator = token ? `?token=${encodeURIComponent(token)}&limit=50` : "?limit=50";
-  const response = await fetch(`${baseUrl}/api/analytics/reports${separator}`, { cache: "no-store" });
+export async function getActiveReports(
+  token?: string,
+): Promise<BadResultReport[]> {
+  const separator = token
+    ? `?token=${encodeURIComponent(token)}&limit=50`
+    : "?limit=50";
+  const response = await fetch(`${baseUrl}/api/analytics/reports${separator}`, {
+    cache: "no-store",
+  });
   if (!response.ok) throw new Error("Report analytics failed");
   const data = await response.json();
   return data.reports || [];
 }
 
-export async function getRecentFilteredListings(token?: string): Promise<FilteredListingRecord[]> {
-  const separator = token ? `?token=${encodeURIComponent(token)}&limit=75` : "?limit=75";
-  const response = await fetch(`${baseUrl}/api/analytics/filtered${separator}`, { cache: "no-store" });
+export async function getRecentFilteredListings(
+  token?: string,
+): Promise<FilteredListingRecord[]> {
+  const separator = token
+    ? `?token=${encodeURIComponent(token)}&limit=75`
+    : "?limit=75";
+  const response = await fetch(
+    `${baseUrl}/api/analytics/filtered${separator}`,
+    { cache: "no-store" },
+  );
   if (!response.ok) throw new Error("Filtered listing analytics failed");
   const data = await response.json();
   return data.filtered || [];
 }
 
-export async function getManualFilterRules(token?: string): Promise<ManualFilterRule[]> {
-  const response = await fetch(`${baseUrl}/api/analytics/filter-rules${adminQuery(token)}`, { cache: "no-store" });
+export async function getManualFilterRules(
+  token?: string,
+): Promise<ManualFilterRule[]> {
+  const response = await fetch(
+    `${baseUrl}/api/analytics/filter-rules${adminQuery(token)}`,
+    { cache: "no-store" },
+  );
   if (!response.ok) throw new Error("Manual filter rules failed");
   const data = await response.json();
   return data.rules || [];
 }
 
-export async function createManualFilterRule(payload: ManualFilterRulePayload, token?: string): Promise<ManualFilterRule> {
+export async function createManualFilterRule(
+  payload: ManualFilterRulePayload,
+  token?: string,
+): Promise<ManualFilterRule> {
   const query = adminQuery(token);
-  const response = await fetch(`${baseUrl}/api/analytics/filter-rules${query}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  const response = await fetch(
+    `${baseUrl}/api/analytics/filter-rules${query}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  );
 
   if (!response.ok) {
     throw new Error("Could not create filter rule");
@@ -297,17 +340,22 @@ export async function createManualFilterRule(payload: ManualFilterRulePayload, t
   return response.json();
 }
 
-export async function deleteManualFilterRule(id: string, token?: string): Promise<void> {
+export async function deleteManualFilterRule(
+  id: string,
+  token?: string,
+): Promise<void> {
   const query = adminQuery(token);
-  const response = await fetch(`${baseUrl}/api/analytics/filter-rules/${encodeURIComponent(id)}${query}`, {
-    method: "DELETE",
-  });
+  const response = await fetch(
+    `${baseUrl}/api/analytics/filter-rules/${encodeURIComponent(id)}${query}`,
+    {
+      method: "DELETE",
+    },
+  );
 
   if (!response.ok) {
     throw new Error("Could not delete filter rule");
   }
 }
-
 
 export async function deleteBadResultReport(
   linkKey: string,
@@ -319,11 +367,34 @@ export async function deleteBadResultReport(
   if (options.productId) params.set("product_id", options.productId);
   if (options.category) params.set("category", options.category);
   const query = params.toString() ? `?${params.toString()}` : "";
-  const response = await fetch(`${baseUrl}/api/analytics/reports/${encodeURIComponent(linkKey)}${query}`, {
-    method: "DELETE",
-  });
+  const response = await fetch(
+    `${baseUrl}/api/analytics/reports/${encodeURIComponent(linkKey)}${query}`,
+    {
+      method: "DELETE",
+    },
+  );
 
   if (!response.ok) {
     throw new Error("Could not delete report");
   }
+}
+
+const ebayCategoryIds: Record<string, string> = {
+  cameras: "31388",
+  lenses: "3323",
+  gpus: "27386",
+  lego: "19006",
+  consoles: "139971",
+  ram: "170083",
+};
+
+export function buildEbaySearchUrl(query: string, category?: string): string {
+  const params = new URLSearchParams({
+    _nkw: query,
+    LH_BIN: "1",
+    _sop: "15",
+  });
+  const categoryId = category ? ebayCategoryIds[category] : undefined;
+  if (categoryId) params.set("_sacat", categoryId);
+  return `https://www.ebay.com/sch/i.html?${params.toString()}`;
 }

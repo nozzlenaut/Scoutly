@@ -5,6 +5,7 @@ from pathlib import Path
 
 from app.catalog.normalizer import compact_text, has_term, normalize_text
 from app.models.product import Product, ProductMatch
+from app.catalog.ram import ram_product_match, ram_title_matches_product
 
 CATALOG_PATH = Path(__file__).resolve().parents[1] / "data" / "product_catalog.json"
 
@@ -31,6 +32,8 @@ GLOBAL_BAD_LISTING_TERMS = [
     "pickup only",
     "pick up only",
     "repair",
+    "salvage",
+    "no power",
     "spares",
     "untested",
 ]
@@ -460,6 +463,33 @@ def _looks_like_gpu_accessory(title: str, product: Product | None = None) -> boo
 
     if product is not None and product.category == "gpus":
         product_name = product.display_name
+
+        # Consumer desktop cards should not silently resolve to passive server
+        # modules or external/eGPU enclosures that share the same GPU chip.
+        product_compact_identity = compact_text(product.model, strip_filler=False)
+        is_consumer_desktop_gpu = bool(
+            re.search(r"(?:rtx|gtx)\d{3,4}", product_compact_identity)
+            or re.search(r"rx\d{3,4}", product_compact_identity)
+            or re.search(r"arca\d{3,4}", product_compact_identity)
+        ) and not product_compact_identity.startswith("rtxa")
+        if is_consumer_desktop_gpu and _has_any_term(
+            title,
+            [
+                "passive",
+                "passively cooled",
+                "server gpu",
+                "server card",
+                "server",
+                "egpu",
+                "e gpu",
+                "external gpu",
+                "external graphics",
+                "graphics amplifier",
+                "gaming box",
+                "thunderbolt enclosure",
+            ],
+        ):
+            return True
         datacenter_models = ["p4", "p40", "k80", "m40", "p100", "v100", "t4", "a40", "a100"]
         searched_model = next((model for model in datacenter_models if _has_exact_code(product_name, model)), None)
         if searched_model:
@@ -846,9 +876,36 @@ def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
     # numbered or inner/outer packaging-only title as junk for complete-set
     # searches.
     raw_normalized = normalize_text(title, strip_filler=False)
-    if re.search(r"\b(?:empty\s+)?(?:inner|outer)\s+boxes?\s+only\b", raw_normalized):
+    if re.search(r"\b(?:empty\s+)?(?:inner|outer)\s+box(?:es)?(?:\s+only)?\b", raw_normalized):
         return True
-    if re.search(r"\b\d+\s+(?:inner|outer)\s+boxes?\s+only\b", raw_normalized):
+    if re.search(r"\b\d+\s+(?:inner|outer)\s+box(?:es)?(?:\s+only)?\b", raw_normalized):
+        return True
+    if re.search(r"\b(?:boxes?|packaging)\s+only\b", raw_normalized):
+        return True
+
+    # Common typo protection for strong packaging warnings. One-edit variants
+    # such as EMPRY should not allow an empty-box listing through.
+    def one_edit_from_empty(token: str) -> bool:
+        target = "empty"
+        if abs(len(token) - len(target)) > 1:
+            return False
+        previous = list(range(len(target) + 1))
+        for index, char in enumerate(token, start=1):
+            current = [index]
+            for target_index, target_char in enumerate(target, start=1):
+                current.append(
+                    min(
+                        current[-1] + 1,
+                        previous[target_index] + 1,
+                        previous[target_index - 1] + (char != target_char),
+                    )
+                )
+            previous = current
+        return previous[-1] <= 1
+
+    packaging_words = {"box", "boxes", "packaging", "outer", "inner"}
+    tokens = raw_normalized.split()
+    if any(one_edit_from_empty(token) for token in tokens) and packaging_words.intersection(tokens):
         return True
 
     if _has_any_term(title, LEGO_ACCESSORY_TERMS):
@@ -1038,6 +1095,9 @@ CATEGORY_ALIASES = {
     "xbox": "consoles",
     "switch": "consoles",
     "nintendo": "consoles",
+    "ram": "ram",
+    "memory": "ram",
+    "computer-memory": "ram",
 }
 
 
@@ -1229,7 +1289,11 @@ def _gpu_variant_resolution_is_ambiguous(query: str, matches: list[ProductMatch]
 
 
 def match_product(query: str, category: str | None = None) -> ProductMatch | None:
-    matches = suggest_products(query, category=category, limit=8)
+    normalized_category = normalize_category(category)
+    if normalized_category == "ram":
+        return ram_product_match(query)
+
+    matches = suggest_products(query, category=normalized_category, limit=8)
     if not matches:
         return None
     best_match = matches[0]
@@ -1241,11 +1305,16 @@ def match_product(query: str, category: str | None = None) -> ProductMatch | Non
 
 
 def suggest_products(query: str, category: str | None = None, limit: int = 8) -> list[ProductMatch]:
+    normalized_category = normalize_category(category)
+    if normalized_category == "ram":
+        match = ram_product_match(query)
+        return [match] if match is not None else []
+
     if len(query.strip()) < 2:
         return []
 
     matches: list[ProductMatch] = []
-    for product in list_products(category):
+    for product in list_products(normalized_category):
         match = _score_product_candidate(query, product)
         if match is not None and match.confidence >= 0.42:
             matches.append(match)
@@ -1292,6 +1361,9 @@ def listing_matches_product(title: str, product: Product) -> bool:
 
     if product.category == "gpus" and _looks_like_gpu_accessory(title, product):
         return False
+
+    if product.category == "ram":
+        return ram_title_matches_product(title, product)
 
     if product.category == "lenses" and _looks_like_lens_accessory(title):
         return False

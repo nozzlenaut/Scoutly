@@ -14,7 +14,8 @@ export const allCategories: SearchCategory[] = [
     label: "Cameras",
     group: "Photography",
     status: "active",
-    description: "Used camera bodies with eBay Digital Cameras category filtering.",
+    description:
+      "Used camera bodies with eBay Digital Cameras category filtering.",
     placeholder: "Try Sony A7R V, Canon R5 II, Nikon Z6 III...",
     defaultQuery: "Sony A7 III Body",
   },
@@ -23,7 +24,8 @@ export const allCategories: SearchCategory[] = [
     label: "Lenses",
     group: "Photography",
     status: "coming-soon",
-    description: "Temporarily paused while we validate cleaner eBay lens-category results.",
+    description:
+      "Temporarily paused while we validate cleaner eBay lens-category results.",
     placeholder: "Coming soon",
     defaultQuery: "Sony FE 24-70mm f/2.8 GM",
   },
@@ -31,17 +33,29 @@ export const allCategories: SearchCategory[] = [
     id: "gpus",
     label: "GPUs",
     group: "PC Parts",
-    status: "lab",
-    description: "Active testing category with eBay Graphics/Video Cards category filtering.",
+    status: "active",
+    description:
+      "Used desktop graphics cards with strict model and form-factor filtering.",
     placeholder: "Try RTX 5050, RX 480, RX 9070 XT, Arc A580...",
     defaultQuery: "RTX 3060 12GB",
+  },
+  {
+    id: "ram",
+    label: "RAM",
+    group: "PC Parts",
+    status: "lab",
+    description:
+      "Specification-builder testing for strict DDR3, DDR4, and DDR5 memory-kit searches.",
+    placeholder: "Build a RAM configuration",
+    defaultQuery: "",
   },
   {
     id: "consoles",
     label: "Consoles",
     group: "Gaming",
-    status: "lab",
-    description: "Active testing for complete Xbox, PlayStation, and Nintendo systems.",
+    status: "active",
+    description:
+      "Complete Xbox, PlayStation, and Nintendo systems with accessory filtering.",
     placeholder: "Try PS5 Disc, Xbox Series X, Switch OLED...",
     defaultQuery: "Xbox Series X 1TB",
   },
@@ -56,16 +70,25 @@ export const allCategories: SearchCategory[] = [
   },
 ];
 
-export const searchCategories = allCategories.filter((category) => category.status !== "coming-soon");
+export const searchCategories = allCategories.filter(
+  (category) => category.status !== "coming-soon",
+);
 
 export function getCategoryById(id?: string | null): SearchCategory | null {
   if (!id) return null;
   return allCategories.find((category) => category.id === id) ?? null;
 }
 
-export function getSearchCategoryById(id?: string | null): SearchCategory | null {
+export function getSearchCategoryById(
+  id?: string | null,
+): SearchCategory | null {
   const category = getCategoryById(id);
-  if (!category || category.status === "coming-soon" || category.status === "planned") return null;
+  if (
+    !category ||
+    category.status === "coming-soon" ||
+    category.status === "planned"
+  )
+    return null;
   return category;
 }
 

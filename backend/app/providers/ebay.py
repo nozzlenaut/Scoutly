@@ -28,6 +28,8 @@ EBAY_US_CATEGORY_IDS = {
     "gpus": "27386",
     "lego": "19006",
     "consoles": "139971",
+    # Computer Memory (RAM)
+    "ram": "170083",
 }
 
 

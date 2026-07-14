@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
-from app.catalog.catalog import match_product
+from app.catalog.catalog import match_product, normalize_category
+from app.catalog.ram import ram_provider_query
 from app.models.listing import Listing
 from app.models.product import Product, ProductMatch
 from app.models.search import SearchDiagnostics
@@ -24,6 +25,10 @@ def _build_providers():
 
 
 PROVIDERS = _build_providers()
+
+
+def _structured_product_required_but_missing(category: str | None, product_match: ProductMatch | None) -> bool:
+    return normalize_category(category) == "ram" and product_match is None
 
 
 def _parse_ebay_dt(value: str | None) -> datetime | None:
@@ -131,7 +136,13 @@ async def search_best_deals(
     category: str | None = None,
 ) -> tuple[ProductMatch | None, list[Listing]]:
     product_match = match_product(query, category)
-    provider_query = product_match.product.display_name if product_match else query
+    if _structured_product_required_but_missing(category, product_match):
+        return None, []
+    provider_query = (
+        ram_provider_query(product_match.product)
+        if product_match and product_match.product.category == "ram"
+        else product_match.product.display_name if product_match else query
+    )
     product = product_match.product if product_match else None
     search_category = product.category if product else category
     results: list[Listing] = []
@@ -159,7 +170,13 @@ async def search_best_deals_with_auctions(
     auction_hours: int = 24,
 ) -> tuple[ProductMatch | None, list[Listing], list[Listing], SearchDiagnostics]:
     product_match = match_product(query, category)
-    provider_query = product_match.product.display_name if product_match else query
+    if _structured_product_required_but_missing(category, product_match):
+        return None, [], [], SearchDiagnostics()
+    provider_query = (
+        ram_provider_query(product_match.product)
+        if product_match and product_match.product.category == "ram"
+        else product_match.product.display_name if product_match else query
+    )
     product = product_match.product if product_match else None
     search_category = product.category if product else category
     fixed_results: list[Listing] = []
@@ -208,7 +225,13 @@ async def search_auction_deals(
     auction_hours: int = 24,
 ) -> tuple[ProductMatch | None, list[Listing], SearchDiagnostics]:
     product_match = match_product(query, category)
-    provider_query = product_match.product.display_name if product_match else query
+    if _structured_product_required_but_missing(category, product_match):
+        return None, [], SearchDiagnostics()
+    provider_query = (
+        ram_provider_query(product_match.product)
+        if product_match and product_match.product.category == "ram"
+        else product_match.product.display_name if product_match else query
+    )
     product = product_match.product if product_match else None
     search_category = product.category if product else category
     auction_results: list[Listing] = []

@@ -6,8 +6,6 @@ from app.services.filter_rules import manual_filter_rejection_reasons
 
 BAD_TITLE_WORDS = [
     *GLOBAL_BAD_LISTING_TERMS,
-    "laptop",
-    "mobile",
     "no display",
 ]
 
@@ -16,6 +14,11 @@ BAD_CONDITION_WORDS = [
     "not working",
     "parts only",
     "repair",
+    "untested",
+    "as-is",
+    "as is",
+    "salvage",
+    "no power",
 ]
 
 
@@ -34,6 +37,12 @@ def rejection_reasons(listing: Listing, product: Product | None = None) -> list[
             reasons.append(f"bad condition: {word}")
             break
 
+    if product is not None and product.category == "gpus":
+        for word in ["laptop", "notebook", "mobile"]:
+            if has_term(listing.title, word):
+                reasons.append(f"bad GPU form factor: {word}")
+                break
+
     if listing.seller_feedback_score == 0:
         reasons.append("seller feedback score is zero")
 
@@ -46,7 +55,7 @@ def rejection_reasons(listing: Listing, product: Product | None = None) -> list[
     # than trusting the cheapest variation price.
     if (
         product is not None
-        and product.category in {"consoles", "gpus"}
+        and product.category in {"consoles", "gpus", "ram"}
         and (listing.item_group_type or "").upper() == "SELLER_DEFINED_VARIATIONS"
     ):
         reasons.append("seller-defined variation listing")

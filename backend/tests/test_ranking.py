@@ -137,3 +137,20 @@ def test_clean_console_listing_ranks_above_same_price_bundle():
     )
 
     assert score_listing(clean) > score_listing(bundle)
+
+
+def test_rejects_seller_defined_variations_for_ram():
+    from app.catalog.catalog import match_product
+
+    product = match_product("DDR5 Desktop 32GB 2x16GB 6000 MT/s", category="ram").product
+    listing = Listing(
+        provider="eBay",
+        title="DDR5 Desktop RAM 32GB 2x16GB 6000 UDIMM - Choose Capacity",
+        price=19.99,
+        shipping=0,
+        total_price=19.99,
+        condition="Used",
+        url="https://www.ebay.com/itm/123456789012",
+        item_group_type="SELLER_DEFINED_VARIATIONS",
+    )
+    assert is_bad_listing(listing, product) is True

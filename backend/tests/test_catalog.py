@@ -720,3 +720,78 @@ def test_bare_rtx_3080_query_does_not_choose_a_vram_variant():
     assert "NVIDIA RTX 3080 12GB" in names
     assert match_product("RTX 3080 10GB", category="gpus").product.id == "gpu-nvidia-rtx-3080-10gb"
     assert match_product("RTX 3080 12GB", category="gpus").product.id == "gpu-nvidia-rtx-3080-12gb"
+
+
+def test_rejects_titanic_packaging_typos_and_phrase_variants():
+    titanic = match_product("LEGO Titanic 10294", category="lego")
+    assert titanic is not None
+
+    assert listing_matches_product("LEGO Titanic 10294 EMPRY OUTER BOX", titanic.product) is False
+    assert listing_matches_product("LEGO Titanic 10294 Outer Box", titanic.product) is False
+    assert listing_matches_product("LEGO Titanic 10294 Packaging Only", titanic.product) is False
+    assert listing_matches_product("LEGO Titanic 10294 Complete Set with Original Box", titanic.product) is True
+
+
+def test_consumer_rtx_3080_rejects_server_passive_and_external_variants():
+    rtx_3080 = match_product("NVIDIA RTX 3080 10GB", category="gpus")
+    assert rtx_3080 is not None
+
+    assert listing_matches_product("NVIDIA RTX 3080 10GB Passive Server GPU", rtx_3080.product) is False
+    assert listing_matches_product("AORUS RTX 3080 Gaming Box eGPU External Graphics", rtx_3080.product) is False
+    assert listing_matches_product("Gigabyte GeForce RTX 3080 10GB Desktop Graphics Card", rtx_3080.product) is True
+
+
+def test_ram_builder_resolves_complete_specs():
+    match = match_product("DDR4 Desktop 32GB 2x16GB 3200 MT/s Corsair", category="ram")
+    assert match is not None
+    assert match.confidence == 1.0
+    assert match.product.category == "ram"
+    assert match.product.metadata["form_factor"] == "desktop"
+    assert match.product.metadata["generation"] == "ddr4"
+    assert match.product.metadata["total_capacity_gb"] == 32
+    assert match.product.metadata["stick_count"] == 2
+    assert match.product.metadata["capacity_per_stick_gb"] == 16
+    assert match.product.metadata["speed_mts"] == 3200
+
+
+def test_ram_builder_rejects_unclear_or_incomplete_query():
+    assert match_product("DDR4 Desktop 32GB", category="ram") is None
+    assert match_product("DDR4 32GB 2x16GB", category="ram") is None
+    assert match_product("Desktop 32GB 2x16GB", category="ram") is None
+
+
+def test_ram_listing_requires_exact_generation_form_factor_and_configuration():
+    match = match_product("DDR4 Desktop 32GB 2x16GB 3200 MT/s", category="ram")
+    assert match is not None
+
+    assert listing_matches_product(
+        "Corsair Vengeance LPX 32GB (2x16GB) DDR4 3200MHz UDIMM Desktop Memory Kit",
+        match.product,
+    ) is True
+    assert listing_matches_product("Corsair 32GB DDR4 3200 Desktop RAM", match.product) is False
+    assert listing_matches_product("Corsair 32GB (1x32GB) DDR4 3200 UDIMM", match.product) is False
+    assert listing_matches_product("Corsair 32GB (2x16GB) DDR5 3200 UDIMM", match.product) is False
+    assert listing_matches_product("Corsair 32GB (2x16GB) DDR4 3200 SODIMM Laptop RAM", match.product) is False
+    assert listing_matches_product("Samsung 32GB (2x16GB) DDR4 3200 ECC RDIMM Server RAM", match.product) is False
+
+
+def test_ram_laptop_and_ddr3_are_supported():
+    match = match_product("DDR3 Laptop 16GB 2x8GB 1600 MT/s", category="ram")
+    assert match is not None
+    assert listing_matches_product(
+        "Crucial 16GB Kit (2x8GB) DDR3 1600MHz PC3-12800 SODIMM Laptop Memory",
+        match.product,
+    ) is True
+    assert listing_matches_product(
+        "Crucial 16GB Kit (2x8GB) DDR3 1600MHz UDIMM Desktop Memory",
+        match.product,
+    ) is False
+
+
+def test_ram_generation_selection_rejects_multi_generation_spam():
+    match = match_product("DDR4 Desktop 32GB 2x16GB", category="ram")
+    assert match is not None
+    assert listing_matches_product(
+        "DDR3 DDR4 DDR5 Desktop RAM 8GB 16GB 32GB 2x16GB UDIMM",
+        match.product,
+    ) is False
