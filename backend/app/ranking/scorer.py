@@ -1,4 +1,4 @@
-from app.catalog.catalog import GLOBAL_BAD_LISTING_TERMS, listing_matches_product
+from app.catalog.catalog import GLOBAL_BAD_LISTING_TERMS, listing_match_rejection_reasons
 from app.catalog.normalizer import has_term
 from app.models.listing import Listing
 from app.models.product import Product
@@ -20,6 +20,36 @@ BAD_CONDITION_WORDS = [
     "salvage",
     "no power",
 ]
+
+CONSOLE_REVIEW_WORDS = [
+    "please read",
+    "read description",
+    "read desc",
+    "see description",
+    "read",
+]
+
+
+def _console_title_quality_adjustment(listing: Listing, product: Product | None) -> float:
+    if product is None or product.category != "consoles":
+        return 0
+
+    adjustment = 0.0
+    title = listing.title
+
+    # Review-caveated listings may still be functional, so keep them eligible
+    # but make a clean listing win even when it costs noticeably more.
+    if any(has_term(title, word) for word in CONSOLE_REVIEW_WORDS):
+        adjustment -= 130
+
+    if any(has_term(title, word) for word in ["tested", "working", "fully functional"]):
+        adjustment += 30
+    if any(has_term(title, word) for word in ["complete", "complete console", "full system"]):
+        adjustment += 25
+    if any(has_term(title, word) for word in ["console", "system", "handheld", "unit"]):
+        adjustment += 15
+
+    return adjustment
 
 
 def rejection_reasons(listing: Listing, product: Product | None = None) -> list[str]:
@@ -68,8 +98,8 @@ def rejection_reasons(listing: Listing, product: Product | None = None) -> list[
     ):
         reasons.append("seller-defined variation listing")
 
-    if product is not None and not listing_matches_product(listing.title, product):
-        reasons.append("catalog/product match rejected")
+    if product is not None:
+        reasons.extend(listing_match_rejection_reasons(listing.title, product))
 
     return reasons
 
@@ -109,8 +139,18 @@ def score_listing(listing: Listing, product: Product | None = None) -> float:
     shipping_bonus = 10 if listing.shipping == 0 else 0
     product_match_bonus = 35 if product is not None else 0
     bundle_penalty = 15 if "Bundle / extras included" in listing.warning_labels else 0
+    console_title_adjustment = _console_title_quality_adjustment(listing, product)
 
-    return round(price_score + seller_score + condition_bonus + shipping_bonus + product_match_bonus - bundle_penalty, 2)
+    return round(
+        price_score
+        + seller_score
+        + condition_bonus
+        + shipping_bonus
+        + product_match_bonus
+        + console_title_adjustment
+        - bundle_penalty,
+        2,
+    )
 
 
 def top_listings(listings: list[Listing], product: Product | None = None, limit: int = 3) -> list[Listing]:

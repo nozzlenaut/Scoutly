@@ -365,6 +365,21 @@ def _switch_has_standard_identity(title: str) -> bool:
     return has_revision or has_console_identity or _switch_has_complete_controls(title)
 
 
+def _console_title_has_hardware_evidence(title: str) -> bool:
+    normalized = normalize_text(title, strip_filler=False)
+    scrubbed = re.sub(r"\bconsole edition\b", "", normalized)
+    scrubbed = re.sub(r"\bfor (?:the )?console\b", "", scrubbed)
+    if re.search(r"\b(?:video game|gaming|complete|full) console\b", scrubbed):
+        return True
+    if re.search(r"\bconsole (?:system|unit|bundle|with|and)\b", scrubbed):
+        return True
+    if any(has_term(scrubbed, clue) for clue in ["system", "unit", "handheld", "tested", "working"]):
+        return True
+    if re.search(r"\b(?:32|64|256|500|512|825)\s*gb\b|\b(?:1|2)\s*tb\b", scrubbed):
+        return True
+    return False
+
+
 def console_builder_title_matches_product(title: str, product: Product) -> bool:
     metadata = product.metadata
     family = str(metadata.get("family") or "")
@@ -378,6 +393,8 @@ def console_builder_title_matches_product(title: str, product: Product) -> bool:
 
     if family == "xbox-series":
         if "xbox" not in compact:
+            return False
+        if "xbox360" in compact or has_term(title, "xbox 360"):
             return False
         is_x = "seriesx" in compact
         is_s = "seriess" in compact
@@ -412,6 +429,8 @@ def console_builder_title_matches_product(title: str, product: Product) -> bool:
             return False
         if model == "pro" and not has_pro:
             return False
+        if model == "pro" and not _console_title_has_hardware_evidence(title):
+            return False
         if model == "standard" and (has_slim or has_pro):
             return False
         title_has_digital = _raw_has_term(title, "digital") or "digitaledition" in compact
@@ -433,11 +452,15 @@ def console_builder_title_matches_product(title: str, product: Product) -> bool:
             return False
         is_oled = has_term(title, "oled")
         is_lite = has_term(title, "lite")
+        is_heg = "heg001" in compact
+        is_hac = "hac001" in compact
         if model == "oled" and not is_oled:
             return False
         if model == "lite" and not is_lite:
             return False
-        if model == "standard" and (is_oled or is_lite):
+        if model == "standard" and (is_oled or is_lite or is_heg):
+            return False
+        if model == "switch2" and (is_oled or is_lite or is_heg or is_hac):
             return False
         # Standard Switch listings are inconsistently titled. Accept V1/V2,
         # HAC model codes, the word Standard, or normal console/system wording,

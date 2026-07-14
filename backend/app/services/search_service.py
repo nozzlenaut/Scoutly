@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from collections import Counter
 
 from app.catalog.catalog import match_product, normalize_category
 from app.catalog.ram import ram_provider_query
@@ -72,6 +73,28 @@ def _top_scored_listings(listings: list[Listing], limit: int = 3) -> list[Listin
     for listing in sorted(listings, key=lambda item: item.score, reverse=True):
         deduped.setdefault(_listing_identity(listing), listing)
     return list(deduped.values())[: max(1, limit)]
+
+
+def _listing_rejection_summary(
+    listings: list[Listing],
+    product: Product | None,
+) -> tuple[int, int, Counter[str]]:
+    rejected = 0
+    eligible = 0
+    reason_counts: Counter[str] = Counter()
+    for listing in listings:
+        reasons = rejection_reasons(listing, product)
+        if reasons:
+            rejected += 1
+            reason_counts.update(set(reasons))
+        else:
+            eligible += 1
+    return rejected, eligible, reason_counts
+
+
+def _merge_reason_counts(target: dict[str, int], counts: Counter[str]) -> None:
+    for reason, count in counts.items():
+        target[reason] = target.get(reason, 0) + count
 
 
 def _auction_sort_key(listing: Listing) -> tuple[int, datetime, float]:
@@ -248,10 +271,13 @@ async def search_best_deals_with_auctions(
                     buying_option="fixed_price",
                 )
                 diagnostics.fixed_price_candidates += fixed_candidate_count
-                diagnostics.fixed_price_filtered += max(0, fixed_candidate_count - len(fixed_listings))
-                diagnostics.fixed_price_filtered += sum(
-                    1 for listing in fixed_listings if is_bad_listing(listing, scoped_product)
-                )
+                report_filtered = max(0, fixed_candidate_count - len(fixed_listings))
+                rejected, eligible, reason_counts = _listing_rejection_summary(fixed_listings, scoped_product)
+                diagnostics.fixed_price_filtered += report_filtered + rejected
+                diagnostics.fixed_price_eligible += eligible
+                if report_filtered:
+                    reason_counts["reported listing filter"] += report_filtered
+                _merge_reason_counts(diagnostics.fixed_price_rejection_reasons, reason_counts)
                 provider_fixed_candidates.extend(top_listings(fixed_listings, scoped_product, limit=3))
 
                 if include_auctions and provider_key.lower() == "ebay":
@@ -263,10 +289,13 @@ async def search_best_deals_with_auctions(
                         buying_option="auction",
                     )
                     diagnostics.auction_candidates += auction_candidate_count
-                    diagnostics.auction_filtered += max(0, auction_candidate_count - len(auction_listings))
-                    diagnostics.auction_filtered += sum(
-                        1 for listing in auction_listings if is_bad_listing(listing, scoped_product)
-                    )
+                    report_filtered = max(0, auction_candidate_count - len(auction_listings))
+                    rejected, eligible, reason_counts = _listing_rejection_summary(auction_listings, scoped_product)
+                    diagnostics.auction_filtered += report_filtered + rejected
+                    diagnostics.auction_eligible += eligible
+                    if report_filtered:
+                        reason_counts["reported listing filter"] += report_filtered
+                    _merge_reason_counts(diagnostics.auction_rejection_reasons, reason_counts)
                     provider_auction_candidates.extend(
                         best_auction_listings(
                             auction_listings,
@@ -281,7 +310,7 @@ async def search_best_deals_with_auctions(
 
     return (
         product_match,
-        sorted(_top_scored_listings(fixed_results, limit=3), key=lambda item: item.total_price),
+        _top_scored_listings(fixed_results, limit=3),
         sorted(_top_combined_auctions(auction_results, limit=3), key=lambda item: item.item_end_date or ""),
         diagnostics,
     )
@@ -316,10 +345,13 @@ async def search_auction_deals(
                 buying_option="auction",
             )
             diagnostics.auction_candidates += auction_candidate_count
-            diagnostics.auction_filtered += max(0, auction_candidate_count - len(auction_listings))
-            diagnostics.auction_filtered += sum(
-                1 for listing in auction_listings if is_bad_listing(listing, scoped_product)
-            )
+            report_filtered = max(0, auction_candidate_count - len(auction_listings))
+            rejected, eligible, reason_counts = _listing_rejection_summary(auction_listings, scoped_product)
+            diagnostics.auction_filtered += report_filtered + rejected
+            diagnostics.auction_eligible += eligible
+            if report_filtered:
+                reason_counts["reported listing filter"] += report_filtered
+            _merge_reason_counts(diagnostics.auction_rejection_reasons, reason_counts)
             provider_auction_candidates.extend(
                 best_auction_listings(
                     auction_listings,

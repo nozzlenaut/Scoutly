@@ -61,6 +61,13 @@ Show the best used result
 - Pause Console variant narrowing until core-model result quality is proven
 - Reset the Console QA benchmark while retaining LEGO evaluations
 
+## v0.6.9 - Console listing quality pass
+
+- Filter the accessory, replacement-part, packaging-only, game, and wrong-generation titles found during live Console QA
+- Preserve quality-score ordering through the final result list
+- Expose eligible counts and rejection-reason diagnostics in the QA workbench
+- Rerun the unchanged 16 core-model Console benchmark before adding categories or variant narrowing
+
 ## Later
 
 - Price history

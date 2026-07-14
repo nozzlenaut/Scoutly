@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.9
+
+- Adds a stricter console listing-eligibility layer for standalone drives, shells, frames, cooling parts, cases, packaging/manual-only listings, docks, and incomplete hardware.
+- Rejects `Console Edition` game listings and Xbox 360 titles that collide with Xbox Series S/X wording.
+- Rejects HEG-001/OLED hardware from standard Nintendo Switch searches and strengthens PlayStation Pro hardware evidence.
+- Keeps `READ`-caveated listings eligible but heavily demotes them below clean tested hardware.
+- Fixes the final fixed-price result order so quality scores are preserved instead of re-sorting the selected top three by lowest price.
+- Adds QA diagnostics for eligible listings and categorized filter-reason counts.
+- Adds exact regression cases from the v0.6.8 console QA report, bringing the backend suite to 155 passing tests.
+
 ## v0.6.8
 
 - Groups console storage, color, drive, revision, and bundle variants under 16 core-model catalog products.

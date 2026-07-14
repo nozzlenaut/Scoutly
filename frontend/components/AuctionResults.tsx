@@ -14,8 +14,12 @@ type Props = {
 const emptyDiagnostics: SearchDiagnostics = {
   fixed_price_candidates: 0,
   fixed_price_filtered: 0,
+  fixed_price_eligible: 0,
+  fixed_price_rejection_reasons: {},
   auction_candidates: 0,
   auction_filtered: 0,
+  auction_eligible: 0,
+  auction_rejection_reasons: {},
 };
 
 export function AuctionResults({ query, category, productId, resolved = false }: Props) {

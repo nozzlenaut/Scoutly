@@ -277,3 +277,146 @@ def test_original_switch_accepts_v1_v2_hac_and_rejects_other_models():
         assert listing_matches_product(title, product) is True, title
     for title in rejected_titles:
         assert listing_matches_product(title, product) is False, title
+
+
+def test_console_qa_problem_titles_are_rejected_without_blocking_real_hardware():
+    problem_cases = [
+        (
+            "PS5 Pro",
+            "Disc Drive for PS5 Pro Digital Edition Console",
+        ),
+        (
+            "PS4",
+            "Sony PlayStation 4 PS4 Base Shell Replacement Housing Black",
+        ),
+        (
+            "PS4",
+            "PS4 Mid-Frame Cooling Fan Heat Sink Replacement Part",
+        ),
+        (
+            "PS4",
+            "Rust Console Edition PS4 Video Game",
+        ),
+        (
+            "Xbox Series S",
+            "Microsoft Xbox 360 S Series S Console 250GB Black",
+        ),
+        (
+            "Nintendo Switch",
+            "Nintendo Switch HEG-001 Console White Tested",
+        ),
+        (
+            "Nintendo Switch",
+            "Nintendo Switch Dock with Charger OEM HAC-007",
+        ),
+        (
+            "Nintendo Switch Lite",
+            "Nintendo Licensed Slim Hard Case Collection for Switch Lite",
+        ),
+        (
+            "Nintendo 3DS XL",
+            "Nintendo New 3DS XL Box & Tray and Manuals Only",
+        ),
+    ]
+
+    for query, title in problem_cases:
+        product = match_product(query, category="consoles").product
+        assert is_bad_listing(
+            Listing(
+                provider="eBay",
+                title=title,
+                price=40,
+                shipping=0,
+                total_price=40,
+                condition="Used",
+                seller_rating=99.5,
+                seller_feedback_score=200,
+                url=f"https://example.com/{abs(hash((query, title)))}",
+            ),
+            product,
+        ) is True, title
+
+    valid_cases = [
+        ("PS5 Pro", "Sony PlayStation 5 Pro PS5 Pro 2TB Console Tested"),
+        ("PS5 Pro", "Sony PlayStation 5 Pro 2TB Console with Disc Drive Tested"),
+        ("PS4", "Sony PlayStation 4 PS4 500GB Console Tested Working"),
+        ("Xbox Series S", "Microsoft Xbox Series S 512GB Console Tested"),
+        ("Nintendo Switch", "Nintendo Switch HAC-001 Console System Complete"),
+        ("Nintendo Switch Lite", "Nintendo Switch Lite Handheld Console Tested"),
+        ("Nintendo 3DS XL", "Nintendo New 3DS XL Handheld System Tested"),
+    ]
+    for query, title in valid_cases:
+        product = match_product(query, category="consoles").product
+        assert listing_matches_product(title, product) is True, title
+
+
+class RankingConsoleProvider:
+    name = "eBay"
+
+    async def search(
+        self,
+        query: str,
+        category: str | None = None,
+        buying_option: str = "fixed_price",
+    ) -> list[Listing]:
+        if buying_option == "auction":
+            return []
+        return [
+            Listing(
+                provider="eBay",
+                title="Sony PlayStation 5 Pro PS5 Pro 2TB Console READ DESCRIPTION",
+                price=420,
+                shipping=0,
+                total_price=420,
+                condition="Used",
+                seller_rating=99.8,
+                seller_feedback_score=500,
+                url="https://www.ebay.com/itm/100000000020",
+            ),
+            Listing(
+                provider="eBay",
+                title="Sony PlayStation 5 Pro PS5 Pro 2TB Console Tested Working",
+                price=465,
+                shipping=0,
+                total_price=465,
+                condition="Used",
+                seller_rating=99.8,
+                seller_feedback_score=500,
+                url="https://www.ebay.com/itm/100000000021",
+            ),
+            Listing(
+                provider="eBay",
+                title="Disc Drive for PS5 Pro Digital Edition Console",
+                price=79,
+                shipping=0,
+                total_price=79,
+                condition="Used",
+                seller_rating=99.8,
+                seller_feedback_score=500,
+                url="https://www.ebay.com/itm/100000000022",
+            ),
+        ]
+
+
+def test_console_search_preserves_quality_ranking_and_exposes_filter_reasons(monkeypatch):
+    provider = RankingConsoleProvider()
+    monkeypatch.setitem(search_service.PROVIDERS, "ebay", provider)
+
+    resolved, results, auctions, diagnostics = asyncio.run(
+        search_service.search_best_deals_with_auctions(
+            "PS5 Pro",
+            ["ebay"],
+            "consoles",
+            include_auctions=False,
+        )
+    )
+
+    assert resolved is not None
+    assert results[0].title.endswith("Tested Working")
+    assert results[1].title.endswith("READ DESCRIPTION")
+    assert all("Disc Drive for" not in listing.title for listing in results)
+    assert diagnostics.fixed_price_candidates == 3
+    assert diagnostics.fixed_price_eligible == 2
+    assert diagnostics.fixed_price_filtered == 1
+    assert diagnostics.fixed_price_rejection_reasons["console accessory/part/incomplete"] == 1
+    assert auctions == []

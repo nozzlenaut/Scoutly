@@ -69,6 +69,12 @@ function money(value: number): string {
   }).format(value);
 }
 
+function topRejectionReasons(reasons: Record<string, number> | undefined): [string, number][] {
+  return Object.entries(reasons ?? {})
+    .sort((left, right) => right[1] - left[1])
+    .slice(0, 6);
+}
+
 function statusPill(evaluation?: QaEvaluation | null) {
   if (!evaluation) {
     return <span className="rounded-full border border-white/10 px-2.5 py-1 text-xs text-slate-500">Untested</span>;
@@ -377,7 +383,7 @@ export function QaWorkbench({ initialCases, initialSummary, token }: Props) {
                   <div>
                     <h3 className="text-xl font-bold">Top live results</h3>
                     <p className="mt-1 text-sm text-slate-500">
-                      {searchData.diagnostics.fixed_price_candidates} candidates · {searchData.diagnostics.fixed_price_filtered} filtered
+                      {searchData.diagnostics.fixed_price_candidates} candidates · {searchData.diagnostics.fixed_price_eligible} eligible · {searchData.diagnostics.fixed_price_filtered} filtered
                     </p>
                   </div>
                   <p className="text-xs text-slate-600">Links open directly so QA clicks do not pollute normal click analytics.</p>
@@ -411,6 +417,18 @@ export function QaWorkbench({ initialCases, initialSummary, token }: Props) {
                     No safe Buy It Now listings were returned.
                   </div>
                 )}
+                {topRejectionReasons(searchData.diagnostics.fixed_price_rejection_reasons).length ? (
+                  <div className="mt-4 rounded-2xl border border-white/10 bg-slate-950/30 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Top filter reasons</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {topRejectionReasons(searchData.diagnostics.fixed_price_rejection_reasons).map(([reason, count]) => (
+                        <span key={reason} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-300">
+                          {count}× {reason}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               <div className="mt-7 border-t border-white/10 pt-6">

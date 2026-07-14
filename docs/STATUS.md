@@ -14,5 +14,6 @@ Scoutly remains the internal repository and infrastructure name.
 - Seed suite: 16 Console cases and 20 LEGO cases
 - Outcome tracking: Pass, Top-3 only, Fail, No inventory
 - Persistence: PostgreSQL production storage with local JSON fallback
-- Next milestone: Rerun the 16 reset core-model Console cases, compare them with the retained LEGO results, then tune listing eligibility and ranking
+- Current build: v0.6.9 console listing eligibility, model-conflict filtering, and quality-order correction
+- Next milestone: Rerun and save the unchanged 16 core-model Console cases, then compare Pass / Top-3 / Fail / No inventory outcomes with the v0.6.8 baseline
 

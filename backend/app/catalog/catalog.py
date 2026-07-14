@@ -388,6 +388,7 @@ CAMERA_PART_ACCESSORY_TERMS = [
 ]
 
 CONSOLE_PART_ACCESSORY_TERMS = [
+    "base shell",
     "board card",
     "bracket",
     "cover only",
@@ -434,12 +435,21 @@ CONSOLE_PART_ACCESSORY_TERMS = [
     "blu ray drive",
     "blu-ray drive",
     "box only",
+    "box & tray only",
+    "box and tray only",
     "case only",
+    "case collection",
     "carrying case",
+    "hard case",
+    "slim hard case",
     "smart pouch",
     "charge dock",
     "charging dock",
+    "dock with charger",
+    "dock and charger",
     "manual only",
+    "manuals only",
+    "tray only",
     "controller only",
     "controllers only",
     "disc drive only",
@@ -478,6 +488,13 @@ CONSOLE_PART_ACCESSORY_TERMS = [
     "for parts",
     "hdmi port",
     "housing shell",
+    "mid frame",
+    "mid-frame",
+    "fan only",
+    "replacement fan",
+    "cooling fan",
+    "heat sink",
+    "heat sync",
     "joy con only",
     "joy-con only",
     "left joy con",
@@ -822,10 +839,80 @@ def _console_has_hardware_evidence(title: str) -> bool:
     return any(re.search(pattern, raw, re.I) for pattern in model_code_patterns)
 
 
+def _console_has_strong_hardware_evidence(title: str) -> bool:
+    """Identify a real console rather than a title that merely names one.
+
+    Marketplace accessories often contain the word ``console`` in phrases such
+    as ``for console`` or ``Console Edition``. Strong evidence uses explicit
+    system wording, storage/model codes, or normal sale-condition language.
+    """
+    normalized = normalize_text(title, strip_filler=False)
+    scrubbed = re.sub(r"\bconsole edition\b", "", normalized)
+    scrubbed = re.sub(r"\bfor (?:the )?console\b", "", scrubbed)
+
+    if re.search(r"\b(?:video game|gaming|complete|full) console\b", scrubbed):
+        return True
+    if re.search(r"\bconsole (?:system|unit|bundle|with|and)\b", scrubbed):
+        return True
+    if _has_any_term(scrubbed, ["system", "unit", "handheld"]):
+        return True
+    if re.search(r"\b(?:32|64|256|500|512|825)\s*gb\b|\b(?:1|2)\s*tb\b", scrubbed):
+        return True
+    model_code_patterns = [
+        r"\bcuh[-\s]?\d{4}[a-z]?\b",
+        r"\b(?:model\s*)?(?:1540|1681|1787)\b",
+        r"\b(?:spr|red|ktr)[-\s]?001\b",
+    ]
+    if any(re.search(pattern, scrubbed, re.I) for pattern in model_code_patterns):
+        return True
+    if _has_any_term(scrubbed, ["tested", "working", "fully functional", "powers on"]):
+        return True
+    return False
+
+
+def _looks_like_standalone_console_drive(title: str) -> bool:
+    drive_terms = [
+        "disc drive",
+        "disk drive",
+        "optical drive",
+        "blu ray drive",
+        "blu-ray drive",
+    ]
+    if not _has_any_term(title, drive_terms):
+        return False
+    normalized = normalize_text(title, strip_filler=False)
+    console_sale_evidence = bool(
+        re.search(r"\bconsole (?:with|and|bundle|system|unit)\b", normalized)
+        or re.search(r"\b(?:32|64|256|500|512|825)\s*gb\b|\b(?:1|2)\s*tb\b", normalized)
+    )
+    return not console_sale_evidence
+
+
+def _looks_like_console_edition_game(title: str) -> bool:
+    if not _has_any_term(title, ["console edition"]):
+        return False
+    game_signals = [
+        "game",
+        "video game",
+        "disc",
+        "disk",
+        "cartridge",
+        "rated",
+        "esrb",
+    ]
+    return _has_any_term(title, game_signals) or not _console_has_strong_hardware_evidence(title)
+
+
 def _looks_like_console_accessory(title: str, product: Product | None = None) -> bool:
     normalized = normalize_text(title)
 
     if _has_any_term(title, CONSOLE_PART_ACCESSORY_TERMS + CONSOLE_INCOMPLETE_TERMS):
+        return True
+
+    if _looks_like_standalone_console_drive(title):
+        return True
+
+    if _looks_like_console_edition_game(title):
         return True
 
     if _looks_like_console_multi_variation_listing(title, product):
@@ -987,6 +1074,11 @@ def _looks_like_console_accessory(title: str, product: Product | None = None) ->
             "supporters",
         ]
         if _has_any_term(title, obvious_game_or_merch) and not _has_any_term(title, console_clues):
+            return True
+
+        # A controller bundle can be a valid console bundle, but only when the
+        # title has stronger hardware evidence than the platform name itself.
+        if _has_any_term(title, ["controller bundle", "controller set"]) and not _console_has_strong_hardware_evidence(title):
             return True
 
     if (
@@ -1256,6 +1348,8 @@ def _console_title_matches_product(title: str, product: Product) -> bool:
             return False
         if "pro" in product_text and not has_raw("pro"):
             return False
+        if "pro" in product_text and not _console_has_strong_hardware_evidence(title):
+            return False
         if "slim" in product_text and not has_raw("slim"):
             return False
         is_base_generation = not any(term in product_text for term in ["slim", "pro"])
@@ -1274,6 +1368,8 @@ def _console_title_matches_product(title: str, product: Product) -> bool:
 
     if product.brand.lower() == "xbox":
         if not has_raw("xbox"):
+            return False
+        if "xbox360" in compact_title or has_raw("xbox 360"):
             return False
         if "series x" in product_text:
             if has_raw("series s") or has_raw("xbox one") or has_raw("one x") or has_raw("one s"):
@@ -1303,7 +1399,13 @@ def _console_title_matches_product(title: str, product: Product) -> bool:
         if "switch lite" in product_text:
             return has_raw("switch") and has_raw("lite")
         if "switch" in product_text:
-            return has_raw("switch") and not has_raw("lite") and not has_raw("oled") and not has_raw("switch 2")
+            return (
+                has_raw("switch")
+                and not has_raw("lite")
+                and not has_raw("oled")
+                and not has_raw("switch 2")
+                and "heg001" not in compact_title
+            )
         if "wii u" in product_text:
             return has_raw("wii u") or "wiiu" in compact_title
         return all(has_raw(required_term) for required_term in product.required_terms)
@@ -1670,3 +1772,17 @@ def listing_matches_product(title: str, product: Product) -> bool:
         return _lego_title_matches_product(title, product)
 
     return all(has_term(title, required_term) for required_term in product.required_terms)
+
+
+def listing_match_rejection_reasons(title: str, product: Product) -> list[str]:
+    """Return a useful QA-facing reason when product matching rejects a title."""
+    if product.category == "consoles":
+        if _looks_like_console_accessory(title, product):
+            return ["console accessory/part/incomplete"]
+        if product.metadata.get("builder") == "consoles":
+            matched = console_builder_title_matches_product(title, product)
+        else:
+            matched = _console_title_matches_product(title, product)
+        return [] if matched else ["console model conflict"]
+
+    return [] if listing_matches_product(title, product) else ["catalog/product match rejected"]
