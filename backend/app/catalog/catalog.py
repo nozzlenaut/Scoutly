@@ -1294,6 +1294,11 @@ def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
         ["complete", "complete set", "sealed", "new in box", "with box", "building kit"],
     )
 
+    if _looks_like_lego_named_subbuild(
+        title, product, clearly_full_set=clearly_full_set
+    ):
+        return True
+
     # LEGO part listings can include the exact set number or model name while
     # selling only a horse, bed, display stand, cartridge piece, etc. Keep this
     # gated behind "not clearly full set" so normal complete sets that mention
@@ -1396,6 +1401,42 @@ def _lego_has_canonical_name_agreement(title: str, product: Product) -> bool:
     anchor = model_tokens[-1]
     required_hits = max(2, (len(model_tokens) + 1) // 2)
     return has_term(title, anchor) and hits >= required_hits
+
+
+def _looks_like_lego_named_subbuild(
+    title: str,
+    product: Product,
+    *,
+    clearly_full_set: bool,
+) -> bool:
+    """Reject known named sub-builds that reuse the parent set identity.
+
+    Some LEGO listings contain the exact set number and enough canonical-name
+    words to pass normal identity matching, but the item is only a recognizable
+    side build. Keep these rules narrow and set-specific so a generic word like
+    "ghost" does not damage unrelated sets.
+    """
+    set_number = str(product.metadata.get("set_number") or product.variant or "").strip()
+    normalized = normalize_text(title, strip_filler=False)
+
+    if set_number == "10323":
+        ghost_signal = bool(
+            re.search(r"\b(?:ghost|ghosts|blinky|clyde|pinky|inky)\b", normalized)
+        )
+        full_arcade_signal = clearly_full_set or _has_any_term(
+            title,
+            [
+                "arcade machine",
+                "arcade cabinet",
+                "full arcade",
+                "complete arcade",
+                "complete main build",
+            ],
+        )
+        if ghost_signal and not full_arcade_signal:
+            return True
+
+    return False
 
 
 def _looks_like_lego_individual_bricks(title: str) -> bool:

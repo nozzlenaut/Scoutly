@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.6.13
+
+- Adds a narrow PAC-MAN Arcade `10323` sub-build rule for named ghosts such as Blinky, Clyde, Pinky, and Inky.
+- Rejects ghost/display builds that reuse the parent set number and PAC-MAN wording without evidence of the full arcade machine.
+- Keeps full arcade-machine/cabinet titles and complete sets eligible, even when they mention included ghosts.
+- Adds a focused regression test, bringing the backend suite to 168 passing tests.
+- Freezes the existing 88-case QA matrix as the stable cross-category baseline.
+
 ## v0.6.12
 
 - Rejects faulty and partially functional electronics, including single-working-port GPU listings.
@@ -111,6 +119,14 @@
 - Rejects GPU problem/issue listings while allowing “no problems” / “no issues” context.
 
 # Changelog
+
+## v0.6.13
+
+- Adds a narrow PAC-MAN Arcade `10323` sub-build rule for named ghosts such as Blinky, Clyde, Pinky, and Inky.
+- Rejects ghost/display builds that reuse the parent set number and PAC-MAN wording without evidence of the full arcade machine.
+- Keeps full arcade-machine/cabinet titles and complete sets eligible, even when they mention included ghosts.
+- Adds a focused regression test, bringing the backend suite to 168 passing tests.
+- Freezes the existing 88-case QA matrix as the stable cross-category baseline.
 
 ## v0.6.10
 

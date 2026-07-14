@@ -91,6 +91,12 @@ Show the best used result
 - Separate inventory-adjusted QA quality from availability and overall outcomes
 - Preserve the 88-case regression suite for periodic full sweeps
 
+## v0.6.13 - Stable QA baseline
+
+- Reject named PAC-MAN `10323` ghost sub-builds unless the title clearly identifies the full arcade machine or complete set
+- Preserve the unchanged 88-case suite as the periodic regression baseline
+- Move active development from category/filter architecture toward buyer-facing price context
+
 ## Later
 
 - Price history

@@ -1062,6 +1062,26 @@ def test_ram_rejects_mixed_speed_kit_for_exact_speed_search():
     ) is True
 
 
+def test_lego_pac_man_rejects_named_ghost_subbuilds_but_keeps_full_arcade():
+    match = match_product("PAC-MAN Arcade 10323", category="lego")
+    assert match is not None
+
+    rejected_titles = [
+        "LEGO Icons PAC-MAN 10323 Blinky and Clyde Ghosts",
+        "LEGO 10323 PAC-MAN Red & Orange Ghosts Display Build",
+        "LEGO PAC-MAN Arcade 10323 Pinky Inky Ghost Sub Build",
+    ]
+    for title in rejected_titles:
+        assert listing_matches_product(title, match.product) is False, title
+
+    accepted_titles = [
+        "LEGO Icons PAC-MAN Arcade Machine 10323",
+        "LEGO PAC-MAN Arcade 10323 Complete Set with Blinky and Clyde",
+    ]
+    for title in accepted_titles:
+        assert listing_matches_product(title, match.product) is True, title
+
+
 def test_lego_requires_canonical_name_and_rejects_partial_set_patterns():
     cases = [
         (
