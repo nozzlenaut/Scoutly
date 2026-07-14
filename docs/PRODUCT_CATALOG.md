@@ -28,6 +28,7 @@ Examples:
 - Cameras: mount, sensor format
 - Lenses: mount, focal length, max aperture
 - GPUs: chipset brand, VRAM, memory type, generation
+- Consoles: core model plus grouped storage, color, drive, revision, and bundle variants
 
 ## Current categories
 
@@ -45,6 +46,8 @@ Examples:
 | Lenses | `canon rf 50 1.8` | Canon RF 50mm f/1.8 STM |
 | GPUs | `3060` | NVIDIA RTX 3060 12GB |
 | GPUs | `rx6700xt` | AMD RX 6700 XT 12GB |
+| Consoles | `Xbox Series S Carbon Black 1TB` | Xbox Series S |
+| Consoles | `PS5 Slim Digital` | PlayStation 5 Slim |
 
 ## Why free-text and dropdown both exist
 

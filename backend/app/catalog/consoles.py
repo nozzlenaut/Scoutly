@@ -30,8 +30,12 @@ class ConsoleSpec:
             base = "Nintendo Switch"
             if self.model == "standard":
                 base += " Standard"
+            elif self.model == "switch2":
+                base += " 2"
             elif self.model:
                 base += f" {self.model.upper() if self.model == 'oled' else self.model.title()}"
+        elif self.family == "nintendo-wii-u":
+            base = "Nintendo Wii U"
         else:
             base = "Nintendo 3DS XL"
 
@@ -96,27 +100,33 @@ def parse_console_query(query: str) -> ConsoleSpec | None:
                 model = "pro"
             elif has_term(query, "slim"):
                 model = "slim"
-            elif has_term(query, "standard"):
+            else:
+                # PS4 and PS5 are core models. Storage and Disc/Digital are
+                # grouped variants rather than separate searchable products.
                 model = "standard"
             if _raw_has_term(query, "digital") or "digitaledition" in compact:
                 edition = "digital"
             elif _raw_has_term(query, "disc") or _raw_has_term(query, "disk"):
                 edition = "disc"
-    elif "nintendo" in compact or "switch" in compact or "3ds" in compact:
+    elif "nintendo" in compact or "switch" in compact or "3ds" in compact or "wiiu" in compact:
         brand = "Nintendo"
         if "3dsxl" in compact or ("3ds" in compact and has_term(query, "xl")):
             family = "nintendo-3ds-xl"
+            model = "3ds-xl"
+        elif "wiiu" in compact:
+            family = "nintendo-wii-u"
+            model = "wii-u"
         elif "switch" in compact:
             family = "nintendo-switch"
-            if has_term(query, "oled"):
+            if has_term(query, "switch 2") or "switch2" in compact:
+                model = "switch2"
+            elif has_term(query, "oled"):
                 model = "oled"
             elif has_term(query, "lite"):
                 model = "lite"
-            elif has_term(query, "standard") or has_term(query, "v1") or has_term(query, "v2"):
+            else:
+                # V1 and V2 are variants under the original Switch model.
                 model = "standard"
-            # Switch 2 remains paused and must never fall back to Switch.
-            if has_term(query, "switch 2") or "switch2" in compact:
-                return None
 
     if not brand or not family:
         return None
@@ -152,8 +162,12 @@ def _console_product_from_spec(spec: ConsoleSpec) -> Product:
             model = "Switch OLED"
         elif spec.model == "lite":
             model = "Switch Lite"
+        elif spec.model == "switch2":
+            model = "Switch 2"
         elif spec.model == "standard":
-            model = "Switch Standard"
+            model = "Switch"
+    elif spec.family == "nintendo-wii-u":
+        model = "Wii U"
     else:
         model = "3DS XL"
 
@@ -203,7 +217,7 @@ _FAMILY_MODEL_SCOPES: dict[str, tuple[str, ...]] = {
     "xbox-one": ("One S", "One X"),
     "playstation-5": ("standard", "slim", "pro"),
     "playstation-4": ("standard", "slim", "pro"),
-    "nintendo-switch": ("standard", "oled", "lite"),
+    "nintendo-switch": ("standard", "oled", "lite", "switch2"),
 }
 
 _MODEL_STORAGE_SUPPORT: dict[tuple[str, str], set[str]] = {
@@ -257,7 +271,7 @@ def console_search_products(product: Product) -> list[Product]:
 
 def console_provider_query(product: Product) -> str:
     value = product.metadata.get("provider_query")
-    return str(value) if value else product.display_name
+    return str(value) if value else f"{product.display_name} console"
 
 
 def _is_standard_switch_product(product: Product) -> bool:
@@ -272,8 +286,13 @@ def _is_standard_switch_product(product: Product) -> bool:
         and product.brand.lower() == "nintendo"
         and (
             (family == "nintendo-switch" and model_scope == "standard")
-            or "switchv1v2" in product_identity
-            or product.id == "console-nintendo-switch-v1-v2"
+            or product.id in {"console-nintendo-switch", "console-nintendo-switch-v1-v2"}
+            or (
+                "switch" in product_identity
+                and "switcholed" not in product_identity
+                and "switchlite" not in product_identity
+                and "switch2" not in product_identity
+            )
         )
     )
 

@@ -45,7 +45,6 @@ const outcomeLabels: Record<QaOutcome, { label: string; detail: string; classNam
 const issueOptions = [
   ["wrong_product_resolution", "Wrong product resolution"],
   ["wrong_model", "Wrong model / version"],
-  ["wrong_edition_or_storage", "Wrong edition / storage"],
   ["accessory_or_part", "Accessory or replacement part"],
   ["incomplete_or_broken", "Incomplete or broken"],
   ["wrong_set", "Wrong LEGO set"],

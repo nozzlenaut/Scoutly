@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.8
+
+- Groups console storage, color, drive, revision, and bundle variants under 16 core-model catalog products.
+- Makes PlayStation 4/5, Slim, Pro, Xbox Series S/X, Xbox One S/X, Switch, Switch OLED/Lite/2, Wii U, and 3DS XL the active searchable identities.
+- Keeps old variant-specific wording as aliases while using broad marketplace queries such as `Xbox Series S console`.
+- Removes storage and Disc/Digital controls from the Console builder until a later narrowing release.
+- Replaces the 16 Console QA cases with versioned core-model cases so Console testing resets without erasing the 20 saved LEGO evaluations.
+- Activates Switch 2 and Wii U as core-model QA targets.
+- Adds grouped-variant regression coverage, bringing the backend suite to 153 passing tests.
+
 ## v0.6.7
 
 - Adds a private `/admin/qa` live-search workbench for repeatable console and LEGO validation.

@@ -38,13 +38,13 @@ class RecordingConsoleProvider:
         return []
 
 
-def test_direct_console_search_runs_one_exact_catalog_query(monkeypatch):
+def test_direct_console_search_uses_one_core_model_query(monkeypatch):
     provider = RecordingConsoleProvider()
     monkeypatch.setitem(search_service.PROVIDERS, "ebay", provider)
 
     resolved, results, auctions, diagnostics = asyncio.run(
         search_service.search_best_deals_with_auctions(
-            "Xbox Series X",
+            "Xbox Series X 1TB",
             ["ebay"],
             "consoles",
             include_auctions=False,
@@ -52,10 +52,10 @@ def test_direct_console_search_runs_one_exact_catalog_query(monkeypatch):
     )
 
     assert resolved is not None
-    assert resolved.product.id == "console-xbox-series-x-1tb"
-    assert resolved.product.metadata.get("builder") is None
+    assert resolved.product.id == "console-xbox-series-x"
+    assert resolved.product.metadata.get("variants_grouped") is True
     assert len(provider.calls) == 1
-    assert provider.calls[0][0] == "Xbox Series X 1TB"
+    assert provider.calls[0][0] == "Xbox Series X console"
     assert [listing.title for listing in results] == [
         "Microsoft Xbox Series X 1TB Console Black Tested"
     ]
@@ -63,21 +63,42 @@ def test_direct_console_search_runs_one_exact_catalog_query(monkeypatch):
     assert diagnostics.fixed_price_candidates == 1
 
 
-def test_console_autocomplete_returns_exact_model_choices():
-    xbox = suggest_products("Xbox Series", category="consoles", limit=5)
+def test_console_autocomplete_returns_core_model_choices_without_variant_duplicates():
+    xbox = suggest_products("Xbox Series", category="consoles", limit=8)
     playstation = suggest_products("PlayStation 5", category="consoles", limit=8)
 
-    assert {match.product.id for match in xbox[:3]} == {
-        "console-xbox-series-x-1tb",
-        "console-xbox-series-s-512gb",
-        "console-xbox-series-s-1tb",
-    }
-    assert "console-playstation-5-slim-digital-edition" in {
-        match.product.id for match in playstation
-    }
-    assert "console-playstation-5-slim-disc-edition" in {
-        match.product.id for match in playstation
-    }
+    xbox_ids = {match.product.id for match in xbox}
+    playstation_ids = {match.product.id for match in playstation}
+    assert {"console-xbox-series-s", "console-xbox-series-x"}.issubset(xbox_ids)
+    assert "console-xbox-series-s-512gb" not in xbox_ids
+    assert "console-xbox-series-s-1tb" not in xbox_ids
+    assert {
+        "console-playstation-5",
+        "console-playstation-5-slim",
+        "console-playstation-5-pro",
+    }.issubset(playstation_ids)
+
+
+def test_storage_color_and_drive_queries_resolve_to_the_same_core_model():
+    series_s_queries = [
+        "Xbox Series S",
+        "Xbox Series S 512GB",
+        "Xbox Series S Carbon Black 1TB",
+    ]
+    ps5_slim_queries = [
+        "PS5 Slim",
+        "PS5 Slim Disc Edition",
+        "PS5 Slim Digital Edition 1TB",
+    ]
+
+    assert {
+        match_product(query, category="consoles").product.id
+        for query in series_s_queries
+    } == {"console-xbox-series-s"}
+    assert {
+        match_product(query, category="consoles").product.id
+        for query in ps5_slim_queries
+    } == {"console-playstation-5-slim"}
 
 
 def test_controller_requires_console_and_service_is_rejected():
@@ -200,7 +221,7 @@ def test_original_switch_aliases_use_revision_and_generic_provider_queries():
     for alias in aliases:
         match = match_product(alias, category="consoles")
         assert match is not None, alias
-        assert match.product.id == "console-nintendo-switch-v1-v2", alias
+        assert match.product.id == "console-nintendo-switch", alias
         assert search_service._provider_queries_for_product(alias, match.product) == expected_queries
 
 
@@ -218,7 +239,7 @@ def test_original_switch_combines_revision_results(monkeypatch):
     )
 
     assert resolved is not None
-    assert resolved.product.id == "console-nintendo-switch-v1-v2"
+    assert resolved.product.id == "console-nintendo-switch"
     assert [call[0] for call in provider.calls] == [
         "Nintendo Switch V1 console",
         "Nintendo Switch V2 console",

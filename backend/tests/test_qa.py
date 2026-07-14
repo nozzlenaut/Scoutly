@@ -6,13 +6,13 @@ from app.services.qa_store import load_qa_cases, qa_cases_with_latest, qa_summar
 
 def _evaluation_payload() -> dict:
     return {
-        "case_id": "console-switch-v2",
+        "case_id": "console-model-v2-switch",
         "category": "consoles",
-        "query": "Nintendo Switch V2",
-        "expected_product_id": "console-nintendo-switch-v1-v2",
-        "expected_label": "Nintendo Switch V1/V2",
-        "resolved_product_id": "console-nintendo-switch-v1-v2",
-        "resolved_label": "Nintendo Switch V1/V2",
+        "query": "Nintendo Switch",
+        "expected_product_id": "console-nintendo-switch",
+        "expected_label": "Nintendo Switch",
+        "resolved_product_id": "console-nintendo-switch",
+        "resolved_label": "Nintendo Switch",
         "resolution_correct": True,
         "outcome": "pass",
         "issue_tags": [],
@@ -36,7 +36,7 @@ def test_qa_file_fallback_saves_latest_evaluation(monkeypatch, tmp_path):
 
     saved = save_qa_evaluation(_evaluation_payload())
     cases = qa_cases_with_latest()
-    switch_case = next(case for case in cases if case["id"] == "console-switch-v2")
+    switch_case = next(case for case in cases if case["id"] == "console-model-v2-switch")
     summary = qa_summary()
 
     assert saved["outcome"] == "pass"
@@ -70,6 +70,6 @@ def test_qa_endpoints_require_token_and_save(monkeypatch, tmp_path):
 
     refreshed = client.get("/api/qa/cases", params={"token": "secret"})
     switch_case = next(
-        case for case in refreshed.json()["cases"] if case["id"] == "console-switch-v2"
+        case for case in refreshed.json()["cases"] if case["id"] == "console-model-v2-switch"
     )
     assert switch_case["latest_evaluation"]["outcome"] == "pass"

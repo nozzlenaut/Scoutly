@@ -195,6 +195,8 @@ export type ConsoleBuilderSelection = {
   brand: "nintendo" | "playstation" | "xbox" | "";
   family: string;
   model: string;
+  // Kept for backward-compatible parsing of old result-page URLs. Console
+  // variants are grouped under the core model and are not active refinements.
   storage: string;
   edition: string;
 };
@@ -215,8 +217,9 @@ export const consoleBrands: SpecOption[] = [
 
 const consoleFamilyMap: Record<string, SpecOption[]> = {
   nintendo: [
-    { id: "nintendo-3ds-xl", label: "3DS XL" },
-    { id: "nintendo-switch", label: "Switch" },
+    { id: "nintendo-switch", label: "Nintendo Switch" },
+    { id: "nintendo-wii-u", label: "Wii U" },
+    { id: "nintendo-3ds", label: "Nintendo 3DS" },
   ],
   playstation: [
     { id: "playstation-4", label: "PlayStation 4" },
@@ -229,72 +232,31 @@ const consoleFamilyMap: Record<string, SpecOption[]> = {
 };
 
 const consoleModelMap: Record<string, SpecOption[]> = {
-  "nintendo-3ds-xl": [{ id: "", label: "Any 3DS XL" }],
   "nintendo-switch": [
-    { id: "", label: "All Switch models" },
-    { id: "standard", label: "Standard Switch (V1/V2)" },
+    { id: "standard", label: "Nintendo Switch" },
     { id: "oled", label: "Switch OLED" },
     { id: "lite", label: "Switch Lite" },
+    { id: "switch2", label: "Switch 2" },
   ],
+  "nintendo-wii-u": [{ id: "wii-u", label: "Wii U" }],
+  "nintendo-3ds": [{ id: "3ds-xl", label: "3DS XL" }],
   "playstation-4": [
-    { id: "", label: "All PS4 models" },
+    { id: "standard", label: "PlayStation 4" },
     { id: "slim", label: "PS4 Slim" },
     { id: "pro", label: "PS4 Pro" },
   ],
   "playstation-5": [
-    { id: "", label: "All PS5 models" },
-    { id: "standard", label: "Standard PS5" },
+    { id: "standard", label: "PlayStation 5" },
     { id: "slim", label: "PS5 Slim" },
     { id: "pro", label: "PS5 Pro" },
   ],
   "xbox-one": [
-    { id: "", label: "All Xbox One models" },
     { id: "One S", label: "Xbox One S" },
     { id: "One X", label: "Xbox One X" },
   ],
   "xbox-series": [
-    { id: "", label: "All Xbox Series models" },
     { id: "Series S", label: "Xbox Series S" },
     { id: "Series X", label: "Xbox Series X" },
-  ],
-};
-
-const consoleStorageMap: Record<string, SpecOption[]> = {
-  "playstation-5:": [
-    { id: "", label: "Any storage" },
-    { id: "825GB", label: "825GB" },
-    { id: "1TB", label: "1TB" },
-    { id: "2TB", label: "2TB" },
-  ],
-  "playstation-5:standard": [
-    { id: "", label: "Any storage" },
-    { id: "825GB", label: "825GB" },
-  ],
-  "playstation-5:slim": [
-    { id: "", label: "Any storage" },
-    { id: "1TB", label: "1TB" },
-  ],
-  "playstation-5:pro": [
-    { id: "", label: "Any storage" },
-    { id: "2TB", label: "2TB" },
-  ],
-  "xbox-series:": [
-    { id: "", label: "Any storage" },
-    { id: "512GB", label: "512GB" },
-    { id: "1TB", label: "1TB" },
-  ],
-  "xbox-series:Series S": [
-    { id: "", label: "Any storage" },
-    { id: "512GB", label: "512GB" },
-    { id: "1TB", label: "1TB" },
-  ],
-  "xbox-series:Series X": [
-    { id: "", label: "Any storage" },
-    { id: "1TB", label: "1TB" },
-  ],
-  "xbox-one:": [
-    { id: "", label: "Any storage" },
-    { id: "1TB", label: "1TB" },
   ],
 };
 
@@ -310,30 +272,24 @@ export function consoleModelOptions(
   return selection.family ? consoleModelMap[selection.family] || [] : [];
 }
 
+// Reserved for a future narrowing update. Keeping the functions avoids
+// breaking older imports while making the current model-first behavior clear.
 export function consoleStorageOptions(
-  selection: ConsoleBuilderSelection,
+  _selection: ConsoleBuilderSelection,
 ): SpecOption[] {
-  const key = `${selection.family}:${selection.model}`;
-  return consoleStorageMap[key] || [];
+  return [];
 }
 
 export function consoleEditionOptions(
-  selection: ConsoleBuilderSelection,
+  _selection: ConsoleBuilderSelection,
 ): SpecOption[] {
-  if (selection.family !== "playstation-5" || selection.model === "pro") {
-    return [];
-  }
-  return [
-    { id: "", label: "Any edition" },
-    { id: "disc", label: "Disc Edition" },
-    { id: "digital", label: "Digital Edition" },
-  ];
+  return [];
 }
 
 export function consoleSelectionIsSearchable(
   selection: ConsoleBuilderSelection,
 ): boolean {
-  return Boolean(selection.brand && selection.family);
+  return Boolean(selection.brand && selection.family && selection.model);
 }
 
 export function buildConsoleQuery(
@@ -341,34 +297,30 @@ export function buildConsoleQuery(
 ): string | null {
   if (!consoleSelectionIsSearchable(selection)) return null;
 
-  let query = "";
-  if (selection.family === "xbox-series") {
-    query = selection.model ? `Xbox ${selection.model}` : "Xbox Series";
-  } else if (selection.family === "xbox-one") {
-    query = selection.model ? `Xbox ${selection.model}` : "Xbox One";
-  } else if (selection.family === "playstation-5") {
-    query = "PlayStation 5";
-    if (selection.model) {
-      query += ` ${selection.model === "standard" ? "Standard" : selection.model[0].toUpperCase() + selection.model.slice(1)}`;
-    }
-  } else if (selection.family === "playstation-4") {
-    query = "PlayStation 4";
-    if (selection.model) {
-      query += ` ${selection.model[0].toUpperCase() + selection.model.slice(1)}`;
-    }
-  } else if (selection.family === "nintendo-switch") {
-    query = "Nintendo Switch";
-    if (selection.model === "standard") query += " Standard";
-    if (selection.model === "oled") query += " OLED";
-    if (selection.model === "lite") query += " Lite";
-  } else {
-    query = "Nintendo 3DS XL";
+  if (selection.family === "xbox-series") return `Xbox ${selection.model}`;
+  if (selection.family === "xbox-one") return `Xbox ${selection.model}`;
+
+  if (selection.family === "playstation-5") {
+    if (selection.model === "slim") return "PlayStation 5 Slim";
+    if (selection.model === "pro") return "PlayStation 5 Pro";
+    return "PlayStation 5";
   }
 
-  if (selection.storage) query += ` ${selection.storage}`;
-  if (selection.edition === "disc") query += " Disc Edition";
-  if (selection.edition === "digital") query += " Digital Edition";
-  return query;
+  if (selection.family === "playstation-4") {
+    if (selection.model === "slim") return "PlayStation 4 Slim";
+    if (selection.model === "pro") return "PlayStation 4 Pro";
+    return "PlayStation 4";
+  }
+
+  if (selection.family === "nintendo-switch") {
+    if (selection.model === "oled") return "Nintendo Switch OLED";
+    if (selection.model === "lite") return "Nintendo Switch Lite";
+    if (selection.model === "switch2") return "Nintendo Switch 2";
+    return "Nintendo Switch";
+  }
+
+  if (selection.family === "nintendo-wii-u") return "Nintendo Wii U";
+  return "Nintendo 3DS XL";
 }
 
 export function parseConsoleQuery(
@@ -395,21 +347,27 @@ export function parseConsoleQuery(
     selection.family = compact.includes("ps5") || compact.includes("playstation5") ? "playstation-5" : "playstation-4";
     if (lower.includes("slim")) selection.model = "slim";
     else if (lower.includes("pro")) selection.model = "pro";
-    else if (lower.includes("standard")) selection.model = "standard";
+    else selection.model = "standard";
     if (lower.includes("digital")) selection.edition = "digital";
     else if (lower.includes("disc") || lower.includes("disk")) selection.edition = "disc";
+  } else if (compact.includes("wiiu")) {
+    selection.brand = "nintendo";
+    selection.family = "nintendo-wii-u";
+    selection.model = "wii-u";
   } else if (compact.includes("3dsxl")) {
     selection.brand = "nintendo";
-    selection.family = "nintendo-3ds-xl";
+    selection.family = "nintendo-3ds";
+    selection.model = "3ds-xl";
   } else if (compact.includes("switch")) {
     selection.brand = "nintendo";
     selection.family = "nintendo-switch";
-    if (lower.includes("oled")) selection.model = "oled";
-    else if (lower.includes("lite")) selection.model = "lite";
-    else if (lower.includes("standard") || lower.includes("v1") || lower.includes("v2")) selection.model = "standard";
+    if (lower.includes("switch 2") || compact.includes("switch2")) selection.model = "switch2";
+    else if (lower.includes("oled") || compact.includes("heg001")) selection.model = "oled";
+    else if (lower.includes("lite") || compact.includes("hdh001")) selection.model = "lite";
+    else selection.model = "standard";
   }
 
-  const storage = lower.match(/\b(512\s*gb|825\s*gb|1\s*tb|2\s*tb)\b/i)?.[1];
+  const storage = lower.match(/\b(8\s*gb|32\s*gb|64\s*gb|500\s*gb|512\s*gb|825\s*gb|1\s*tb|2\s*tb)\b/i)?.[1];
   if (storage) selection.storage = storage.replace(/\s+/g, "").toUpperCase();
   return selection;
 }

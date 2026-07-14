@@ -4,11 +4,9 @@ import { useMemo, useState } from "react";
 import {
   buildConsoleQuery,
   consoleBrands,
-  consoleEditionOptions,
   consoleFamilyOptions,
   consoleModelOptions,
   consoleSelectionIsSearchable,
-  consoleStorageOptions,
   parseConsoleQuery,
   type ConsoleBuilderSelection,
   type SpecOption,
@@ -81,8 +79,6 @@ export function ConsoleSearchBuilder({
   );
   const families = useMemo(() => consoleFamilyOptions(selection), [selection]);
   const models = useMemo(() => consoleModelOptions(selection), [selection]);
-  const storage = useMemo(() => consoleStorageOptions(selection), [selection]);
-  const editions = useMemo(() => consoleEditionOptions(selection), [selection]);
   const query = buildConsoleQuery(selection);
 
   function searchNext(next: ConsoleBuilderSelection) {
@@ -109,14 +105,6 @@ export function ConsoleSearchBuilder({
     searchNext({ ...selection, model: value, storage: "", edition: "" });
   }
 
-  function changeStorage(value: string) {
-    searchNext({ ...selection, storage: value });
-  }
-
-  function changeEdition(value: string) {
-    searchNext({ ...selection, edition: value });
-  }
-
   return (
     <div className={compact ? "mt-2" : "mt-1"}>
       <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -125,9 +113,8 @@ export function ConsoleSearchBuilder({
             Build your console search
           </p>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
-            Pick a brand and console family to see results. Leaving model open
-            searches every active model in that family, then combines the best
-            valid listings. Storage and edition remain optional refinements.
+            Pick the core console model you want. Storage, color, Disc/Digital,
+            and bundle variants are grouped underneath that model for now.
           </p>
         </div>
         <span className="w-fit rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1 text-xs font-semibold text-emerald-100">
@@ -156,38 +143,20 @@ export function ConsoleSearchBuilder({
       {selection.family ? (
         <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/35 p-4">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
-            Optional refinements · results update after each choice
+            Choose the core model
           </p>
-          <div className="grid gap-5 lg:grid-cols-2">
-            <ChoiceField
-              label="Model"
-              step={3}
-              value={selection.model}
-              options={models}
-              disabled={isNavigating}
-              onChange={changeModel}
-            />
-            {storage.length > 0 ? (
-              <ChoiceField
-                label="Storage"
-                step={4}
-                value={selection.storage}
-                options={storage}
-                disabled={isNavigating}
-                onChange={changeStorage}
-              />
-            ) : null}
-            {editions.length > 0 ? (
-              <ChoiceField
-                label="Edition / drive"
-                step={5}
-                value={selection.edition}
-                options={editions}
-                disabled={isNavigating}
-                onChange={changeEdition}
-              />
-            ) : null}
-          </div>
+          <ChoiceField
+            label="Model"
+            step={3}
+            value={selection.model}
+            options={models}
+            disabled={isNavigating}
+            onChange={changeModel}
+          />
+          <p className="mt-4 text-xs leading-5 text-slate-500">
+            Variant narrowing is intentionally paused. A Series S search can include
+            512GB and 1TB systems; a PS5 Slim search can include Disc and Digital systems.
+          </p>
         </div>
       ) : null}
 
@@ -197,7 +166,7 @@ export function ConsoleSearchBuilder({
             Structured search
           </p>
           <p className="mt-1 font-semibold text-white">
-            {query || "Choose a brand, then a family / generation"}
+            {query || "Choose a brand, family / generation, and model"}
           </p>
         </div>
         <button

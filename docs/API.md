@@ -130,13 +130,13 @@ Example evaluation payload:
 
 ```json
 {
-  "case_id": "console-switch-v2",
+  "case_id": "console-model-v2-switch",
   "category": "consoles",
-  "query": "Nintendo Switch V2",
-  "expected_product_id": "console-nintendo-switch-v1-v2",
-  "expected_label": "Nintendo Switch V1/V2",
-  "resolved_product_id": "console-nintendo-switch-v1-v2",
-  "resolved_label": "Nintendo Switch V1/V2",
+  "query": "Nintendo Switch",
+  "expected_product_id": "console-nintendo-switch",
+  "expected_label": "Nintendo Switch",
+  "resolved_product_id": "console-nintendo-switch",
+  "resolved_label": "Nintendo Switch",
   "resolution_correct": true,
   "outcome": "pass",
   "issue_tags": [],

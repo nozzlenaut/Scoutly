@@ -55,7 +55,7 @@ export const allCategories: SearchCategory[] = [
     group: "Gaming",
     status: "active",
     description:
-      "Exact-model searches for complete Xbox, PlayStation, and Nintendo systems.",
+      "Core-model searches for complete Xbox, PlayStation, and Nintendo systems, with variants grouped together.",
     placeholder: "Search by console model",
     defaultQuery: "",
   },

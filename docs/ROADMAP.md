@@ -54,6 +54,13 @@ Show the best used result
 - Track expected resolution, live top-three quality, issue tags, and notes
 - Establish measurable category quality before expanding into another product category
 
+## v0.6.8 - Grouped console models
+
+- Make the core console model the searchable identity
+- Group storage, color, drive, revision, and bundle variants underneath
+- Pause Console variant narrowing until core-model result quality is proven
+- Reset the Console QA benchmark while retaining LEGO evaluations
+
 ## Later
 
 - Price history

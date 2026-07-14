@@ -24623,1048 +24623,6 @@
     "active": true
   },
   {
-    "id": "console-playstation-5-disc-edition",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "PlayStation",
-    "model": "5",
-    "variant": "Disc Edition",
-    "aliases": [
-      "PS5 Disc",
-      "PS5 Disc Edition",
-      "PlayStation 5 Disc",
-      "PlayStation 5 Disc Edition",
-      "PS5 Standard",
-      "PS5 Console Disc",
-      "CFI-1015A",
-      "CFI-1115A",
-      "CFI-1215A"
-    ],
-    "required_terms": [
-      "ps5"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "PlayStation 5",
-      "storage": "825GB",
-      "drive": "disc"
-    },
-    "active": true
-  },
-  {
-    "id": "console-playstation-5-digital-edition",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "PlayStation",
-    "model": "5",
-    "variant": "Digital Edition",
-    "aliases": [
-      "PS5 Digital",
-      "PS5 Digital Edition",
-      "PlayStation 5 Digital",
-      "PlayStation 5 Digital Edition",
-      "PS5 Console Digital",
-      "CFI-1015B",
-      "CFI-1115B",
-      "CFI-1215B"
-    ],
-    "required_terms": [
-      "ps5"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "PlayStation 5",
-      "storage": "825GB",
-      "drive": "digital"
-    },
-    "active": true
-  },
-  {
-    "id": "console-playstation-5-slim-disc-edition",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "PlayStation",
-    "model": "5 Slim",
-    "variant": "Disc Edition",
-    "aliases": [
-      "PS5 Slim Disc",
-      "PS5 Slim Disc Edition",
-      "PlayStation 5 Slim Disc",
-      "PlayStation 5 Slim Disc Edition",
-      "PS5 Slim Console Disc"
-    ],
-    "required_terms": [
-      "ps5",
-      "slim"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "PlayStation 5",
-      "storage": "1TB",
-      "drive": "disc"
-    },
-    "active": true
-  },
-  {
-    "id": "console-playstation-5-slim-digital-edition",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "PlayStation",
-    "model": "5 Slim",
-    "variant": "Digital Edition",
-    "aliases": [
-      "PS5 Slim Digital",
-      "PS5 Slim Digital Edition",
-      "PlayStation 5 Slim Digital",
-      "PlayStation 5 Slim Digital Edition",
-      "PS5 Slim Console Digital"
-    ],
-    "required_terms": [
-      "ps5",
-      "slim"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "PlayStation 5",
-      "storage": "1TB",
-      "drive": "digital"
-    },
-    "active": true
-  },
-  {
-    "id": "console-playstation-5-pro-2tb",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "PlayStation",
-    "model": "5 Pro",
-    "variant": "2TB",
-    "aliases": [
-      "PS5 Pro",
-      "PlayStation 5 Pro",
-      "PS5 Pro Console",
-      "PlayStation 5 Pro 2TB"
-    ],
-    "required_terms": [
-      "ps5",
-      "pro"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "PlayStation 5",
-      "storage": "2TB"
-    },
-    "active": true
-  },
-  {
-    "id": "console-playstation-4-pro-1tb",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "PlayStation",
-    "model": "4 Pro",
-    "variant": "1TB",
-    "aliases": [
-      "PS4 Pro",
-      "PlayStation 4 Pro",
-      "PS4 Pro 1TB",
-      "PlayStation 4 Pro 1TB"
-    ],
-    "required_terms": [
-      "ps4",
-      "pro"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "PlayStation 4",
-      "storage": "1TB"
-    },
-    "active": true
-  },
-  {
-    "id": "console-playstation-4-slim-1tb",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "PlayStation",
-    "model": "4 Slim",
-    "variant": "1TB",
-    "aliases": [
-      "PS4 Slim",
-      "PlayStation 4 Slim",
-      "PS4 Slim 1TB",
-      "PlayStation 4 Slim 1TB"
-    ],
-    "required_terms": [
-      "ps4",
-      "slim"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "PlayStation 4",
-      "storage": "1TB"
-    },
-    "active": true
-  },
-  {
-    "id": "console-xbox-series-x-1tb",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "Xbox",
-    "model": "Series X",
-    "variant": "1TB",
-    "aliases": [
-      "Xbox Series X",
-      "Series X",
-      "Xbox Series X 1TB",
-      "Xbox Series X Console",
-      "Xbox Series X 1 TB"
-    ],
-    "required_terms": [
-      "xbox",
-      "series x"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "Xbox Series",
-      "storage": "1TB"
-    },
-    "active": true
-  },
-  {
-    "id": "console-xbox-series-s-512gb",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "Xbox",
-    "model": "Series S",
-    "variant": "512GB",
-    "aliases": [
-      "Xbox Series S",
-      "Series S",
-      "Xbox Series S 512GB",
-      "Xbox Series S 512 GB",
-      "Xbox Series S White"
-    ],
-    "required_terms": [
-      "xbox",
-      "series s"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "Xbox Series",
-      "storage": "512GB"
-    },
-    "active": true
-  },
-  {
-    "id": "console-xbox-series-s-1tb",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "Xbox",
-    "model": "Series S",
-    "variant": "1TB",
-    "aliases": [
-      "Xbox Series S 1TB",
-      "Xbox Series S 1 TB",
-      "Xbox Series S Black",
-      "Xbox Series S Carbon Black",
-      "Series S 1TB"
-    ],
-    "required_terms": [
-      "xbox",
-      "series s"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "Xbox Series",
-      "storage": "1TB"
-    },
-    "active": true
-  },
-  {
-    "id": "console-xbox-one-x-1tb",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "Xbox",
-    "model": "One X",
-    "variant": "1TB",
-    "aliases": [
-      "Xbox One X",
-      "Xbox One X 1TB",
-      "Xbox One X Console",
-      "Project Scorpio Xbox One X"
-    ],
-    "required_terms": [
-      "xbox",
-      "one x"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "Xbox One",
-      "storage": "1TB"
-    },
-    "active": true
-  },
-  {
-    "id": "console-xbox-one-s-1tb",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "Xbox",
-    "model": "One S",
-    "variant": "1TB",
-    "aliases": [
-      "Xbox One S",
-      "Xbox One S 1TB",
-      "Xbox One S Console",
-      "Xbox One S 1 TB"
-    ],
-    "required_terms": [
-      "xbox",
-      "one s"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "Xbox One",
-      "storage": "1TB"
-    },
-    "active": true
-  },
-  {
-    "id": "console-nintendo-switch-v1-v2",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "Nintendo",
-    "model": "Switch",
-    "variant": "V1/V2",
-    "aliases": [
-      "Nintendo Switch",
-      "Switch Console",
-      "Nintendo Switch Console",
-      "Nintendo Switch V2",
-      "HAC-001",
-      "HAC-001(-01)",
-      "Nintendo Switch Standard",
-      "Standard Nintendo Switch",
-      "Nintendo Switch V1 Console",
-      "Nintendo Switch V2 Console",
-      "Nintendo Switch V1",
-      "Switch V1",
-      "Switch V2",
-      "Original Nintendo Switch",
-      "Nintendo Switch Original",
-      "Nintendo Switch HAC-001",
-      "Nintendo Switch HAC-001(-01)",
-      "HAC001",
-      "HAC001-01"
-    ],
-    "required_terms": [
-      "nintendo",
-      "switch"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "Nintendo Switch",
-      "screen": "LCD"
-    },
-    "active": true
-  },
-  {
-    "id": "console-nintendo-switch-oled",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "Nintendo",
-    "model": "Switch OLED",
-    "variant": null,
-    "aliases": [
-      "Nintendo Switch OLED",
-      "Switch OLED",
-      "Nintendo Switch OLED Model",
-      "OLED Switch",
-      "HEG-001"
-    ],
-    "required_terms": [
-      "nintendo",
-      "switch",
-      "oled"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "Nintendo Switch",
-      "screen": "OLED"
-    },
-    "active": true
-  },
-  {
-    "id": "console-nintendo-switch-lite",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "Nintendo",
-    "model": "Switch Lite",
-    "variant": null,
-    "aliases": [
-      "Nintendo Switch Lite",
-      "Switch Lite",
-      "Nintendo Switch Lite Console",
-      "HDH-001"
-    ],
-    "required_terms": [
-      "nintendo",
-      "switch",
-      "lite"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "Nintendo Switch",
-      "screen": "LCD"
-    },
-    "active": true
-  },
-  {
-    "id": "console-nintendo-switch-2",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "Nintendo",
-    "model": "Switch 2",
-    "variant": null,
-    "aliases": [
-      "Nintendo Switch 2",
-      "Switch 2",
-      "Nintendo Switch 2 Console"
-    ],
-    "required_terms": [
-      "nintendo",
-      "switch 2"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "Nintendo Switch",
-      "paused_reason": "Switch 2 search is temporarily paused because eBay results are mostly games/accessories."
-    },
-    "active": false
-  },
-  {
-    "id": "console-nintendo-wii-u-32gb-deluxe",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "Nintendo",
-    "model": "Wii U",
-    "variant": "32GB Deluxe",
-    "aliases": [
-      "Nintendo Wii U 32GB",
-      "Wii U Deluxe",
-      "Wii U 32GB",
-      "Nintendo Wii U Deluxe"
-    ],
-    "required_terms": [
-      "nintendo",
-      "wii u"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "Nintendo Wii U",
-      "storage": "32GB",
-      "paused_reason": "Wii U search is temporarily paused until complete console + GamePad filtering is defined."
-    },
-    "active": false
-  },
-  {
-    "id": "console-nintendo-3ds-xl",
-    "category": "consoles",
-    "category_label": "Consoles",
-    "product_type": "game_console",
-    "brand": "Nintendo",
-    "model": "3DS XL",
-    "variant": null,
-    "aliases": [
-      "Nintendo 3DS XL",
-      "3DS XL",
-      "Nintendo New 3DS XL",
-      "New 3DS XL"
-    ],
-    "required_terms": [
-      "nintendo",
-      "3ds",
-      "xl"
-    ],
-    "excluded_terms": [
-      "account only",
-      "as is",
-      "as-is",
-      "battery only",
-      "box only",
-      "broken",
-      "case only",
-      "controller only",
-      "controllers only",
-      "dock only",
-      "for parts",
-      "hdmi port",
-      "not working",
-      "parts only",
-      "power supply",
-      "read description",
-      "repair",
-      "screen only",
-      "shell only",
-      "tablet only",
-      "untested",
-      "no cables",
-      "no controller",
-      "no controllers",
-      "no cords",
-      "no dock",
-      "no hdmi",
-      "no power cord",
-      "missing controller",
-      "missing controllers"
-    ],
-    "metadata": {
-      "family": "Nintendo 3DS"
-    },
-    "active": true
-  },
-  {
     "id": "lego-10179-star-wars-ultimate-collector-s-millennium-falcon",
     "category": "lego",
     "category_label": "LEGO",
@@ -42504,6 +41462,1084 @@
     ],
     "metadata": {
       "set_number": "10303"
+    },
+    "active": true
+  },
+  {
+    "id": "console-playstation-5",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "PlayStation",
+    "model": "5",
+    "variant": null,
+    "aliases": [
+      "PS5",
+      "PlayStation 5",
+      "PS5 Console",
+      "PlayStation 5 Console",
+      "PS5 Disc",
+      "PS5 Disc Edition",
+      "PlayStation 5 Disc Edition",
+      "PS5 Digital",
+      "PS5 Digital Edition",
+      "PlayStation 5 Digital Edition",
+      "PS5 825GB",
+      "CFI-1015A",
+      "CFI-1115A",
+      "CFI-1215A",
+      "CFI-1015B",
+      "CFI-1115B",
+      "CFI-1215B"
+    ],
+    "required_terms": [
+      "ps5"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "hdmi port",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "tablet only",
+      "untested",
+      "no cables",
+      "no controller",
+      "no controllers",
+      "no cords",
+      "no dock",
+      "no hdmi",
+      "no power cord",
+      "missing controller",
+      "missing controllers"
+    ],
+    "metadata": {
+      "family": "PlayStation 5",
+      "variants_grouped": true,
+      "variants": {
+        "storage": [
+          "825GB"
+        ],
+        "drive": [
+          "disc",
+          "digital"
+        ]
+      }
+    },
+    "active": true
+  },
+  {
+    "id": "console-playstation-5-slim",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "PlayStation",
+    "model": "5 Slim",
+    "variant": null,
+    "aliases": [
+      "PS5 Slim",
+      "PlayStation 5 Slim",
+      "PS5 Slim Console",
+      "PS5 Slim Disc",
+      "PS5 Slim Disc Edition",
+      "PS5 Slim Digital",
+      "PS5 Slim Digital Edition",
+      "PS5 Slim 1TB"
+    ],
+    "required_terms": [
+      "ps5",
+      "slim"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "hdmi port",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "tablet only",
+      "untested",
+      "no cables",
+      "no controller",
+      "no controllers",
+      "no cords",
+      "no dock",
+      "no hdmi",
+      "no power cord",
+      "missing controller",
+      "missing controllers"
+    ],
+    "metadata": {
+      "family": "PlayStation 5",
+      "variants_grouped": true,
+      "variants": {
+        "storage": [
+          "1TB"
+        ],
+        "drive": [
+          "disc",
+          "digital"
+        ]
+      }
+    },
+    "active": true
+  },
+  {
+    "id": "console-playstation-5-pro",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "PlayStation",
+    "model": "5 Pro",
+    "variant": null,
+    "aliases": [
+      "PS5 Pro",
+      "PlayStation 5 Pro",
+      "PS5 Pro Console",
+      "PS5 Pro 2TB"
+    ],
+    "required_terms": [
+      "ps5",
+      "pro"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "hdmi port",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "tablet only",
+      "untested",
+      "no cables",
+      "no controller",
+      "no controllers",
+      "no cords",
+      "no dock",
+      "no hdmi",
+      "no power cord",
+      "missing controller",
+      "missing controllers"
+    ],
+    "metadata": {
+      "family": "PlayStation 5",
+      "variants_grouped": true,
+      "variants": {
+        "storage": [
+          "2TB"
+        ],
+        "drive": [
+          "digital",
+          "optional disc drive"
+        ]
+      }
+    },
+    "active": true
+  },
+  {
+    "id": "console-playstation-4",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "PlayStation",
+    "model": "4",
+    "variant": null,
+    "aliases": [
+      "PS4",
+      "PlayStation 4",
+      "PS4 Console",
+      "PlayStation 4 Console",
+      "PS4 500GB",
+      "PS4 1TB"
+    ],
+    "required_terms": [
+      "ps4"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "hdmi port",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "tablet only",
+      "untested",
+      "no cables",
+      "no controller",
+      "no controllers",
+      "no cords",
+      "no dock",
+      "no hdmi",
+      "no power cord",
+      "missing controller",
+      "missing controllers"
+    ],
+    "metadata": {
+      "family": "PlayStation 4",
+      "variants_grouped": true,
+      "variants": {
+        "storage": [
+          "500GB",
+          "1TB"
+        ]
+      }
+    },
+    "active": true
+  },
+  {
+    "id": "console-playstation-4-slim",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "PlayStation",
+    "model": "4 Slim",
+    "variant": null,
+    "aliases": [
+      "PS4 Slim",
+      "PlayStation 4 Slim",
+      "PS4 Slim Console",
+      "PS4 Slim 500GB",
+      "PS4 Slim 1TB"
+    ],
+    "required_terms": [
+      "ps4",
+      "slim"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "hdmi port",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "tablet only",
+      "untested",
+      "no cables",
+      "no controller",
+      "no controllers",
+      "no cords",
+      "no dock",
+      "no hdmi",
+      "no power cord",
+      "missing controller",
+      "missing controllers"
+    ],
+    "metadata": {
+      "family": "PlayStation 4",
+      "variants_grouped": true,
+      "variants": {
+        "storage": [
+          "500GB",
+          "1TB"
+        ]
+      }
+    },
+    "active": true
+  },
+  {
+    "id": "console-playstation-4-pro",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "PlayStation",
+    "model": "4 Pro",
+    "variant": null,
+    "aliases": [
+      "PS4 Pro",
+      "PlayStation 4 Pro",
+      "PS4 Pro Console",
+      "PS4 Pro 1TB",
+      "PS4 Pro 2TB"
+    ],
+    "required_terms": [
+      "ps4",
+      "pro"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "hdmi port",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "tablet only",
+      "untested",
+      "no cables",
+      "no controller",
+      "no controllers",
+      "no cords",
+      "no dock",
+      "no hdmi",
+      "no power cord",
+      "missing controller",
+      "missing controllers"
+    ],
+    "metadata": {
+      "family": "PlayStation 4",
+      "variants_grouped": true,
+      "variants": {
+        "storage": [
+          "1TB",
+          "2TB"
+        ]
+      }
+    },
+    "active": true
+  },
+  {
+    "id": "console-xbox-series-x",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "Xbox",
+    "model": "Series X",
+    "variant": null,
+    "aliases": [
+      "Xbox Series X",
+      "Xbox Series X Console",
+      "Xbox Series X 1TB",
+      "Xbox Series X 2TB"
+    ],
+    "required_terms": [
+      "xbox",
+      "series x"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "hdmi port",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "tablet only",
+      "untested",
+      "no cables",
+      "no controller",
+      "no controllers",
+      "no cords",
+      "no dock",
+      "no hdmi",
+      "no power cord",
+      "missing controller",
+      "missing controllers"
+    ],
+    "metadata": {
+      "family": "Xbox Series",
+      "variants_grouped": true,
+      "variants": {
+        "storage": [
+          "1TB",
+          "2TB"
+        ],
+        "color": [
+          "Black",
+          "Galaxy Black"
+        ]
+      }
+    },
+    "active": true
+  },
+  {
+    "id": "console-xbox-series-s",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "Xbox",
+    "model": "Series S",
+    "variant": null,
+    "aliases": [
+      "Xbox Series S",
+      "Xbox Series S Console",
+      "Xbox Series S 512GB",
+      "Xbox Series S 1TB",
+      "Xbox Series S Carbon Black",
+      "Xbox Series S Carbon Black 1TB",
+      "Xbox Series S Robot White 1TB"
+    ],
+    "required_terms": [
+      "xbox",
+      "series s"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "hdmi port",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "tablet only",
+      "untested",
+      "no cables",
+      "no controller",
+      "no controllers",
+      "no cords",
+      "no dock",
+      "no hdmi",
+      "no power cord",
+      "missing controller",
+      "missing controllers"
+    ],
+    "metadata": {
+      "family": "Xbox Series",
+      "variants_grouped": true,
+      "variants": {
+        "storage": [
+          "512GB",
+          "1TB"
+        ],
+        "color": [
+          "Robot White",
+          "Carbon Black"
+        ]
+      }
+    },
+    "active": true
+  },
+  {
+    "id": "console-xbox-one-x",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "Xbox",
+    "model": "One X",
+    "variant": null,
+    "aliases": [
+      "Xbox One X",
+      "Xbox One X Console",
+      "Xbox One X 1TB",
+      "Xbox One X 2TB"
+    ],
+    "required_terms": [
+      "xbox",
+      "one x"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "hdmi port",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "tablet only",
+      "untested",
+      "no cables",
+      "no controller",
+      "no controllers",
+      "no cords",
+      "no dock",
+      "no hdmi",
+      "no power cord",
+      "missing controller",
+      "missing controllers"
+    ],
+    "metadata": {
+      "family": "Xbox One",
+      "variants_grouped": true,
+      "variants": {
+        "storage": [
+          "1TB",
+          "2TB"
+        ]
+      }
+    },
+    "active": true
+  },
+  {
+    "id": "console-xbox-one-s",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "Xbox",
+    "model": "One S",
+    "variant": null,
+    "aliases": [
+      "Xbox One S",
+      "Xbox One S Console",
+      "Xbox One S 500GB",
+      "Xbox One S 1TB",
+      "Xbox One S 2TB"
+    ],
+    "required_terms": [
+      "xbox",
+      "one s"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "hdmi port",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "tablet only",
+      "untested",
+      "no cables",
+      "no controller",
+      "no controllers",
+      "no cords",
+      "no dock",
+      "no hdmi",
+      "no power cord",
+      "missing controller",
+      "missing controllers"
+    ],
+    "metadata": {
+      "family": "Xbox One",
+      "variants_grouped": true,
+      "variants": {
+        "storage": [
+          "500GB",
+          "1TB",
+          "2TB"
+        ],
+        "drive": [
+          "disc",
+          "all-digital"
+        ]
+      }
+    },
+    "active": true
+  },
+  {
+    "id": "console-nintendo-switch",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "Nintendo",
+    "model": "Switch",
+    "variant": null,
+    "aliases": [
+      "Nintendo Switch",
+      "Switch Console",
+      "Nintendo Switch Console",
+      "Nintendo Switch V1",
+      "Nintendo Switch V2",
+      "Switch V1",
+      "Switch V2",
+      "Nintendo Switch Standard",
+      "Original Nintendo Switch",
+      "Nintendo Switch HAC-001",
+      "Nintendo Switch HAC-001(-01)",
+      "HAC-001",
+      "HAC-001(-01)",
+      "HAC001",
+      "HAC001-01"
+    ],
+    "required_terms": [
+      "nintendo",
+      "switch"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "hdmi port",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "tablet only",
+      "untested",
+      "no cables",
+      "no controller",
+      "no controllers",
+      "no cords",
+      "no dock",
+      "no hdmi",
+      "no power cord",
+      "missing controller",
+      "missing controllers"
+    ],
+    "metadata": {
+      "family": "Nintendo Switch",
+      "variants_grouped": true,
+      "variants": {
+        "revision": [
+          "V1",
+          "V2"
+        ],
+        "hardware_code": [
+          "HAC-001",
+          "HAC-001(-01)"
+        ]
+      }
+    },
+    "active": true
+  },
+  {
+    "id": "console-nintendo-switch-oled",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "Nintendo",
+    "model": "Switch OLED",
+    "variant": null,
+    "aliases": [
+      "Nintendo Switch OLED",
+      "Switch OLED",
+      "Nintendo Switch OLED Model",
+      "OLED Switch",
+      "HEG-001"
+    ],
+    "required_terms": [
+      "nintendo",
+      "switch",
+      "oled"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "hdmi port",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "tablet only",
+      "untested",
+      "no cables",
+      "no controller",
+      "no controllers",
+      "no cords",
+      "no dock",
+      "no hdmi",
+      "no power cord",
+      "missing controller",
+      "missing controllers"
+    ],
+    "metadata": {
+      "family": "Nintendo Switch",
+      "variants_grouped": true,
+      "variants": {
+        "storage": [
+          "64GB"
+        ],
+        "hardware_code": [
+          "HEG-001"
+        ],
+        "color": [
+          "White",
+          "Neon"
+        ]
+      }
+    },
+    "active": true
+  },
+  {
+    "id": "console-nintendo-switch-lite",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "Nintendo",
+    "model": "Switch Lite",
+    "variant": null,
+    "aliases": [
+      "Nintendo Switch Lite",
+      "Switch Lite",
+      "Nintendo Switch Lite Console",
+      "HDH-001"
+    ],
+    "required_terms": [
+      "nintendo",
+      "switch",
+      "lite"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "hdmi port",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "tablet only",
+      "untested",
+      "no cables",
+      "no controller",
+      "no controllers",
+      "no cords",
+      "no dock",
+      "no hdmi",
+      "no power cord",
+      "missing controller",
+      "missing controllers"
+    ],
+    "metadata": {
+      "family": "Nintendo Switch",
+      "variants_grouped": true,
+      "variants": {
+        "storage": [
+          "32GB"
+        ],
+        "hardware_code": [
+          "HDH-001"
+        ],
+        "color": [
+          "Various"
+        ]
+      }
+    },
+    "active": true
+  },
+  {
+    "id": "console-nintendo-switch-2",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "Nintendo",
+    "model": "Switch 2",
+    "variant": null,
+    "aliases": [
+      "Nintendo Switch 2",
+      "Switch 2",
+      "Nintendo Switch 2 Console"
+    ],
+    "required_terms": [
+      "nintendo",
+      "switch 2"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "hdmi port",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "tablet only",
+      "untested",
+      "no cables",
+      "no controller",
+      "no controllers",
+      "no cords",
+      "no dock",
+      "no hdmi",
+      "no power cord",
+      "missing controller",
+      "missing controllers"
+    ],
+    "metadata": {
+      "family": "Nintendo Switch 2",
+      "variants_grouped": true,
+      "variants": {
+        "storage": [
+          "Various"
+        ],
+        "bundle": [
+          "Console",
+          "Console bundle"
+        ]
+      }
+    },
+    "active": true
+  },
+  {
+    "id": "console-nintendo-wii-u",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "Nintendo",
+    "model": "Wii U",
+    "variant": null,
+    "aliases": [
+      "Nintendo Wii U",
+      "Wii U",
+      "Nintendo Wii U Console",
+      "Wii U Console",
+      "Nintendo Wii U 8GB",
+      "Wii U Basic",
+      "Wii U 8GB",
+      "Nintendo Wii U 32GB",
+      "Wii U Deluxe",
+      "Wii U 32GB",
+      "Nintendo Wii U Deluxe"
+    ],
+    "required_terms": [
+      "wii u"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "hdmi port",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "tablet only",
+      "untested",
+      "no cables",
+      "no controller",
+      "no controllers",
+      "no cords",
+      "no dock",
+      "no hdmi",
+      "no power cord",
+      "missing controller",
+      "missing controllers"
+    ],
+    "metadata": {
+      "family": "Nintendo Wii U",
+      "variants_grouped": true,
+      "variants": {
+        "storage": [
+          "8GB",
+          "32GB"
+        ],
+        "edition": [
+          "Basic",
+          "Deluxe"
+        ]
+      }
+    },
+    "active": true
+  },
+  {
+    "id": "console-nintendo-3ds-xl",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "Nintendo",
+    "model": "3DS XL",
+    "variant": null,
+    "aliases": [
+      "Nintendo 3DS XL",
+      "3DS XL",
+      "Nintendo New 3DS XL",
+      "New 3DS XL"
+    ],
+    "required_terms": [
+      "3ds",
+      "xl"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "hdmi port",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "tablet only",
+      "untested",
+      "no cables",
+      "no controller",
+      "no controllers",
+      "no cords",
+      "no dock",
+      "no hdmi",
+      "no power cord",
+      "missing controller",
+      "missing controllers"
+    ],
+    "metadata": {
+      "family": "Nintendo 3DS",
+      "variants_grouped": true,
+      "variants": {
+        "revision": [
+          "3DS XL",
+          "New 3DS XL"
+        ]
+      }
     },
     "active": true
   }

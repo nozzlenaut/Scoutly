@@ -1422,7 +1422,12 @@ def _missing_strict_query_clue(query: str, product: Product) -> bool:
         if query_set_numbers and selected_set_number not in query_set_numbers:
             return True
 
-    if product.category == "consoles":
+    grouped_console_variants = (
+        product.category == "consoles"
+        and bool(product.metadata.get("variants_grouped"))
+    )
+
+    if product.category == "consoles" and not grouped_console_variants:
         query_raw = normalize_text(query, strip_filler=False)
         product_raw = normalize_text(product_corpus, strip_filler=False)
         if re.search(r"\bdigital(?:\s+edition)?\b", query_raw) and "digital" not in product_raw:
@@ -1433,7 +1438,11 @@ def _missing_strict_query_clue(query: str, product: Product) -> bool:
             return True
 
     query_storage = _storage_clues(query)
-    if query_storage and not query_storage.issubset(_storage_clues(product_corpus)):
+    if (
+        query_storage
+        and not grouped_console_variants
+        and not query_storage.issubset(_storage_clues(product_corpus))
+    ):
         return True
 
     return False
@@ -1553,19 +1562,17 @@ def match_product(query: str, category: str | None = None) -> ProductMatch | Non
 
     matches = suggest_products(query, category=normalized_category, limit=8)
 
-    # Consoles use the same direct catalog resolution path as cameras and GPUs.
-    # The former guided-builder products remain available in the module for
-    # backward compatibility, but normal searches never synthesize a family
-    # scope or silently combine multiple console models.
+    # Consoles resolve to core model records. Storage, color, bundle, and
+    # Disc/Digital details remain grouped variants and do not create separate
+    # searchable products in this release.
     if not matches:
         return None
 
     if normalized_category == "consoles":
         spec = parse_console_query(query)
-        # Direct console search should never silently turn an unspecified
-        # PlayStation/Xbox family into one arbitrary catalog model. The UI
-        # exposes the exact variants through autocomplete. Bare Nintendo Switch
-        # remains an intentional alias for the original V1/V2 system.
+        # Do not silently turn a genuinely broad Xbox family query into one
+        # arbitrary model. PS4, PS5, and Nintendo Switch are themselves core
+        # model identities, so their parser assigns an explicit model scope.
         if (
             spec is not None
             and spec.model is None

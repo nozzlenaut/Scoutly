@@ -392,25 +392,33 @@ def test_rejects_gpu_problem_notes_but_allows_no_problems():
     ) is True
 
 
-def test_resolves_console_catalog_entries_as_static_exact_items():
+def test_resolves_console_variants_to_grouped_core_models():
     ps5_disc = match_product("PS5 Disc", category="consoles")
+    ps5_digital = match_product("PS5 Digital Edition", category="consoles")
+    series_s_512 = match_product("Xbox Series S 512GB", category="consoles")
+    series_s_1tb = match_product("Xbox Series S Carbon Black 1TB", category="consoles")
+
     assert ps5_disc is not None
-    assert ps5_disc.product.id == "console-playstation-5-disc-edition"
-    assert ps5_disc.product.metadata.get("builder") is None
-    assert match_product("Xbox Series X", category="consoles").product.id == "console-xbox-series-x-1tb"
+    assert ps5_digital is not None
+    assert series_s_512 is not None
+    assert series_s_1tb is not None
+    assert ps5_disc.product.id == "console-playstation-5"
+    assert ps5_digital.product.id == "console-playstation-5"
+    assert series_s_512.product.id == "console-xbox-series-s"
+    assert series_s_1tb.product.id == "console-xbox-series-s"
+    assert ps5_disc.product.metadata.get("variants_grouped") is True
     assert match_product("Switch OLED", category="consoles").product.id == "console-nintendo-switch-oled"
     assert match_product("Nintendo 3DS XL", category="consoles").product.id == "console-nintendo-3ds-xl"
 
 
-def test_broad_playstation_and_xbox_family_queries_do_not_choose_a_model():
-    assert match_product("PlayStation 5", category="consoles") is None
-    assert match_product("PlayStation 4", category="consoles") is None
+def test_core_models_resolve_while_truly_broad_xbox_families_do_not():
+    assert match_product("PlayStation 5", category="consoles").product.id == "console-playstation-5"
+    assert match_product("PlayStation 4", category="consoles").product.id == "console-playstation-4"
     assert match_product("Xbox Series", category="consoles") is None
     assert match_product("Xbox One", category="consoles") is None
-    # Bare Nintendo Switch intentionally means the original V1/V2 system.
     switch = match_product("Nintendo Switch", category="consoles")
     assert switch is not None
-    assert switch.product.id == "console-nintendo-switch-v1-v2"
+    assert switch.product.id == "console-nintendo-switch"
 
 
 def test_console_filters_reject_parts_and_switch_tablet_only():
@@ -486,8 +494,10 @@ def test_rejects_lego_bag_only_listing():
     assert listing_matches_product("75375 - Millennium Falcon - LEGO Star Wars - Bag 7 X2! Bag 7 ONLY!", falcon.product) is False
 
 
-def test_switch_2_is_paused_for_now():
-    assert match_product("Nintendo Switch 2", category="consoles") is None
+def test_switch_2_is_an_active_core_model():
+    match = match_product("Nintendo Switch 2", category="consoles")
+    assert match is not None
+    assert match.product.id == "console-nintendo-switch-2"
 
 
 def test_rejects_ps5_accessory_noise_from_reports():
@@ -712,8 +722,13 @@ def test_rejects_3ds_accessories_games_and_selection_variations():
     ) is True
 
 
-def test_wii_u_is_paused_until_complete_system_rules_are_defined():
-    assert match_product("Nintendo Wii U 32GB", category="consoles") is None
+def test_wii_u_storage_and_edition_variants_resolve_to_one_model():
+    deluxe = match_product("Nintendo Wii U 32GB Deluxe", category="consoles")
+    basic = match_product("Nintendo Wii U 8GB Basic", category="consoles")
+    assert deluxe is not None
+    assert basic is not None
+    assert deluxe.product.id == "console-nintendo-wii-u"
+    assert basic.product.id == "console-nintendo-wii-u"
 
 
 def test_rejects_titanic_packaging_only_variations():
@@ -812,8 +827,8 @@ def test_ram_generation_selection_rejects_multi_generation_spam():
     ) is False
 
 
-def test_console_direct_search_resolves_exact_static_catalog_models():
-    series_x = match_product("Xbox Series X", category="consoles")
+def test_console_direct_search_resolves_core_model_catalog_entries():
+    series_x = match_product("Xbox Series X 1TB", category="consoles")
     ps5_slim_digital = match_product(
         "PlayStation 5 Slim Digital Edition", category="consoles"
     )
@@ -822,15 +837,14 @@ def test_console_direct_search_resolves_exact_static_catalog_models():
     assert series_x is not None
     assert ps5_slim_digital is not None
     assert switch_oled is not None
-    assert series_x.product.id == "console-xbox-series-x-1tb"
-    assert ps5_slim_digital.product.id == "console-playstation-5-slim-digital-edition"
+    assert series_x.product.id == "console-xbox-series-x"
+    assert ps5_slim_digital.product.id == "console-playstation-5-slim"
     assert switch_oled.product.id == "console-nintendo-switch-oled"
-    assert series_x.product.metadata.get("builder") is None
-    assert ps5_slim_digital.product.metadata.get("builder") is None
-    assert switch_oled.product.metadata.get("builder") is None
+    assert series_x.product.metadata.get("variants_grouped") is True
+    assert ps5_slim_digital.product.metadata.get("variants_grouped") is True
 
 
-def test_original_switch_direct_aliases_resolve_to_standard_v1_v2_product():
+def test_original_switch_aliases_resolve_to_grouped_switch_model():
     aliases = [
         "Nintendo Switch",
         "Nintendo Switch V1",
@@ -845,27 +859,33 @@ def test_original_switch_direct_aliases_resolve_to_standard_v1_v2_product():
     for alias in aliases:
         match = match_product(alias, category="consoles")
         assert match is not None, alias
-        assert match.product.id == "console-nintendo-switch-v1-v2", alias
-        assert match.product.metadata.get("builder") is None, alias
+        assert match.product.id == "console-nintendo-switch", alias
+        assert match.product.metadata.get("variants_grouped") is True, alias
 
 
-def test_console_direct_search_keeps_exact_listing_filters():
+def test_console_core_model_filters_keep_model_boundaries_and_accept_variants():
     series_x = match_product("Xbox Series X", category="consoles")
-    ps5_digital = match_product("PlayStation 5 Digital Edition", category="consoles")
+    ps5 = match_product("PlayStation 5 Digital Edition", category="consoles")
     assert series_x is not None
-    assert ps5_digital is not None
+    assert ps5 is not None
 
     assert listing_matches_product(
         "Microsoft Xbox Series X 1TB Console Black Tested", series_x.product
     ) is True
     assert listing_matches_product(
+        "Microsoft Xbox Series X 2TB Galaxy Black Console", series_x.product
+    ) is True
+    assert listing_matches_product(
         "Microsoft Xbox Series S 512GB Console White Tested", series_x.product
     ) is False
     assert listing_matches_product(
-        "Sony PS5 Digital Edition Console 825GB", ps5_digital.product
+        "Sony PS5 Digital Edition Console 825GB", ps5.product
     ) is True
     assert listing_matches_product(
-        "Sony PS5 Disc Edition Console 825GB", ps5_digital.product
+        "Sony PS5 Disc Edition Console 825GB", ps5.product
+    ) is True
+    assert listing_matches_product(
+        "Sony PS5 Slim Disc Edition Console 1TB", ps5.product
     ) is False
 
 def test_lego_rejects_requested_incomplete_unauthentic_and_bulk_phrases():
@@ -887,32 +907,40 @@ def test_lego_rejects_requested_incomplete_unauthentic_and_bulk_phrases():
     ) is True
 
 
-def test_playstation_digital_edition_survives_builder_resolution_and_rejects_disc_units():
-    slim = match_product(
+def test_playstation_disc_and_digital_variants_share_the_core_model():
+    slim_digital = match_product(
         "PlayStation 5 Slim 1TB Digital Edition", category="consoles"
     )
-    standard = match_product(
-        "PlayStation 5 Standard 825GB Digital Edition", category="consoles"
+    slim_disc = match_product(
+        "PlayStation 5 Slim Disc Edition", category="consoles"
+    )
+    standard_digital = match_product(
+        "PlayStation 5 825GB Digital Edition", category="consoles"
+    )
+    standard_disc = match_product(
+        "PlayStation 5 Disc Edition", category="consoles"
     )
 
-    assert slim is not None
-    assert standard is not None
-    assert "Digital Edition" in slim.product.display_name
-    assert "Digital Edition" in standard.product.display_name
+    assert slim_digital is not None
+    assert slim_disc is not None
+    assert standard_digital is not None
+    assert standard_disc is not None
+    assert slim_digital.product.id == slim_disc.product.id == "console-playstation-5-slim"
+    assert standard_digital.product.id == standard_disc.product.id == "console-playstation-5"
     assert listing_matches_product(
-        "Sony PS5 Slim Digital Edition Console 1TB", slim.product
+        "Sony PS5 Slim Digital Edition Console 1TB", slim_digital.product
     ) is True
     assert listing_matches_product(
-        "Sony PS5 Slim Disc Edition Console 1TB", slim.product
-    ) is False
-    assert listing_matches_product(
-        "Sony PS5 Digital Edition Console 825GB", standard.product
+        "Sony PS5 Slim Disc Edition Console 1TB", slim_digital.product
     ) is True
     assert listing_matches_product(
-        "Sony PS5 Slim Digital Edition Console 1TB", standard.product
-    ) is False
+        "Sony PS5 Digital Edition Console 825GB", standard_digital.product
+    ) is True
     assert listing_matches_product(
-        "Sony PS5 Disc Edition Console 825GB", standard.product
+        "Sony PS5 Disc Edition Console 825GB", standard_digital.product
+    ) is True
+    assert listing_matches_product(
+        "Sony PS5 Slim Digital Edition Console 1TB", standard_digital.product
     ) is False
 
 
