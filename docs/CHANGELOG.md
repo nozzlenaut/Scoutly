@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.7
+
+- Adds a private `/admin/qa` live-search workbench for repeatable console and LEGO validation.
+- Seeds 36 exact-item cases covering aliases, model revisions, storage/edition distinctions, duplicate LEGO set names, and common accessory/partial-item traps.
+- Records Pass, Top-3 only, Fail, and No inventory outcomes with issue tags, notes, expected/resolved product IDs, result-title snapshots, diagnostics, and attempt counts.
+- Persists QA evaluations to PostgreSQL with local JSON fallback.
+- Adds aggregate quality metrics and filters for category, untested cases, and cases needing review.
+- Adds three QA tests, bringing the backend suite to 152 passing tests.
+
 ## v0.6.4
 
 - Fixes Standard Nintendo Switch searches that could return no results because the marketplace query used the uncommon combined phrase `Nintendo Switch V1/V2`.

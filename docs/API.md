@@ -113,3 +113,38 @@ Response fields:
   "auction_results": []
 }
 ```
+
+## Search QA endpoints
+
+These private endpoints power the `/admin/qa` workbench and require the existing `SCOUTLY_ADMIN_TOKEN` as `?token=<token>`.
+
+```text
+GET /api/qa/cases
+GET /api/qa/evaluations?limit=200
+POST /api/qa/evaluations
+```
+
+`GET /api/qa/cases` returns the seeded regression cases, each case's latest saved evaluation, attempt counts, and aggregate summary metrics.
+
+Example evaluation payload:
+
+```json
+{
+  "case_id": "console-switch-v2",
+  "category": "consoles",
+  "query": "Nintendo Switch V2",
+  "expected_product_id": "console-nintendo-switch-v1-v2",
+  "expected_label": "Nintendo Switch V1/V2",
+  "resolved_product_id": "console-nintendo-switch-v1-v2",
+  "resolved_label": "Nintendo Switch V1/V2",
+  "resolution_correct": true,
+  "outcome": "pass",
+  "issue_tags": [],
+  "notes": "All three listings were complete systems.",
+  "result_titles": ["Nintendo Switch V2 Console Complete"],
+  "diagnostics": {
+    "fixed_price_candidates": 12,
+    "fixed_price_filtered": 8
+  }
+}
+```

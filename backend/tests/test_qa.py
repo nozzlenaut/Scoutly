@@ -1,0 +1,75 @@
+from fastapi.testclient import TestClient
+
+from app.main import app
+from app.services.qa_store import load_qa_cases, qa_cases_with_latest, qa_summary, save_qa_evaluation
+
+
+def _evaluation_payload() -> dict:
+    return {
+        "case_id": "console-switch-v2",
+        "category": "consoles",
+        "query": "Nintendo Switch V2",
+        "expected_product_id": "console-nintendo-switch-v1-v2",
+        "expected_label": "Nintendo Switch V1/V2",
+        "resolved_product_id": "console-nintendo-switch-v1-v2",
+        "resolved_label": "Nintendo Switch V1/V2",
+        "resolution_correct": True,
+        "outcome": "pass",
+        "issue_tags": [],
+        "notes": "All three listings were complete systems.",
+        "result_titles": ["Nintendo Switch V2 Console Complete"],
+        "diagnostics": {"fixed_price_candidates": 12, "fixed_price_filtered": 8},
+    }
+
+
+def test_qa_case_catalog_has_console_and_lego_cases():
+    cases = load_qa_cases()
+    categories = {case["category"] for case in cases}
+    assert len(cases) >= 30
+    assert {"consoles", "lego"}.issubset(categories)
+    assert all(case.get("expected_product_id") for case in cases)
+
+
+def test_qa_file_fallback_saves_latest_evaluation(monkeypatch, tmp_path):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
+
+    saved = save_qa_evaluation(_evaluation_payload())
+    cases = qa_cases_with_latest()
+    switch_case = next(case for case in cases if case["id"] == "console-switch-v2")
+    summary = qa_summary()
+
+    assert saved["outcome"] == "pass"
+    assert switch_case["latest_evaluation"]["notes"] == "All three listings were complete systems."
+    assert switch_case["attempt_count"] == 1
+    assert summary["tested_cases"] == 1
+    assert summary["counts"]["pass"] == 1
+
+
+def test_qa_endpoints_require_token_and_save(monkeypatch, tmp_path):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("SCOUTLY_ADMIN_TOKEN", "secret")
+    client = TestClient(app)
+
+    assert client.get("/api/qa/cases").status_code == 401
+
+    cases = client.get("/api/qa/cases", params={"token": "secret"})
+    assert cases.status_code == 200
+    assert cases.json()["summary"]["total_cases"] >= 30
+    assert cases.json()["summary"]["category_counts"]["consoles"]["untested"] == 16
+    assert cases.json()["summary"]["category_counts"]["lego"]["untested"] == 20
+
+    saved = client.post(
+        "/api/qa/evaluations",
+        params={"token": "secret"},
+        json=_evaluation_payload(),
+    )
+    assert saved.status_code == 200
+    assert saved.json()["resolution_correct"] is True
+
+    refreshed = client.get("/api/qa/cases", params={"token": "secret"})
+    switch_case = next(
+        case for case in refreshed.json()["cases"] if case["id"] == "console-switch-v2"
+    )
+    assert switch_case["latest_evaluation"]["outcome"] == "pass"

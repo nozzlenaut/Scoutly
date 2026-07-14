@@ -8,3 +8,11 @@
 - Lenses: Paused — accessory and replacement-part ambiguity remains too high
 
 Scoutly remains the internal repository and infrastructure name.
+## Current validation phase
+
+- Search QA workbench: Active at `/admin/qa`
+- Seed suite: 16 Console cases and 20 LEGO cases
+- Outcome tracking: Pass, Top-3 only, Fail, No inventory
+- Persistence: PostgreSQL production storage with local JSON fallback
+- Next milestone: Run the seeded suite, review failure patterns, and tune filters/catalog coverage before adding another category
+

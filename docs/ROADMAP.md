@@ -46,6 +46,14 @@ Show the best used result
 - Add grouped categories, such as Photography and PC Parts, if the category bar gets crowded
 - Add category-specific metadata and filters
 
+
+## v0.6.7 - Search QA validation
+
+- Add a repeatable admin QA workbench
+- Seed Console and LEGO regression cases
+- Track expected resolution, live top-three quality, issue tags, and notes
+- Establish measurable category quality before expanding into another product category
+
 ## Later
 
 - Price history

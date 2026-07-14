@@ -1,0 +1,326 @@
+[
+  {
+    "id": "console-ps5-disc",
+    "category": "consoles",
+    "query": "PS5 Disc Edition",
+    "expected_product_id": "console-playstation-5-disc-edition",
+    "expected_label": "PlayStation 5 Disc Edition",
+    "goal": "Resolve the original disc-drive PS5 without mixing in Slim, Digital, or Pro models.",
+    "priority": "high"
+  },
+  {
+    "id": "console-ps5-digital",
+    "category": "consoles",
+    "query": "PS5 Digital Edition",
+    "expected_product_id": "console-playstation-5-digital-edition",
+    "expected_label": "PlayStation 5 Digital Edition",
+    "goal": "Keep the original Digital Edition separate from disc and Slim systems.",
+    "priority": "high"
+  },
+  {
+    "id": "console-ps5-slim-disc",
+    "category": "consoles",
+    "query": "PS5 Slim Disc",
+    "expected_product_id": "console-playstation-5-slim-disc-edition",
+    "expected_label": "PlayStation 5 Slim Disc Edition",
+    "goal": "Return complete Slim disc consoles, not detachable drives or faceplates.",
+    "priority": "high"
+  },
+  {
+    "id": "console-ps5-slim-digital",
+    "category": "consoles",
+    "query": "PS5 Slim Digital",
+    "expected_product_id": "console-playstation-5-slim-digital-edition",
+    "expected_label": "PlayStation 5 Slim Digital Edition",
+    "goal": "Keep Slim Digital separate from the disc model and original Digital Edition.",
+    "priority": "high"
+  },
+  {
+    "id": "console-ps5-pro",
+    "category": "consoles",
+    "query": "PS5 Pro 2TB",
+    "expected_product_id": "console-playstation-5-pro-2tb",
+    "expected_label": "PlayStation 5 Pro 2TB",
+    "goal": "Reject standard PS5 consoles, disc drives, covers, and accessory bundles.",
+    "priority": "high"
+  },
+  {
+    "id": "console-ps4-pro",
+    "category": "consoles",
+    "query": "PS4 Pro 1TB",
+    "expected_product_id": "console-playstation-4-pro-1tb",
+    "expected_label": "PlayStation 4 Pro 1TB",
+    "goal": "Keep PS4 Pro results separate from Slim and original PS4 listings.",
+    "priority": "medium"
+  },
+  {
+    "id": "console-xbox-series-x",
+    "category": "consoles",
+    "query": "Xbox Series X 1TB",
+    "expected_product_id": "console-xbox-series-x-1tb",
+    "expected_label": "Xbox Series X 1TB",
+    "goal": "Reject controllers, expansion cards, empty boxes, and Xbox One X systems.",
+    "priority": "high"
+  },
+  {
+    "id": "console-xbox-series-s-512",
+    "category": "consoles",
+    "query": "Xbox Series S 512GB",
+    "expected_product_id": "console-xbox-series-s-512gb",
+    "expected_label": "Xbox Series S 512GB",
+    "goal": "Keep the white 512GB system separate from the black 1TB edition.",
+    "priority": "high"
+  },
+  {
+    "id": "console-xbox-series-s-1tb",
+    "category": "consoles",
+    "query": "Xbox Series S Carbon Black 1TB",
+    "expected_product_id": "console-xbox-series-s-1tb",
+    "expected_label": "Xbox Series S 1TB",
+    "goal": "Resolve Carbon Black wording to the 1TB Series S model.",
+    "priority": "high"
+  },
+  {
+    "id": "console-xbox-one-x",
+    "category": "consoles",
+    "query": "Xbox One X 1TB",
+    "expected_product_id": "console-xbox-one-x-1tb",
+    "expected_label": "Xbox One X 1TB",
+    "goal": "Do not confuse Xbox One X with Xbox Series X.",
+    "priority": "high"
+  },
+  {
+    "id": "console-switch-v2",
+    "category": "consoles",
+    "query": "Nintendo Switch V2",
+    "expected_product_id": "console-nintendo-switch-v1-v2",
+    "expected_label": "Nintendo Switch V1/V2",
+    "goal": "Return complete standard Switch systems and reject Lite, OLED, and tablet-only listings.",
+    "priority": "high"
+  },
+  {
+    "id": "console-switch-hac-001-01",
+    "category": "consoles",
+    "query": "HAC-001(-01)",
+    "expected_product_id": "console-nintendo-switch-v1-v2",
+    "expected_label": "Nintendo Switch V1/V2",
+    "goal": "Resolve Nintendo hardware-code wording to the standard V2 Switch catalog item.",
+    "priority": "high"
+  },
+  {
+    "id": "console-switch-oled",
+    "category": "consoles",
+    "query": "Nintendo Switch OLED HEG-001",
+    "expected_product_id": "console-nintendo-switch-oled",
+    "expected_label": "Nintendo Switch OLED",
+    "goal": "Reject standard Switch, Lite, docks, screens, and replacement shells.",
+    "priority": "high"
+  },
+  {
+    "id": "console-switch-lite",
+    "category": "consoles",
+    "query": "Nintendo Switch Lite",
+    "expected_product_id": "console-nintendo-switch-lite",
+    "expected_label": "Nintendo Switch Lite",
+    "goal": "Return complete handheld systems rather than cases, shells, or parts.",
+    "priority": "medium"
+  },
+  {
+    "id": "console-switch-2",
+    "category": "consoles",
+    "query": "Nintendo Switch 2 Console",
+    "expected_product_id": "console-nintendo-switch-2",
+    "expected_label": "Nintendo Switch 2",
+    "goal": "Keep Switch 2 results separate from original Switch hardware and accessories.",
+    "priority": "high"
+  },
+  {
+    "id": "console-wii-u-deluxe",
+    "category": "consoles",
+    "query": "Nintendo Wii U 32GB Deluxe",
+    "expected_product_id": "console-nintendo-wii-u-32gb-deluxe",
+    "expected_label": "Nintendo Wii U 32GB Deluxe",
+    "goal": "Prefer complete console-and-GamePad listings and reject GamePad-only results.",
+    "priority": "medium"
+  },
+  {
+    "id": "lego-75192-number",
+    "category": "lego",
+    "query": "75192",
+    "expected_product_id": "lego-75192-star-wars-millennium-falcon",
+    "expected_label": "LEGO Star Wars Millennium Falcon 75192",
+    "goal": "Resolve the exact set number and reject manuals, boxes, minifigures, and partial lots.",
+    "priority": "high"
+  },
+  {
+    "id": "lego-75192-name",
+    "category": "lego",
+    "query": "Millennium Falcon 75192",
+    "expected_product_id": "lego-75192-star-wars-millennium-falcon",
+    "expected_label": "LEGO Star Wars Millennium Falcon 75192",
+    "goal": "Use the set number to distinguish this UCS set from other Millennium Falcon sets.",
+    "priority": "high"
+  },
+  {
+    "id": "lego-75375-falcon",
+    "category": "lego",
+    "query": "LEGO Millennium Falcon 75375",
+    "expected_product_id": "lego-75375-star-wars-millennium-falcon",
+    "expected_label": "LEGO Star Wars Millennium Falcon 75375",
+    "goal": "Keep the midi-scale 75375 set separate from 75192 and other Falcon versions.",
+    "priority": "high"
+  },
+  {
+    "id": "lego-75313-at-at",
+    "category": "lego",
+    "query": "LEGO AT-AT 75313",
+    "expected_product_id": "lego-75313-star-wars-at-at",
+    "expected_label": "LEGO Star Wars AT-AT 75313",
+    "goal": "Return the exact UCS AT-AT set, not smaller AT-AT sets or loose minifigures.",
+    "priority": "high"
+  },
+  {
+    "id": "lego-10316-rivendell",
+    "category": "lego",
+    "query": "Rivendell 10316",
+    "expected_product_id": "lego-10316-the-lord-of-the-rings-rivendell",
+    "expected_label": "LEGO The Lord of the Rings Rivendell 10316",
+    "goal": "Reject lighting kits, display cases, instructions, and incomplete sets.",
+    "priority": "high"
+  },
+  {
+    "id": "lego-10333-barad-dur",
+    "category": "lego",
+    "query": "Barad-dur 10333",
+    "expected_product_id": "lego-10333-the-lord-of-the-rings-barad-dur",
+    "expected_label": "LEGO The Lord of the Rings Barad-dur 10333",
+    "goal": "Handle punctuation variants while keeping accessory-only listings out.",
+    "priority": "medium"
+  },
+  {
+    "id": "lego-71043-hogwarts",
+    "category": "lego",
+    "query": "Hogwarts Castle 71043",
+    "expected_product_id": "lego-71043-harry-potter-hogwarts-castle",
+    "expected_label": "LEGO Harry Potter Hogwarts Castle 71043",
+    "goal": "Use the set number to avoid mixing in other Hogwarts Castle products.",
+    "priority": "high"
+  },
+  {
+    "id": "lego-10294-titanic",
+    "category": "lego",
+    "query": "LEGO Titanic 10294",
+    "expected_product_id": "lego-10294-icons-titanic",
+    "expected_label": "LEGO Icons Titanic 10294",
+    "goal": "Reject display cases, light kits, manuals, boxes, and compatible-brand copies.",
+    "priority": "high"
+  },
+  {
+    "id": "lego-21330-home-alone",
+    "category": "lego",
+    "query": "Home Alone 21330",
+    "expected_product_id": "lego-21330-ideas-home-alone",
+    "expected_label": "LEGO Ideas Home Alone 21330",
+    "goal": "Return the complete official LEGO set rather than minifigures or add-on lighting.",
+    "priority": "medium"
+  },
+  {
+    "id": "lego-42115-lamborghini",
+    "category": "lego",
+    "query": "Technic Lamborghini Sian 42115",
+    "expected_product_id": "lego-42115-technic-lamborghini-sian-fkp-37",
+    "expected_label": "LEGO Technic Lamborghini Sian FKP 37 42115",
+    "goal": "Reject individual parts, wheels, boxes, manuals, and non-LEGO copies.",
+    "priority": "high"
+  },
+  {
+    "id": "lego-76178-daily-bugle",
+    "category": "lego",
+    "query": "Daily Bugle 76178",
+    "expected_product_id": "lego-76178-marvel-daily-bugle",
+    "expected_label": "LEGO Marvel Daily Bugle 76178",
+    "goal": "Return complete sets and avoid loose minifigures or building sections.",
+    "priority": "medium"
+  },
+  {
+    "id": "lego-76269-avengers-tower",
+    "category": "lego",
+    "query": "Avengers Tower 76269",
+    "expected_product_id": "lego-76269-marvel-avengers-tower",
+    "expected_label": "LEGO Marvel Avengers Tower 76269",
+    "goal": "Keep the exact set separate from older Avengers Tower sets and display accessories.",
+    "priority": "medium"
+  },
+  {
+    "id": "lego-71374-nes",
+    "category": "lego",
+    "query": "Nintendo Entertainment System 71374",
+    "expected_product_id": "lego-71374-nintendo-entertainment-system",
+    "expected_label": "LEGO Nintendo Entertainment System 71374",
+    "goal": "Reject real consoles, cartridges, display cases, and LEGO-compatible substitutes.",
+    "priority": "high"
+  },
+  {
+    "id": "lego-10306-atari",
+    "category": "lego",
+    "query": "LEGO Atari 2600 10306",
+    "expected_product_id": "lego-10306-atari-2600",
+    "expected_label": "LEGO Atari 2600 10306",
+    "goal": "Avoid real Atari hardware, loose bricks, and display accessories.",
+    "priority": "medium"
+  },
+  {
+    "id": "lego-10323-pac-man",
+    "category": "lego",
+    "query": "PAC-MAN Arcade 10323",
+    "expected_product_id": "lego-10323-pac-man-arcade",
+    "expected_label": "LEGO PAC-MAN Arcade 10323",
+    "goal": "Resolve punctuation variants and reject non-set merchandise.",
+    "priority": "medium"
+  },
+  {
+    "id": "lego-10300-time-machine",
+    "category": "lego",
+    "query": "Back to the Future Time Machine 10300",
+    "expected_product_id": "lego-10300-back-to-the-future-time-machine",
+    "expected_label": "LEGO Back to the Future Time Machine 10300",
+    "goal": "Keep the official set separate from custom parts, lights, stands, and older DeLorean sets.",
+    "priority": "medium"
+  },
+  {
+    "id": "lego-76989-tallneck",
+    "category": "lego",
+    "query": "Horizon Tallneck 76989",
+    "expected_product_id": "lego-76989-horizon-forbidden-west-tallneck",
+    "expected_label": "LEGO Horizon Forbidden West Tallneck 76989",
+    "goal": "Accept shortened game-title wording while rejecting display cases and lighting kits.",
+    "priority": "medium"
+  },
+  {
+    "id": "lego-21318-tree-house",
+    "category": "lego",
+    "query": "LEGO Tree House 21318",
+    "expected_product_id": "lego-21318-ideas-tree-house",
+    "expected_label": "LEGO Ideas Tree House 21318",
+    "goal": "Keep exact set-number results free of loose parts and compatible-brand copies.",
+    "priority": "medium"
+  },
+  {
+    "id": "lego-10255-assembly-square",
+    "category": "lego",
+    "query": "Assembly Square 10255",
+    "expected_product_id": "lego-10255-creator-expert-assembly-square",
+    "expected_label": "LEGO Creator Expert Assembly Square 10255",
+    "goal": "Reject modular-building lots, instructions, and partial floor sections.",
+    "priority": "medium"
+  },
+  {
+    "id": "lego-10307-eiffel-tower",
+    "category": "lego",
+    "query": "Eiffel Tower 10307",
+    "expected_product_id": "lego-10307-icons-eiffel-tower",
+    "expected_label": "LEGO Icons Eiffel Tower 10307",
+    "goal": "Use the set number to avoid other Eiffel Tower sets and non-LEGO models.",
+    "priority": "high"
+  }
+]

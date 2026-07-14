@@ -1,19 +1,19 @@
-# Scoutly v0.6.6 / PriceSift console direct-search rollback
+# Scoutly v0.6.7 / PriceSift search QA workbench
 
-Scoutly remains the internal project name. PriceSift now uses category-specific search styles: direct exact-item search for Cameras, GPUs, Consoles, and LEGO; a specification builder for RAM.
+Scoutly remains the internal project name. PriceSift uses category-specific search styles: direct exact-item search for Cameras, GPUs, Consoles, and LEGO; a specification builder for RAM.
 
 ## Included
 
-- Replaced the Console builder with direct autocomplete search.
-- Console suggestions resolve to exact static catalog products.
-- Removed family-level builder interception from normal console searches.
-- Preserved the original Nintendo Switch aliases and revision marketplace queries:
-  - Nintendo Switch / Standard / Original
-  - Nintendo Switch V1 / Switch V1 / HAC-001
-  - Nintendo Switch V2 / Switch V2 / HAC-001(-01)
-- Kept all v0.6.5 precision filters for Digital Edition, older-console parts, GPU failures, LEGO completeness, and mixed-brand RAM.
+- Private search QA workbench at `/admin/qa`.
+- 36 repeatable starter cases for Consoles and LEGO.
+- Live expected-versus-resolved product comparison.
+- Top-three listing inspection with Pass, Top-3 only, Fail, and No inventory outcomes.
+- Issue tags, notes, attempt counts, and persistent evaluation history.
+- PostgreSQL production storage with local JSON fallback.
+- Existing analytics dashboard now links directly to the QA workbench.
+- All 152 backend tests pass and the Next.js production build completes successfully.
 
-No Railway, PostgreSQL, Vercel, domain, or environment changes are required.
+The QA workbench uses the existing `SCOUTLY_ADMIN_TOKEN`. No Railway, PostgreSQL, Vercel, domain, or environment changes are required.
 
 ## Run locally
 
@@ -35,3 +35,5 @@ cd frontend
 npm install
 npm run dev
 ```
+
+Open `/admin`, enter the existing admin token, and select **Open search QA**.

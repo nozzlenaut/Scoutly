@@ -143,6 +143,68 @@ export type ManualFilterRulePayload = {
   source_item_id?: string | null;
 };
 
+
+export type QaOutcome = "pass" | "top3_only" | "fail" | "no_inventory";
+
+export type QaEvaluation = {
+  id: string;
+  case_id: string;
+  category: string;
+  query: string;
+  expected_product_id?: string | null;
+  expected_label?: string | null;
+  resolved_product_id?: string | null;
+  resolved_label?: string | null;
+  resolution_correct: boolean;
+  outcome: QaOutcome;
+  issue_tags: string[];
+  notes?: string | null;
+  result_titles: string[];
+  diagnostics: Record<string, unknown>;
+  created_at: string;
+};
+
+export type QaCase = {
+  id: string;
+  category: "consoles" | "lego" | string;
+  query: string;
+  expected_product_id: string;
+  expected_label: string;
+  goal: string;
+  priority: "high" | "medium" | "low" | string;
+  attempt_count: number;
+  latest_evaluation?: QaEvaluation | null;
+};
+
+export type QaSummary = {
+  total_cases: number;
+  tested_cases: number;
+  counts: Record<QaOutcome | "untested", number>;
+  category_counts: Record<string, Record<QaOutcome | "untested", number>>;
+  quality_rate: number | null;
+};
+
+export type QaCasesResponse = {
+  cases: QaCase[];
+  summary: QaSummary;
+};
+
+export type QaEvaluationPayload = {
+  case_id: string;
+  category: string;
+  query: string;
+  expected_product_id?: string | null;
+  expected_label?: string | null;
+  resolved_product_id?: string | null;
+  resolved_label?: string | null;
+  resolution_correct: boolean;
+  outcome: QaOutcome;
+  issue_tags?: string[];
+  notes?: string | null;
+  result_titles?: string[];
+  diagnostics?: Record<string, unknown>;
+};
+
 const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export async function searchDeals(
@@ -397,4 +459,30 @@ export function buildEbaySearchUrl(query: string, category?: string): string {
   const categoryId = category ? ebayCategoryIds[category] : undefined;
   if (categoryId) params.set("_sacat", categoryId);
   return `https://www.ebay.com/sch/i.html?${params.toString()}`;
+}
+
+
+export async function getQaCases(token?: string): Promise<QaCasesResponse> {
+  const response = await fetch(
+    `${baseUrl}/api/qa/cases${adminQuery(token)}`,
+    { cache: "no-store" },
+  );
+  if (!response.ok) throw new Error("QA cases failed");
+  return response.json();
+}
+
+export async function saveQaEvaluation(
+  payload: QaEvaluationPayload,
+  token?: string,
+): Promise<QaEvaluation> {
+  const response = await fetch(
+    `${baseUrl}/api/qa/evaluations${adminQuery(token)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  );
+  if (!response.ok) throw new Error("Could not save QA evaluation");
+  return response.json();
 }

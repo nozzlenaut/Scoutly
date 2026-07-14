@@ -50,3 +50,27 @@ Future tables:
 - listing_url
 - affiliate_url
 - clicked_at
+
+## Current persistence tables
+
+When `DATABASE_URL` is configured, Scoutly creates its operational tables automatically at API startup. The search QA workbench adds:
+
+### scoutly_qa_evaluations
+
+- id
+- case_id
+- category
+- query
+- expected_product_id
+- expected_label
+- resolved_product_id
+- resolved_label
+- resolution_correct
+- outcome
+- issue_tags
+- notes
+- result_titles
+- diagnostics
+- created_at
+
+Local development falls back to `qa_evaluations.json` inside `SCOUTLY_DATA_DIR` (or `/tmp/scoutly`).

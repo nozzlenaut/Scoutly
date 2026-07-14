@@ -157,6 +157,33 @@ def initialize_database() -> bool:
         CREATE INDEX IF NOT EXISTS scoutly_filtered_listings_product
         ON scoutly_filtered_listings (product_id, filtered_at DESC)
         """,
+        """
+        CREATE TABLE IF NOT EXISTS scoutly_qa_evaluations (
+            id TEXT PRIMARY KEY,
+            case_id TEXT NOT NULL,
+            category TEXT NOT NULL,
+            query TEXT NOT NULL,
+            expected_product_id TEXT,
+            expected_label TEXT,
+            resolved_product_id TEXT,
+            resolved_label TEXT,
+            resolution_correct BOOLEAN NOT NULL DEFAULT FALSE,
+            outcome TEXT NOT NULL,
+            issue_tags JSONB NOT NULL DEFAULT '[]'::jsonb,
+            notes TEXT,
+            result_titles JSONB NOT NULL DEFAULT '[]'::jsonb,
+            diagnostics JSONB NOT NULL DEFAULT '{}'::jsonb,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+        """,
+        """
+        CREATE INDEX IF NOT EXISTS scoutly_qa_evaluations_case_recent
+        ON scoutly_qa_evaluations (case_id, created_at DESC)
+        """,
+        """
+        CREATE INDEX IF NOT EXISTS scoutly_qa_evaluations_recent
+        ON scoutly_qa_evaluations (created_at DESC)
+        """,
     ]
 
     try:
