@@ -233,3 +233,14 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Uses “affiliate links” consistently in homepage copy.
 - Uses resolved/unresolved-aware auction empty states.
 - Adds regression coverage for Sony A1 II, Switch completeness, seller sentinels, and common LEGO set aliases.
+
+## v0.5.9 — Result interaction and variation-price cleanup
+
+- Makes listing images and titles clickable using the same tracked outbound link as the result button.
+- Uses a full page navigation for each submitted search so old fixed-price or auction state cannot append to a new query.
+- Rejects eBay seller-defined variation groups for consoles and GPUs because the visible price can belong to an accessory or lower-spec option.
+- Rejects multi-model GPU titles such as RTX A3000/A4000/A5000 and adds GPU core, no-cooler, shell-only, and box-and-insert-only filters.
+- Rejects camera service manuals and parts lists.
+- Tightens Nintendo handheld filtering for accessory-only, game/manual, charger-only, and seller-selection listings while preserving complete console bundles that include chargers.
+- Pauses Wii U until complete console + GamePad requirements are defined.
+- Adds regression coverage for all newly reported titles and eBay variation metadata.

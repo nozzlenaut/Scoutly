@@ -623,3 +623,79 @@ def test_resolves_v058_lego_catalog_expansion_by_set_number():
         assert match is not None
         assert match.product.metadata["set_number"] == set_number
         assert model_clue.lower() in match.product.model.lower()
+
+
+def test_rejects_multi_model_rtx_a_series_variation_listings():
+    a4000 = match_product("NVIDIA RTX A4000 16GB", category="gpus")
+    assert a4000 is not None
+
+    spam_title = "for DELL Precision 7760 SERIES NVIDIA RTX A3000 A4000 A5000 6GB 16GB VIDEO CARD"
+    assert listing_matches_product(spam_title, a4000.product) is False
+    assert listing_matches_product("NVIDIA RTX A4000 16GB GDDR6 PCIe Graphics Card", a4000.product) is True
+
+
+def test_rejects_reported_gpu_core_cooler_shell_and_box_patterns():
+    rtx_3080 = match_product("NVIDIA RTX 3080 10GB", category="gpus")
+    rtx_5060_ti = match_product("NVIDIA RTX 5060 Ti 16GB", category="gpus")
+    assert rtx_3080 is not None
+    assert rtx_5060_ti is not None
+
+    assert listing_matches_product(
+        "NVIDIA GeForce RTX 3080 GPU Core - GA102-200-A1 - Tested & Pulled",
+        rtx_3080.product,
+    ) is False
+    assert listing_matches_product(
+        "Palit RTX 3080 10GB GDDR6X Graphics Card NO HEATSINK/COOLER",
+        rtx_3080.product,
+    ) is False
+    assert listing_matches_product(
+        "ZOTAC GAMING GeForce RTX 3080 Trinity OC Graphics Card - Shell ONLY",
+        rtx_3080.product,
+    ) is False
+    assert listing_matches_product(
+        "PNY GeForce RTX 5060 Ti 16GB - BOX & INSERT ONLY",
+        rtx_5060_ti.product,
+    ) is False
+
+
+def test_rejects_camera_service_manual_parts_list():
+    sony_a9 = match_product("Sony Alpha A9 Body", category="cameras")
+    assert sony_a9 is not None
+    assert listing_matches_product(
+        "Sony Alpha 9 A9 ILCE-9 Service Manual Parts List Genuine Sony OEM NOT A COPY",
+        sony_a9.product,
+    ) is False
+
+
+def test_rejects_3ds_accessories_games_and_selection_variations():
+    three_ds = match_product("Nintendo 3DS XL", category="consoles")
+    assert three_ds is not None
+
+    assert listing_matches_product(
+        "Nintendo 3DS LL XL smart pouch Kyogre Pokemon",
+        three_ds.product,
+    ) is False
+    assert listing_matches_product(
+        "Nintendo 3DS XL MANUAL ONLY No Games Or Consoles Different Languages",
+        three_ds.product,
+    ) is False
+    assert listing_matches_product(
+        "THE CHRONICLES OF NARNIA NINTENDO DS GAME 3DS 2DS LITE DSI XL",
+        three_ds.product,
+    ) is False
+    assert listing_matches_product(
+        "Nintendo WAP-002 3DS XL 3DS AC Adapter Charger Cable Cord Tested Authentic",
+        three_ds.product,
+    ) is False
+    assert listing_matches_product(
+        "Nintendo 3DS XL LL System | With Charger | USA English | 8GB SD | US Seller Pick",
+        three_ds.product,
+    ) is False
+    assert listing_matches_product(
+        "Nintendo New 3DS XL Handheld System With AC Adapter Charger Tested Working",
+        three_ds.product,
+    ) is True
+
+
+def test_wii_u_is_paused_until_complete_system_rules_are_defined():
+    assert match_product("Nintendo Wii U 32GB", category="consoles") is None

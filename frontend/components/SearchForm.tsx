@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useId, useRef, useState } from "react";
 import { suggestProducts, type ProductMatch } from "@/lib/api";
 import { getCategory, searchCategories } from "@/lib/categoryCatalog";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -21,8 +20,7 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const [isLoading, setIsLoading] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didMountRef = useRef(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -96,9 +94,12 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
     setShowSuggestions(false);
     setActiveSuggestionIndex(-1);
     inputRef.current?.blur();
-    startTransition(() => {
-      router.push(`/search?category=${encodeURIComponent(categoryId)}&q=${encodeURIComponent(cleaned)}`);
-    });
+    setIsNavigating(true);
+    const destination = `/search?category=${encodeURIComponent(categoryId)}&q=${encodeURIComponent(cleaned)}`;
+    // Use a full navigation for every search. This guarantees that fixed-price
+    // and auction state from an earlier query cannot survive and append to the
+    // next result set.
+    window.location.assign(destination);
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -260,10 +261,10 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
         </div>
 
         <button
-          disabled={isPending}
+          disabled={isNavigating}
           className="flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-cyan-300 px-7 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-wait disabled:opacity-80"
         >
-          {isPending ? (
+          {isNavigating ? (
             <>
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950" />
               Searching…
@@ -279,7 +280,7 @@ export function SearchForm({ initialCategoryId, initialQuery, compact = false }:
           ? "Search another exact item without going back."
           : "Start typing, pick the exact item from autocomplete, then PriceSift checks eBay for cleaner used listings."}
         {isLoading ? " Checking catalog..." : ""}
-        {isPending ? " Loading results..." : ""}
+        {isNavigating ? " Loading results..." : ""}
       </p>
     </div>
   );

@@ -76,3 +76,34 @@ def test_low_feedback_seller_is_demoted():
     )
 
     assert score_listing(high_feedback) > score_listing(low_feedback)
+
+
+def test_rejects_seller_defined_variation_price_traps_for_exact_categories():
+    from app.catalog.catalog import match_product
+
+    console = match_product("Nintendo 3DS XL", category="consoles").product
+    gpu = match_product("NVIDIA RTX A4000 16GB", category="gpus").product
+
+    console_listing = Listing(
+        provider="eBay",
+        title="Nintendo 3DS XL Console - Choose Color",
+        price=19.99,
+        shipping=0,
+        total_price=19.99,
+        condition="Used",
+        url="https://www.ebay.com/itm/188036851644",
+        item_group_type="SELLER_DEFINED_VARIATIONS",
+    )
+    gpu_listing = Listing(
+        provider="eBay",
+        title="NVIDIA RTX A4000 16GB Video Card",
+        price=49.99,
+        shipping=0,
+        total_price=49.99,
+        condition="Used",
+        url="https://www.ebay.com/itm/198381150500",
+        item_group_type="SELLER_DEFINED_VARIATIONS",
+    )
+
+    assert is_bad_listing(console_listing, console) is True
+    assert is_bad_listing(gpu_listing, gpu) is True

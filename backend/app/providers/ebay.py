@@ -235,6 +235,7 @@ def ebay_item_to_listing(
         item_end_date=item.get("itemEndDate"),
         warning_labels=_listing_warning_labels(title),
         item_location=_item_location_label(item),
+        item_group_type=item.get("itemGroupType"),
     )
 
 

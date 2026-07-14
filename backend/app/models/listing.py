@@ -22,3 +22,4 @@ class Listing(BaseModel):
     item_end_date: str | None = None
     warning_labels: list[str] = Field(default_factory=list)
     item_location: str | None = None
+    item_group_type: str | None = None

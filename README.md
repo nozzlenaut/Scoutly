@@ -1,4 +1,4 @@
-# Scoutly v0.5.8
+# Scoutly v0.5.9
 
 Scoutly is a cleaner exact-item eBay search tool for used products. It resolves a search to a catalog item, filters obvious broken/partial/accessory listings, and returns up to three Buy It Now options while auctions load afterward.
 
@@ -10,15 +10,16 @@ Scoutly is a cleaner exact-item eBay search tool for used products. It resolves 
 - **LEGO:** Lab / early set-number prototype
 - **Lenses:** Paused
 
-## Included in v0.5.8
+## Included in v0.5.9
 
-- Public-facing PriceSift branding for `www.pricesift.app`
-- Production metadata, favicon, manifest, robots file, and sitemap
-- Standalone title-ending `READ` risk rejection
-- LEGO catalog expanded to 395 sets
-- Internal Scoutly repository, package, database, and affiliate identifiers retained
+- Clickable listing images and titles using the tracked outbound link
+- Full page navigation for each new search to prevent stale result merging
+- Seller-defined variation-group rejection for consoles and GPUs
+- Multi-model GPU and reported accessory/part cleanup
+- Nintendo handheld filtering improvements
+- Wii U temporarily paused
 
-See `README-v058.md` for details.
+See `README-v059.md` for details.
 
 ## Run locally
 

@@ -19738,9 +19738,9 @@
       "LEGO The Lord of the Rings Barad-dur 10333",
       "The Lord of the Rings Barad-dur 10333",
       "The Lord of the Rings Barad-dur 10333",
-      "LEGO Barad-dûr 10333",
-      "Barad-dûr 10333",
-      "LEGO Icons Barad-dûr 10333"
+      "LEGO Barad-d\u00fbr 10333",
+      "Barad-d\u00fbr 10333",
+      "LEGO Icons Barad-d\u00fbr 10333"
     ],
     "required_terms": [
       "10333"
@@ -25590,9 +25590,10 @@
     ],
     "metadata": {
       "family": "Nintendo Wii U",
-      "storage": "32GB"
+      "storage": "32GB",
+      "paused_reason": "Wii U search is temporarily paused until complete console + GamePad filtering is defined."
     },
-    "active": true
+    "active": false
   },
   {
     "id": "console-nintendo-3ds-xl",

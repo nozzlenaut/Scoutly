@@ -48,13 +48,33 @@ export function ResultCard({ result, query, category, productId, variant = "buy_
   const priceLabel = isAuction ? "Current bid" : "Item price";
   const totalLabel = isAuction ? "Current total" : "Total";
   const trustLabel = sellerTrustLabel(result);
+  const outboundUrl = buildOutboundUrl(result.url, {
+    query,
+    category,
+    productId,
+    provider: result.provider,
+    title: result.title,
+  });
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/[0.06] shadow-2xl shadow-black/20">
       <div className="flex h-44 items-center justify-center bg-white/[0.03]">
         {result.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={result.image_url} alt={result.title} loading="lazy" className="max-h-40 max-w-full object-contain" />
+          <a
+            href={outboundUrl}
+            target="_blank"
+            rel="sponsored noreferrer"
+            aria-label={`View listing: ${result.title}`}
+            className="flex h-full w-full items-center justify-center p-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-cyan-300"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={result.image_url}
+              alt={result.title}
+              loading="lazy"
+              className="max-h-40 max-w-full object-contain transition duration-200 hover:scale-[1.02]"
+            />
+          </a>
         ) : (
           <span className="text-sm text-slate-500">No image</span>
         )}
@@ -77,7 +97,16 @@ export function ResultCard({ result, query, category, productId, variant = "buy_
           </div>
         </div>
 
-        <h2 className="text-lg font-semibold leading-snug text-white">{result.title}</h2>
+        <h2 className="text-lg font-semibold leading-snug text-white">
+          <a
+            href={outboundUrl}
+            target="_blank"
+            rel="sponsored noreferrer"
+            className="transition hover:text-cyan-200 hover:underline focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300"
+          >
+            {result.title}
+          </a>
+        </h2>
 
         {trustLabel ? (
           <div className="mt-3 rounded-2xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
@@ -122,7 +151,7 @@ export function ResultCard({ result, query, category, productId, variant = "buy_
 
         <div className="mt-auto pt-5">
           <a
-            href={buildOutboundUrl(result.url, { query, category, productId, provider: result.provider, title: result.title })}
+            href={outboundUrl}
             target="_blank"
             rel="sponsored noreferrer"
             className="block rounded-2xl bg-white px-5 py-3 text-center font-semibold text-slate-950 transition hover:bg-slate-200"

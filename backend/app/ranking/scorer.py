@@ -40,6 +40,17 @@ def rejection_reasons(listing: Listing, product: Product | None = None) -> list[
     manual_reasons = manual_filter_rejection_reasons(listing.title, product)
     reasons.extend(manual_reasons)
 
+    # eBay seller-defined variation groups can advertise a console/GPU parent
+    # while the displayed price belongs to an accessory, lower-spec model, or
+    # an explicit "no console" option. Exact-item categories reject them rather
+    # than trusting the cheapest variation price.
+    if (
+        product is not None
+        and product.category in {"consoles", "gpus"}
+        and (listing.item_group_type or "").upper() == "SELLER_DEFINED_VARIATIONS"
+    ):
+        reasons.append("seller-defined variation listing")
+
     if product is not None and not listing_matches_product(listing.title, product):
         reasons.append("catalog/product match rejected")
 

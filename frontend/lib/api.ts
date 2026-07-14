@@ -41,6 +41,7 @@ export type SearchResult = {
   item_end_date: string | null;
   warning_labels: string[];
   item_location: string | null;
+  item_group_type: string | null;
 };
 
 export type SearchResponse = {

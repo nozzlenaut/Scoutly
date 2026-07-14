@@ -197,3 +197,18 @@ def test_ebay_seller_sentinel_values_become_unavailable():
     assert listing is not None
     assert listing.seller_rating is None
     assert listing.seller_feedback_score is None
+
+
+def test_ebay_item_maps_seller_defined_variation_group():
+    item = {
+        "title": "Nintendo 3DS XL Console - Choose Color",
+        "price": {"value": "19.99", "currency": "USD"},
+        "condition": "Used",
+        "itemWebUrl": "https://www.ebay.com/itm/188036851644",
+        "itemGroupType": "SELLER_DEFINED_VARIATIONS",
+    }
+
+    listing = ebay_item_to_listing(item)
+
+    assert listing is not None
+    assert listing.item_group_type == "SELLER_DEFINED_VARIATIONS"

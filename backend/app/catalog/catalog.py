@@ -12,6 +12,10 @@ GLOBAL_BAD_LISTING_TERMS = [
     "as is",
     "as-is",
     "box only",
+    "box & insert only",
+    "box and insert only",
+    "box inserts only",
+    "inserts only",
     "broken",
     "camera error",
     "damaged",
@@ -78,6 +82,10 @@ GPU_PART_ACCESSORY_TERMS = [
     "bracket only",
     "cooler only",
     "cooling fan",
+    "core only",
+    "chip only",
+    "gpu core",
+    "graphics processor only",
     "fan only",
     "gpu cooler",
     "gpu fan",
@@ -91,6 +99,10 @@ GPU_PART_ACCESSORY_TERMS = [
     "fan does not work",
     "single fan missing",
     "missing fans",
+    "no cooler",
+    "no heatsink",
+    "no heat sink",
+    "shell only",
     "1x fan missing",
     "one fan missing",
     "mining rig",
@@ -293,6 +305,9 @@ CAMERA_PART_ACCESSORY_TERMS = [
     "replacement part",
     "ribbon",
     "screen repair",
+    "service manual",
+    "parts list",
+    "manual only",
     "sensor cleaning",
     "spare part",
     "strap lug",
@@ -350,8 +365,10 @@ CONSOLE_PART_ACCESSORY_TERMS = [
     "box only",
     "case only",
     "carrying case",
+    "smart pouch",
     "charge dock",
     "charging dock",
+    "manual only",
     "controller only",
     "controllers only",
     "disc drive only",
@@ -395,6 +412,7 @@ CONSOLE_PART_ACCESSORY_TERMS = [
     "cpu chip",
     "chip only",
     "no console",
+    "no consoles",
     "parts only",
     "power brick",
     "power supply",
@@ -450,6 +468,46 @@ def _looks_like_gpu_accessory(title: str, product: Product | None = None) -> boo
             # Generic compatibility/listing-spam titles like "P4 P40 K80 M40 P100"
             # are usually not the exact card. Keep true single-model listings.
             if mentioned_models - {searched_model}:
+                return True
+
+        # Reject variation/compatibility listings that name several GPUs and
+        # advertise the cheapest option. Keep workstation model numbers such as
+        # Dell Precision 7760 out of this check by requiring a GPU-family prefix.
+        product_compact = compact_text(product.model, strip_filler=False)
+        title_lower = title.lower()
+
+        gpu_model_groups: list[tuple[str, set[str]]] = []
+        if re.search(r"rtxa\d{4}", product_compact):
+            gpu_model_groups.append(
+                (
+                    re.search(r"a\d{4}", product_compact).group(0),
+                    set(re.findall(r"(?<![a-z0-9])a(?:2000|3000|4000|4500|5000|5500|6000)(?![a-z0-9])", title_lower)),
+                )
+            )
+        elif re.search(r"rtx\d{4}", product_compact):
+            gpu_model_groups.append(
+                (
+                    re.search(r"rtx\d{4}", product_compact).group(0),
+                    {f"rtx{model}" for model in re.findall(r"(?<![a-z0-9])rtx\s*(\d{4})(?![a-z0-9])", title_lower)},
+                )
+            )
+        elif re.search(r"gtx\d{3,4}", product_compact):
+            gpu_model_groups.append(
+                (
+                    re.search(r"gtx\d{3,4}", product_compact).group(0),
+                    {f"gtx{model}" for model in re.findall(r"(?<![a-z0-9])gtx\s*(\d{3,4})(?![a-z0-9])", title_lower)},
+                )
+            )
+        elif re.search(r"rx\d{3,4}", product_compact):
+            gpu_model_groups.append(
+                (
+                    re.search(r"rx\d{3,4}", product_compact).group(0),
+                    {f"rx{model}" for model in re.findall(r"(?<![a-z0-9])rx\s*(\d{3,4})(?![a-z0-9])", title_lower)},
+                )
+            )
+
+        for searched_gpu_model, mentioned_gpu_models in gpu_model_groups:
+            if mentioned_gpu_models - {searched_gpu_model}:
                 return True
 
     if product is not None:
@@ -660,6 +718,30 @@ def _looks_like_console_accessory(title: str, product: Product | None = None) ->
     # For PlayStation/Xbox, a real listing usually says console/system/unit or
     # a storage/edition clue. Reject game/accessory-style titles that only use
     # the platform name as compatibility metadata.
+    if product is not None and product.category == "consoles" and product.brand.lower() == "nintendo":
+        product_text = normalize_text(f"{product.model} {product.variant or ''}", strip_filler=False)
+        product_compact = compact_text(f"{product.model} {product.variant or ''}", strip_filler=False)
+        is_nintendo_handheld = any(term in product_compact for term in ["3ds", "2ds", "dsi", "dslite"])
+        if is_nintendo_handheld:
+            accessory_or_media_terms = [
+                "game",
+                "video game",
+                "cartridge",
+                "cart only",
+                "manual",
+                "instructions",
+                "pouch",
+                "case",
+                "ac adapter",
+                "power adapter",
+                "charger",
+                "charger cable",
+                "cable cord",
+            ]
+            console_identity_terms = ["console", "system", "handheld", "unit"]
+            if _has_any_term(title, accessory_or_media_terms) and not _has_any_term(title, console_identity_terms):
+                return True
+
     if product is not None and product.category == "consoles" and product.brand.lower() in {"xbox", "playstation"}:
         console_clues = [
             "console",
@@ -710,6 +792,26 @@ def _looks_like_console_multi_variation_listing(title: str, product: Product | N
         return True
     if "alloriginalslimpro" in compact or "originalslimpro" in compact:
         return True
+
+    # Sellers commonly hide an accessory-only or "no console" variation behind
+    # a parent console title. Search-result prices then reflect the cheap option,
+    # not the console. These selection phrases are a strong variation-listing clue.
+    variation_phrases = [
+        "seller pick",
+        "you pick",
+        "pick your",
+        "pick one",
+        "choose option",
+        "choose your",
+        "select option",
+        "select your",
+        "multiple options",
+        "various options",
+        "options available",
+    ]
+    if _has_any_term(title, variation_phrases):
+        return True
+
     return False
 
 
