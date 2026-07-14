@@ -1,7 +1,7 @@
 # PriceSift status
 
 - Cameras: Active — direct exact-model search
-- Consoles: Active — guided builder with family-level searches and Standard Switch V1/V2 revision coverage
+- Consoles: Active — direct exact-model search with original Switch V1/V2/HAC aliases
 - GPUs: Active — direct exact-model search
 - RAM: Active — strict DDR3/DDR4/DDR5 specification builder
 - LEGO: Beta — exact set-number/name search with conservative completeness filtering

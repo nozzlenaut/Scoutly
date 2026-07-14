@@ -6,11 +6,7 @@ from pathlib import Path
 from app.catalog.normalizer import compact_text, has_term, normalize_text
 from app.models.product import Product, ProductMatch
 from app.catalog.ram import ram_product_match, ram_title_matches_product
-from app.catalog.consoles import (
-    console_builder_title_matches_product,
-    console_product_match,
-    parse_console_query,
-)
+from app.catalog.consoles import console_builder_title_matches_product, parse_console_query
 
 CATALOG_PATH = Path(__file__).resolve().parents[1] / "data" / "product_catalog.json"
 
@@ -1557,24 +1553,33 @@ def match_product(query: str, category: str | None = None) -> ProductMatch | Non
 
     matches = suggest_products(query, category=normalized_category, limit=8)
 
-    if normalized_category == "consoles":
-        spec = parse_console_query(query)
-        if spec is not None:
-            # Preserve exact catalog identities when the query names a unique
-            # console. Use a dynamic builder product only for family/model scopes
-            # that intentionally include multiple valid variants.
-            broad_family = spec.model is None and spec.family != "nintendo-3ds-xl"
-            broad_series_s = spec.family == "xbox-series" and spec.model == "Series S" and spec.storage is None
-            broad_ps5_model = (
-                spec.family == "playstation-5"
-                and spec.model in {"standard", "slim"}
-                and spec.edition is None
-            )
-            if broad_family or broad_series_s or broad_ps5_model:
-                return console_product_match(query)
-
+    # Consoles use the same direct catalog resolution path as cameras and GPUs.
+    # The former guided-builder products remain available in the module for
+    # backward compatibility, but normal searches never synthesize a family
+    # scope or silently combine multiple console models.
     if not matches:
         return None
+
+    if normalized_category == "consoles":
+        spec = parse_console_query(query)
+        # Direct console search should never silently turn an unspecified
+        # PlayStation/Xbox family into one arbitrary catalog model. The UI
+        # exposes the exact variants through autocomplete. Bare Nintendo Switch
+        # remains an intentional alias for the original V1/V2 system.
+        if (
+            spec is not None
+            and spec.model is None
+            and spec.storage is None
+            and spec.edition is None
+            and spec.family in {
+                "xbox-series",
+                "xbox-one",
+                "playstation-5",
+                "playstation-4",
+            }
+        ):
+            return None
+
     best_match = matches[0]
     if best_match.confidence < 0.7:
         return None

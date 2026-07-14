@@ -392,14 +392,25 @@ def test_rejects_gpu_problem_notes_but_allows_no_problems():
     ) is True
 
 
-def test_resolves_console_catalog_entries_and_family_scopes():
+def test_resolves_console_catalog_entries_as_static_exact_items():
     ps5_disc = match_product("PS5 Disc", category="consoles")
     assert ps5_disc is not None
-    assert ps5_disc.product.metadata["builder"] == "consoles"
-    assert ps5_disc.product.metadata["edition"] == "disc"
+    assert ps5_disc.product.id == "console-playstation-5-disc-edition"
+    assert ps5_disc.product.metadata.get("builder") is None
     assert match_product("Xbox Series X", category="consoles").product.id == "console-xbox-series-x-1tb"
     assert match_product("Switch OLED", category="consoles").product.id == "console-nintendo-switch-oled"
     assert match_product("Nintendo 3DS XL", category="consoles").product.id == "console-nintendo-3ds-xl"
+
+
+def test_broad_playstation_and_xbox_family_queries_do_not_choose_a_model():
+    assert match_product("PlayStation 5", category="consoles") is None
+    assert match_product("PlayStation 4", category="consoles") is None
+    assert match_product("Xbox Series", category="consoles") is None
+    assert match_product("Xbox One", category="consoles") is None
+    # Bare Nintendo Switch intentionally means the original V1/V2 system.
+    switch = match_product("Nintendo Switch", category="consoles")
+    assert switch is not None
+    assert switch.product.id == "console-nintendo-switch-v1-v2"
 
 
 def test_console_filters_reject_parts_and_switch_tablet_only():
@@ -801,50 +812,61 @@ def test_ram_generation_selection_rejects_multi_generation_spam():
     ) is False
 
 
-def test_console_builder_supports_family_level_and_optional_refinements():
-    family = match_product("Xbox Series", category="consoles")
-    assert family is not None
-    assert family.product.metadata["builder"] == "consoles"
-    assert family.product.metadata["family"] == "xbox-series"
+def test_console_direct_search_resolves_exact_static_catalog_models():
+    series_x = match_product("Xbox Series X", category="consoles")
+    ps5_slim_digital = match_product(
+        "PlayStation 5 Slim Digital Edition", category="consoles"
+    )
+    switch_oled = match_product("Nintendo Switch OLED", category="consoles")
+
+    assert series_x is not None
+    assert ps5_slim_digital is not None
+    assert switch_oled is not None
+    assert series_x.product.id == "console-xbox-series-x-1tb"
+    assert ps5_slim_digital.product.id == "console-playstation-5-slim-digital-edition"
+    assert switch_oled.product.id == "console-nintendo-switch-oled"
+    assert series_x.product.metadata.get("builder") is None
+    assert ps5_slim_digital.product.metadata.get("builder") is None
+    assert switch_oled.product.metadata.get("builder") is None
+
+
+def test_original_switch_direct_aliases_resolve_to_standard_v1_v2_product():
+    aliases = [
+        "Nintendo Switch",
+        "Nintendo Switch V1",
+        "Switch V1",
+        "Nintendo Switch V2",
+        "Switch V2",
+        "HAC-001",
+        "HAC-001(-01)",
+        "Nintendo Switch Standard",
+        "Original Nintendo Switch",
+    ]
+    for alias in aliases:
+        match = match_product(alias, category="consoles")
+        assert match is not None, alias
+        assert match.product.id == "console-nintendo-switch-v1-v2", alias
+        assert match.product.metadata.get("builder") is None, alias
+
+
+def test_console_direct_search_keeps_exact_listing_filters():
+    series_x = match_product("Xbox Series X", category="consoles")
+    ps5_digital = match_product("PlayStation 5 Digital Edition", category="consoles")
+    assert series_x is not None
+    assert ps5_digital is not None
+
     assert listing_matches_product(
-        "Microsoft Xbox Series S 512GB Console White Tested",
-        family.product,
+        "Microsoft Xbox Series X 1TB Console Black Tested", series_x.product
     ) is True
     assert listing_matches_product(
-        "Microsoft Xbox Series X 1TB Console Black Tested",
-        family.product,
-    ) is True
-    assert listing_matches_product("Xbox Series X Game Disc Only", family.product) is False
-
-    series_s = match_product("Xbox Series S", category="consoles")
-    assert series_s is not None
-    assert series_s.product.metadata["model_scope"] == "Series S"
-    assert listing_matches_product("Xbox Series S 512GB Console", series_s.product) is True
-    assert listing_matches_product("Xbox Series X 1TB Console", series_s.product) is False
-
-
-def test_console_builder_playstation_family_and_drive_refinement():
-    family = match_product("PlayStation 5", category="consoles")
-    assert family is not None
-    assert listing_matches_product("Sony PS5 Slim Digital Edition Console 1TB", family.product) is True
-    assert listing_matches_product("Sony PS5 Pro 2TB Console", family.product) is True
-
-    disc = match_product("PlayStation 5 Slim Disc Edition", category="consoles")
-    assert disc is not None
-    assert listing_matches_product("Sony PS5 Slim Disc Edition Console 1TB", disc.product) is True
-    assert listing_matches_product("Sony PS5 Slim Digital Edition Console 1TB", disc.product) is False
-
-
-def test_console_builder_switch_family_allows_lite_but_requires_complete_full_size_units():
-    family = match_product("Nintendo Switch", category="consoles")
-    assert family is not None
-    assert listing_matches_product("Nintendo Switch Lite Coral Handheld Console Tested", family.product) is True
+        "Microsoft Xbox Series S 512GB Console White Tested", series_x.product
+    ) is False
     assert listing_matches_product(
-        "Nintendo Switch OLED Console with White Joy-Con and Dock",
-        family.product,
+        "Sony PS5 Digital Edition Console 825GB", ps5_digital.product
     ) is True
-    assert listing_matches_product("Nintendo Switch OLED Tablet Only", family.product) is False
-
+    assert listing_matches_product(
+        "Sony PS5 Disc Edition Console 825GB", ps5_digital.product
+    ) is False
 
 def test_lego_rejects_requested_incomplete_unauthentic_and_bulk_phrases():
     titanic = match_product("LEGO Titanic 10294", category="lego")
@@ -928,9 +950,9 @@ def test_lego_query_with_unknown_reissue_number_does_not_resolve_older_set():
 
 def test_older_console_searches_require_hardware_evidence_and_reject_parts():
     rejected = [
-        ("PlayStation 4", "Sony PlayStation 4 Base Shell Housing"),
-        ("PlayStation 4", "Sony PS4 Mid-Frame Fan Heat Sink"),
-        ("PlayStation 4", "PlayStation 4 Game Disc Only"),
+        ("PlayStation 4 Slim", "Sony PlayStation 4 Slim Base Shell Housing"),
+        ("PlayStation 4 Slim", "Sony PS4 Slim Mid-Frame Fan Heat Sink"),
+        ("PlayStation 4 Slim", "PlayStation 4 Slim Game Disc Only"),
         ("PlayStation 4 Pro", "PS4 Pro Astro MixAmp Headset"),
         ("Xbox One S", "Xbox One S Standalone Disc Drive"),
         ("Nintendo 3DS XL", "Nintendo 3DS XL Box and Manuals Only"),
@@ -942,8 +964,8 @@ def test_older_console_searches_require_hardware_evidence_and_reject_parts():
         assert listing_matches_product(title, match.product) is False, title
 
     accepted = [
-        ("PlayStation 4", "Sony PlayStation 4 Console 500GB Tested"),
-        ("PlayStation 4", "Sony PlayStation 4 CUH-1215A 500GB Tested"),
+        ("PlayStation 4 Slim", "Sony PlayStation 4 Slim Console 1TB Tested"),
+        ("PlayStation 4 Slim", "Sony PlayStation 4 Slim CUH-2215B 1TB Tested"),
         ("Xbox One S", "Microsoft Xbox One S Console 1TB Tested"),
         ("Nintendo 3DS XL", "New Nintendo 3DS XL RED-001 Tested"),
     ]

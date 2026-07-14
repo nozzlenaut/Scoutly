@@ -5,7 +5,6 @@ import { suggestProducts, type ProductMatch } from "@/lib/api";
 import { getCategory, searchCategories } from "@/lib/categoryCatalog";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SpecSearchBuilder } from "@/components/SpecSearchBuilder";
-import { ConsoleSearchBuilder } from "@/components/ConsoleSearchBuilder";
 
 type SearchFormProps = {
   initialCategoryId?: string | null;
@@ -59,7 +58,7 @@ export function SearchForm({
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
-    if (categoryId === "ram" || categoryId === "consoles") {
+    if (categoryId === "ram") {
       requestSequenceRef.current += 1;
       setSuggestions([]);
       setShowSuggestions(false);
@@ -220,14 +219,6 @@ export function SearchForm({
       {selectedCategory.id === "ram" ? (
         <SpecSearchBuilder
           key={`ram-builder:${initialQuery || "new"}`}
-          initialQuery={initialQuery}
-          compact={compact}
-          isNavigating={isNavigating}
-          onSearch={submitSearch}
-        />
-      ) : selectedCategory.id === "consoles" ? (
-        <ConsoleSearchBuilder
-          key={`console-builder:${initialQuery || "new"}`}
           initialQuery={initialQuery}
           compact={compact}
           isNavigating={isNavigating}

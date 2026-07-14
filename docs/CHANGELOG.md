@@ -287,3 +287,11 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Rejected passive/server and external/eGPU variants for consumer desktop GPU searches.
 - Strengthened LEGO packaging-only filtering and common EMPTY typo handling.
 - Added transparent empty states with a broader tracked eBay Buy It Now search.
+
+## v0.6.6
+
+- Replaced the Console builder with direct exact-model autocomplete search.
+- Removed dynamic console-family products from normal catalog resolution.
+- Preserved original Nintendo Switch V1, V2, HAC-001, HAC-001(-01), Standard, and Original aliases.
+- Retained multi-query original-Switch coverage and all v0.6.5 precision filters.
+
