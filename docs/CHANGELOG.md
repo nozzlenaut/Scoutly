@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.16
+
+- Prevents unresolved public queries from falling through to raw marketplace searches.
+- Shows a clear unsupported-product state with close catalog suggestions when available.
+- Makes zero fixed-price or auction provider calls for unsupported catalog queries.
+- Routes `/admin/prices` overview and collection requests through same-origin Vercel handlers before reaching Railway.
+- Adds detailed price-proxy error output and an optional server-only `API_URL` frontend environment variable.
+- Adds three public-search guard tests, bringing the backend suite to 182 passing tests.
+
 ## v0.6.15
 
 - Fixes the `/admin/prices` page with client-side overview loading and visible retry/error handling.

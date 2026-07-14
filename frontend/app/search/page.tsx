@@ -161,6 +161,48 @@ export default async function SearchPage({
     },
   );
 
+  if (!resolved) {
+    return (
+      <PageShell>
+        <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+          <SearchForm
+            key={`${category.id}:${rawQuery}`}
+            initialCategoryId={category.id}
+            initialQuery={rawQuery}
+            compact
+          />
+        </section>
+
+        <div className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-6 text-amber-50" role="status">
+          <p className="text-sm uppercase tracking-[0.22em] text-amber-100/70">Not supported yet</p>
+          <h1 className="mt-2 text-2xl font-black">PriceSift could not match “{data.query}” to a supported catalog item.</h1>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-amber-100/90">
+            Public searches only run for products PriceSift knows how to identify and filter safely. Choose one of the suggested catalog items or try a more exact model name.
+          </p>
+          {likelyAlternatives.length > 0 ? (
+            <div className="mt-5">
+              <p className="text-sm font-semibold">Closest supported matches:</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {likelyAlternatives.map((match) => (
+                  <Link
+                    key={match.product.id}
+                    href={`/search?category=${encodeURIComponent(category.id)}&q=${encodeURIComponent(match.product.display_name)}`}
+                    className="rounded-full border border-amber-100/25 bg-slate-950/30 px-4 py-2 text-sm font-semibold text-amber-50 transition hover:bg-slate-950/50"
+                  >
+                    {match.product.display_name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          <p className="mt-5 text-xs leading-5 text-amber-100/70">
+            No marketplace search was sent for this unsupported query. PriceSift is picky on purpose.
+          </p>
+        </div>
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell>
       <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
@@ -181,25 +223,18 @@ export default async function SearchPage({
             <h1 className="mt-2 text-4xl font-black">
               {resolved?.product.display_name ?? data.query}
             </h1>
-            {resolved ? (
-              <div className="mt-3 space-y-2 text-sm text-slate-300">
-                <p>
-                  Catalog item: {resolved.product.display_name} · Product match confidence {Math.round(resolved.confidence * 100)}%
-                </p>
-                {category.id === "consoles" ? (
-                  <p className="text-slate-400">
-                    {resolved.product.variant?.includes("Edition")
-                      ? `Results are narrowed to the ${resolved.product.variant}.`
-                      : `All ${resolved.product.display_name} variants are grouped unless your search names a specific edition.`}
-                  </p>
-                ) : null}
-              </div>
-            ) : (
-              <p className="mt-3 text-sm text-amber-200">
-                No single catalog item was selected. Results use the search text
-                as written.
+            <div className="mt-3 space-y-2 text-sm text-slate-300">
+              <p>
+                Catalog item: {resolved.product.display_name} · Product match confidence {Math.round(resolved.confidence * 100)}%
               </p>
-            )}
+              {category.id === "consoles" ? (
+                <p className="text-slate-400">
+                  {resolved.product.variant?.includes("Edition")
+                    ? `Results are narrowed to the ${resolved.product.variant}.`
+                    : `All ${resolved.product.display_name} variants are grouped unless your search names a specific edition.`}
+                </p>
+              ) : null}
+            </div>
           </div>
           <div className="flex flex-col items-start gap-3 sm:items-end">
             <p className="text-sm text-slate-300">Live eBay results · Up to 3 Buy It Now options</p>
@@ -211,25 +246,6 @@ export default async function SearchPage({
         </div>
 
         <PriceContextPanel context={data.price_context} />
-
-        {!resolved && likelyAlternatives.length > 0 ? (
-          <div className="mt-5 rounded-3xl border border-cyan-300/20 bg-cyan-300/10 p-5 text-cyan-50">
-            <p className="font-semibold">
-              Choose an exact catalog variant for stricter filtering:
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {likelyAlternatives.map((match) => (
-                <Link
-                  key={match.product.id}
-                  href={`/search?category=${encodeURIComponent(category.id)}&q=${encodeURIComponent(match.product.display_name)}`}
-                  className="rounded-full border border-cyan-200/25 bg-slate-950/35 px-4 py-2 text-sm font-semibold text-cyan-50 transition hover:bg-slate-950/55"
-                >
-                  {match.product.display_name}
-                </Link>
-              ))}
-            </div>
-          </div>
-        ) : null}
 
         {data.results.length > 0 ? (
           <section

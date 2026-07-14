@@ -15,6 +15,6 @@ Scoutly remains the internal repository and infrastructure name.
 - Seed suite: 88 cases across Cameras, GPUs, RAM, CPUs, Consoles, and LEGO
 - Outcome tracking: Pass, Top-3 only, Fail, No inventory
 - Persistence: PostgreSQL production storage with local JSON fallback
-- Current build: v0.6.15 public beta and sharing update
-- Next milestone: Collect beta feedback and price history, then choose the next buyer-facing feature based on live tester behavior
+- Current build: v0.6.16 catalog guard and price-admin proxy update
+- Next milestone: Validate the price-admin proxy in production, then add KEH/Awin camera inventory in private shadow mode
 

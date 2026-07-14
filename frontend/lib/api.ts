@@ -601,14 +601,23 @@ export async function saveQaEvaluation(
 }
 
 
+function priceAdminProxyUrl(path: "overview" | "collect"): string {
+  // Price admin actions run in the browser. Route them through Vercel so the
+  // browser never needs direct access to Railway or its deployment-only URL.
+  return `/api/admin/prices/${path}`;
+}
+
 export async function getPriceOverview(
   token?: string,
   days = 30,
 ): Promise<PriceOverview> {
   const params = new URLSearchParams({ days: String(days), limit: "1000" });
   if (token) params.set("token", token);
-  const response = await fetch(`${baseUrl}/api/prices/overview?${params.toString()}`, { cache: "no-store" });
-  if (!response.ok) throw new Error("Price overview failed");
+  const response = await fetch(`${priceAdminProxyUrl("overview")}?${params.toString()}`, { cache: "no-store" });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(detail || `Price overview failed (${response.status})`);
+  }
   return response.json();
 }
 
@@ -616,11 +625,14 @@ export async function collectQaPriceBatch(
   token: string,
   options: { limit?: number; category?: string } = {},
 ): Promise<PriceCollectionResponse> {
-  const response = await fetch(`${baseUrl}/api/prices/collect/qa?token=${encodeURIComponent(token)}`, {
+  const response = await fetch(`${priceAdminProxyUrl("collect")}?token=${encodeURIComponent(token)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ limit: options.limit ?? 5, category: options.category ?? null }),
   });
-  if (!response.ok) throw new Error("Price collection failed");
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(detail || `Price collection failed (${response.status})`);
+  }
   return response.json();
 }

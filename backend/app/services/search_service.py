@@ -187,8 +187,18 @@ def _top_combined_auctions(listings: list[Listing], limit: int = 3) -> list[List
     return selected
 
 
-def _structured_product_required_but_missing(category: str | None, product_match: ProductMatch | None) -> bool:
-    return normalize_category(category) in {"ram", "cpus"} and product_match is None
+SUPPORTED_CATALOG_CATEGORIES = {"cameras", "gpus", "ram", "cpus", "consoles", "lego"}
+
+
+def _catalog_product_required_but_missing(category: str | None, product_match: ProductMatch | None) -> bool:
+    """Keep public searches inside PriceSift's tuned product catalog.
+
+    An unresolved query must not fall through to a raw marketplace search. That
+    would make unsupported products look supported while bypassing the exact-item
+    filters that are the point of PriceSift.
+    """
+
+    return normalize_category(category) in SUPPORTED_CATALOG_CATEGORIES and product_match is None
 
 
 def _parse_ebay_dt(value: str | None) -> datetime | None:
@@ -291,7 +301,7 @@ async def search_best_deals(
     category: str | None = None,
 ) -> tuple[ProductMatch | None, list[Listing]]:
     product_match = match_product(query, category)
-    if _structured_product_required_but_missing(category, product_match):
+    if _catalog_product_required_but_missing(category, product_match):
         return None, []
     product = product_match.product if product_match else None
     search_category = product.category if product else category
@@ -326,7 +336,7 @@ async def search_best_deals_with_auctions(
     snapshot_source: str = "search",
 ) -> tuple[ProductMatch | None, list[Listing], list[Listing], SearchDiagnostics, PriceContext]:
     product_match = match_product(query, category)
-    if _structured_product_required_but_missing(category, product_match):
+    if _catalog_product_required_but_missing(category, product_match):
         return None, [], [], SearchDiagnostics(), PriceContext()
     product = product_match.product if product_match else None
     search_category = product.category if product else category
@@ -447,7 +457,7 @@ async def search_auction_deals(
     auction_hours: int = 24,
 ) -> tuple[ProductMatch | None, list[Listing], SearchDiagnostics]:
     product_match = match_product(query, category)
-    if _structured_product_required_but_missing(category, product_match):
+    if _catalog_product_required_but_missing(category, product_match):
         return None, [], SearchDiagnostics()
     product = product_match.product if product_match else None
     search_category = product.category if product else category

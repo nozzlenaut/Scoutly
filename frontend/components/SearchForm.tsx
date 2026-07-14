@@ -339,8 +339,8 @@ export function SearchForm({
             aria-live="polite"
             className="mt-3 text-sm text-slate-300"
           >
-            Pick a catalog item for exact filtering, or search the text as
-            written.
+            Type or pick a supported catalog item. Unsupported text will not be
+            sent to the marketplace.
             {isLoading ? " Checking catalog…" : ""}
             {isNavigating ? " Loading fresh results…" : ""}
           </p>

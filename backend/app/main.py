@@ -24,7 +24,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="Scoutly API", version="0.6.15", lifespan=lifespan)
+app = FastAPI(title="Scoutly API", version="0.6.16", lifespan=lifespan)
 
 # Scoutly does not use cookies or browser credentials yet, so a public API CORS
 # policy is the simplest way to support localhost, Vercel production domains,
