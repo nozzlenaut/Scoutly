@@ -112,9 +112,11 @@ export default async function SearchPage({
           <p className="mt-3 text-sm leading-6 text-slate-300">
             {category.id === "ram"
               ? "Complete the first four RAM builder choices above. PriceSift requires a clear DDR type, form factor, capacity, and stick configuration."
-              : category.id === "consoles"
-                ? "Choose a console brand, family / generation, and core model above. Storage, color, and edition variants are grouped together."
-                : `Type an exact ${category.label.toLowerCase()} item above. PriceSift will not fall back to a default item from an empty URL.`}
+              : category.id === "cpus"
+                ? "Choose a CPU manufacturer, socket, generation, and exact model above. Suffix variants remain separate products."
+                : category.id === "consoles"
+                  ? "Choose a console brand, family / generation, and core model above. Storage, color, and edition variants are grouped together."
+                  : `Type an exact ${category.label.toLowerCase()} item above. PriceSift will not fall back to a default item from an empty URL.`}
           </p>
         </div>
       </PageShell>

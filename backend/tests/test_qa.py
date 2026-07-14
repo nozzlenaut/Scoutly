@@ -22,11 +22,11 @@ def _evaluation_payload() -> dict:
     }
 
 
-def test_qa_case_catalog_has_console_and_lego_cases():
+def test_qa_case_catalog_covers_all_search_categories():
     cases = load_qa_cases()
     categories = {case["category"] for case in cases}
-    assert len(cases) >= 30
-    assert {"consoles", "lego"}.issubset(categories)
+    assert len(cases) >= 80
+    assert {"cameras", "gpus", "ram", "cpus", "consoles", "lego"}.issubset(categories)
     assert all(case.get("expected_product_id") for case in cases)
 
 
@@ -59,6 +59,10 @@ def test_qa_endpoints_require_token_and_save(monkeypatch, tmp_path):
     assert cases.json()["summary"]["total_cases"] >= 30
     assert cases.json()["summary"]["category_counts"]["consoles"]["untested"] == 16
     assert cases.json()["summary"]["category_counts"]["lego"]["untested"] == 20
+    assert cases.json()["summary"]["category_counts"]["cpus"]["untested"] == 16
+    assert cases.json()["summary"]["category_counts"]["ram"]["untested"] == 12
+    assert cases.json()["summary"]["category_counts"]["gpus"]["untested"] == 12
+    assert cases.json()["summary"]["category_counts"]["cameras"]["untested"] == 12
 
     saved = client.post(
         "/api/qa/evaluations",

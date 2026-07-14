@@ -64,7 +64,7 @@ export default async function QaPage({
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">PriceSift admin</p>
           <h1 className="mt-2 text-4xl font-black">Search QA workbench</h1>
           <p className="mt-3 max-w-4xl text-slate-400">
-            Run repeatable console and LEGO searches against the live marketplace, inspect the top three results, and save exactly what worked or failed. Each new evaluation becomes the latest status while preserving the attempt count.
+            Run repeatable searches for every active category against the live marketplace, inspect the top three results, and save exactly what worked or failed. Each new evaluation becomes the latest status while preserving the attempt count.
           </p>
         </div>
 

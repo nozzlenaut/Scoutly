@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.11
+
+- Adds an active CPU builder covering 161 consumer desktop processors across AMD AM4/AM5 and Intel LGA1151/LGA1200/LGA1700/LGA1851.
+- Keeps CPU suffix variants exact while grouping the selection flow by manufacturer, socket, generation, and final model.
+- Filters CPU bundles, accessories, lots, full systems, engineering/qualification samples, damaged chips, and model/suffix conflicts.
+- Adds eBay US Computer Processors category `164`.
+- Expands the QA suite to 88 cases across Cameras, GPUs, RAM, CPUs, Consoles, and LEGO.
+- Makes QA category filters dynamic and preserves existing Console/LEGO case IDs and evaluation history.
+- Adds seven CPU/provider/QA regression tests, bringing the backend suite to 163 passing tests.
+
 ## v0.6.10
 
 - Requires standard Nintendo Switch results to show explicit complete-system language or both Joy-Con and dock evidence.

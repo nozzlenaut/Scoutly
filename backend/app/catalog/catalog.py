@@ -6,6 +6,7 @@ from pathlib import Path
 from app.catalog.normalizer import compact_text, has_term, normalize_text
 from app.models.product import Product, ProductMatch
 from app.catalog.ram import ram_product_match, ram_title_matches_product
+from app.catalog.cpus import cpu_catalog_products, cpu_listing_rejection_reasons, cpu_title_matches_product
 from app.catalog.consoles import console_builder_title_matches_product, parse_console_query
 
 CATALOG_PATH = Path(__file__).resolve().parents[1] / "data" / "product_catalog.json"
@@ -1471,6 +1472,11 @@ CATEGORY_ALIASES = {
     "ram": "ram",
     "memory": "ram",
     "computer-memory": "ram",
+    "cpu": "cpus",
+    "cpus": "cpus",
+    "processor": "cpus",
+    "processors": "cpus",
+    "computer-processors": "cpus",
 }
 
 
@@ -1485,7 +1491,8 @@ def normalize_category(category: str | None) -> str | None:
 def load_products() -> list[Product]:
     with CATALOG_PATH.open("r", encoding="utf-8") as file:
         raw_products = json.load(file)
-    return [Product(**item) for item in raw_products if item.get("active", True)]
+    static_products = [Product(**item) for item in raw_products if item.get("active", True)]
+    return [*static_products, *cpu_catalog_products()]
 
 
 def list_products(category: str | None = None) -> list[Product]:
@@ -1782,6 +1789,9 @@ def listing_matches_product(title: str, product: Product) -> bool:
     if product.category == "ram":
         return ram_title_matches_product(title, product)
 
+    if product.category == "cpus":
+        return cpu_title_matches_product(title, product)
+
     if product.category == "lenses" and _looks_like_lens_accessory(title):
         return False
 
@@ -1812,6 +1822,9 @@ def listing_matches_product(title: str, product: Product) -> bool:
 
 def listing_match_rejection_reasons(title: str, product: Product) -> list[str]:
     """Return a useful QA-facing reason when product matching rejects a title."""
+    if product.category == "cpus":
+        return cpu_listing_rejection_reasons(title, product)
+
     if product.category == "consoles":
         if _looks_like_console_accessory(title, product):
             return ["console accessory/part/incomplete"]

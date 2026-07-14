@@ -29,12 +29,18 @@ Examples:
 - Lenses: mount, focal length, max aperture
 - GPUs: chipset brand, VRAM, memory type, generation
 - Consoles: core model plus grouped storage, color, drive, revision, and bundle variants
+- CPUs: manufacturer, socket, generation/series, tier, and exact model code/suffix
+- RAM: form factor, DDR generation, capacity, stick configuration, speed, and optional brand
 
 ## Current categories
 
 - Cameras: active starter category
 - Lenses: paused in the public UI until eBay lens-part filtering is cleaner
-- GPUs: lab category, still useful for testing the PC-parts path
+- GPUs: active direct exact-model category
+- RAM: active strict specification builder
+- CPUs: active exact-model desktop processor builder
+- Consoles: active grouped core-model builder
+- LEGO: beta exact-set category
 
 ## Example resolutions
 
@@ -48,6 +54,9 @@ Examples:
 | GPUs | `rx6700xt` | AMD RX 6700 XT 12GB |
 | Consoles | `Xbox Series S Carbon Black 1TB` | Xbox Series S |
 | Consoles | `PS5 Slim Digital` | PlayStation 5 Slim |
+| RAM | `DDR5 Desktop 32GB 2x16GB 6000 MT/s` | Generated exact RAM specification |
+| CPUs | `i7-12700KF` | Intel Core i7-12700KF |
+| CPUs | `5800X3D` | AMD Ryzen 7 5800X3D |
 
 ## Why free-text and dropdown both exist
 

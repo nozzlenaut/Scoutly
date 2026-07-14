@@ -50,6 +50,16 @@ export const allCategories: SearchCategory[] = [
     defaultQuery: "",
   },
   {
+    id: "cpus",
+    label: "CPUs",
+    group: "PC Parts",
+    status: "active",
+    description:
+      "Consumer desktop processors selected by manufacturer, socket, generation, and exact model.",
+    placeholder: "Build an exact CPU search",
+    defaultQuery: "",
+  },
+  {
     id: "consoles",
     label: "Consoles",
     group: "Gaming",

@@ -4,6 +4,7 @@ from collections import Counter
 from app.catalog.catalog import match_product, normalize_category
 from app.catalog.normalizer import normalize_text
 from app.catalog.ram import ram_provider_query
+from app.catalog.cpus import cpu_provider_query
 from app.catalog.consoles import console_provider_queries, console_search_products
 from app.models.listing import Listing
 from app.models.product import Product, ProductMatch
@@ -37,6 +38,8 @@ def _provider_queries_for_product(query: str, product: Product | None) -> list[s
         return [ram_provider_query(product)]
     if product.category == "consoles":
         return console_provider_queries(product)
+    if product.category == "cpus":
+        return [cpu_provider_query(product)]
     return [product.display_name]
 
 
@@ -163,7 +166,7 @@ def _top_combined_auctions(listings: list[Listing], limit: int = 3) -> list[List
 
 
 def _structured_product_required_but_missing(category: str | None, product_match: ProductMatch | None) -> bool:
-    return normalize_category(category) == "ram" and product_match is None
+    return normalize_category(category) in {"ram", "cpus"} and product_match is None
 
 
 def _parse_ebay_dt(value: str | None) -> datetime | None:

@@ -30,6 +30,8 @@ EBAY_US_CATEGORY_IDS = {
     "consoles": "139971",
     # Computer Memory (RAM)
     "ram": "170083",
+    # Computer Processors (CPUs)
+    "cpus": "164",
 }
 
 

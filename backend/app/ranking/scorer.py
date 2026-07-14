@@ -93,7 +93,7 @@ def rejection_reasons(listing: Listing, product: Product | None = None) -> list[
     # than trusting the cheapest variation price.
     if (
         product is not None
-        and product.category in {"consoles", "gpus", "ram"}
+        and product.category in {"consoles", "gpus", "ram", "cpus"}
         and (listing.item_group_type or "").upper() == "SELLER_DEFINED_VARIATIONS"
     ):
         reasons.append("seller-defined variation listing")

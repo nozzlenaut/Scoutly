@@ -266,3 +266,9 @@ def test_ebay_item_flags_description_review_language_without_rejecting_listing()
         )
         assert listing is not None
         assert "Seller asks you to review the description" in listing.warning_labels
+
+
+def test_ebay_search_adds_cpu_category_id():
+    provider = _CaptureEbayProvider()
+    asyncio.run(provider.search("Intel Core i7-12700K CPU", category="cpus"))
+    assert provider.last_params["category_ids"] == "164"

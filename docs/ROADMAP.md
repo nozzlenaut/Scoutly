@@ -75,6 +75,14 @@ Show the best used result
 - Expose duplicate-collapsed counts in QA diagnostics
 - Run the final unchanged 16-case Console benchmark before expanding categories
 
+## v0.6.11 - CPU builder and full-category QA
+
+- Add consumer desktop CPUs as an active exact-model category
+- Keep meaningful CPU suffix variants separate while presenting them in one final model picker
+- Filter bundles, accessories, lots, samples, damaged chips, and mobile/server conflicts
+- Expand the QA workbench to Cameras, GPUs, RAM, CPUs, Consoles, and LEGO
+- Preserve existing Console and LEGO evaluation history
+
 ## Later
 
 - Price history

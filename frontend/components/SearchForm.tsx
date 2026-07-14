@@ -5,6 +5,7 @@ import { suggestProducts, type ProductMatch } from "@/lib/api";
 import { getCategory, searchCategories } from "@/lib/categoryCatalog";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SpecSearchBuilder } from "@/components/SpecSearchBuilder";
+import { CpuSearchBuilder } from "@/components/CpuSearchBuilder";
 
 type SearchFormProps = {
   initialCategoryId?: string | null;
@@ -58,7 +59,7 @@ export function SearchForm({
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
-    if (categoryId === "ram") {
+    if (categoryId === "ram" || categoryId === "cpus") {
       requestSequenceRef.current += 1;
       setSuggestions([]);
       setShowSuggestions(false);
@@ -219,6 +220,14 @@ export function SearchForm({
       {selectedCategory.id === "ram" ? (
         <SpecSearchBuilder
           key={`ram-builder:${initialQuery || "new"}`}
+          initialQuery={initialQuery}
+          compact={compact}
+          isNavigating={isNavigating}
+          onSearch={submitSearch}
+        />
+      ) : selectedCategory.id === "cpus" ? (
+        <CpuSearchBuilder
+          key={`cpu-builder:${initialQuery || "new"}`}
           initialQuery={initialQuery}
           compact={compact}
           isNavigating={isNavigating}

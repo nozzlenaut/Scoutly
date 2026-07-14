@@ -322,5 +322,473 @@
     "expected_label": "LEGO Icons Eiffel Tower 10307",
     "goal": "Use the set number to avoid other Eiffel Tower sets and non-LEGO models.",
     "priority": "high"
+  },
+  {
+    "id": "camera-core-sony-a7-iii",
+    "category": "cameras",
+    "query": "Sony A7 III",
+    "expected_product_id": "camera-sony-a7-iii-body",
+    "expected_label": "Sony A7 III Body",
+    "goal": "Return the exact used camera body while rejecting lenses, accessories, parts, broken bodies, and conflicting model generations.",
+    "priority": "medium"
+  },
+  {
+    "id": "camera-core-sony-a7-iv",
+    "category": "cameras",
+    "query": "Sony A7 IV",
+    "expected_product_id": "camera-sony-a7-iv-body",
+    "expected_label": "Sony A7 IV Body",
+    "goal": "Return the exact used camera body while rejecting lenses, accessories, parts, broken bodies, and conflicting model generations.",
+    "priority": "medium"
+  },
+  {
+    "id": "camera-core-canon-r5",
+    "category": "cameras",
+    "query": "Canon EOS R5",
+    "expected_product_id": "camera-canon-eos-r5-body",
+    "expected_label": "Canon EOS R5 Body",
+    "goal": "Return the exact used camera body while rejecting lenses, accessories, parts, broken bodies, and conflicting model generations.",
+    "priority": "medium"
+  },
+  {
+    "id": "camera-core-canon-r6-ii",
+    "category": "cameras",
+    "query": "Canon EOS R6 Mark II",
+    "expected_product_id": "camera-canon-eos-r6-mark-ii-body",
+    "expected_label": "Canon EOS R6 Mark II Body",
+    "goal": "Return the exact used camera body while rejecting lenses, accessories, parts, broken bodies, and conflicting model generations.",
+    "priority": "medium"
+  },
+  {
+    "id": "camera-core-nikon-z6-ii",
+    "category": "cameras",
+    "query": "Nikon Z6 II",
+    "expected_product_id": "camera-nikon-z6-ii-body",
+    "expected_label": "Nikon Z6 II Body",
+    "goal": "Return the exact used camera body while rejecting lenses, accessories, parts, broken bodies, and conflicting model generations.",
+    "priority": "medium"
+  },
+  {
+    "id": "camera-core-nikon-z8",
+    "category": "cameras",
+    "query": "Nikon Z8",
+    "expected_product_id": "camera-nikon-z8-body",
+    "expected_label": "Nikon Z8 Body",
+    "goal": "Return the exact used camera body while rejecting lenses, accessories, parts, broken bodies, and conflicting model generations.",
+    "priority": "medium"
+  },
+  {
+    "id": "camera-core-fuji-x-t5",
+    "category": "cameras",
+    "query": "Fujifilm X-T5",
+    "expected_product_id": "camera-fujifilm-x-t5-body",
+    "expected_label": "Fujifilm X-T5 Body",
+    "goal": "Return the exact used camera body while rejecting lenses, accessories, parts, broken bodies, and conflicting model generations.",
+    "priority": "medium"
+  },
+  {
+    "id": "camera-core-panasonic-s5-ii",
+    "category": "cameras",
+    "query": "Panasonic Lumix S5 II",
+    "expected_product_id": "camera-panasonic-lumix-s5-ii-body",
+    "expected_label": "Panasonic Lumix S5 II Body",
+    "goal": "Return the exact used camera body while rejecting lenses, accessories, parts, broken bodies, and conflicting model generations.",
+    "priority": "medium"
+  },
+  {
+    "id": "camera-core-olympus-e-m1-iii",
+    "category": "cameras",
+    "query": "Olympus OM-D E-M1 Mark III",
+    "expected_product_id": "camera-olympus-e-m1-mark-iii-body",
+    "expected_label": "Olympus E-M1 Mark III Body",
+    "goal": "Return the exact used camera body while rejecting lenses, accessories, parts, broken bodies, and conflicting model generations.",
+    "priority": "medium"
+  },
+  {
+    "id": "camera-core-sony-a6700",
+    "category": "cameras",
+    "query": "Sony A6700",
+    "expected_product_id": "camera-sony-a6700-body",
+    "expected_label": "Sony a6700 Body",
+    "goal": "Return the exact used camera body while rejecting lenses, accessories, parts, broken bodies, and conflicting model generations.",
+    "priority": "medium"
+  },
+  {
+    "id": "camera-core-canon-90d",
+    "category": "cameras",
+    "query": "Canon EOS 90D",
+    "expected_product_id": "camera-canon-eos-90d-body",
+    "expected_label": "Canon EOS 90D Body",
+    "goal": "Return the exact used camera body while rejecting lenses, accessories, parts, broken bodies, and conflicting model generations.",
+    "priority": "medium"
+  },
+  {
+    "id": "camera-core-nikon-d850",
+    "category": "cameras",
+    "query": "Nikon D850",
+    "expected_product_id": "camera-nikon-d850-body",
+    "expected_label": "Nikon D850 Body",
+    "goal": "Return the exact used camera body while rejecting lenses, accessories, parts, broken bodies, and conflicting model generations.",
+    "priority": "medium"
+  },
+  {
+    "id": "gpu-core-rtx-3060-12",
+    "category": "gpus",
+    "query": "RTX 3060 12GB",
+    "expected_product_id": "gpu-nvidia-rtx-3060-12gb",
+    "expected_label": "NVIDIA RTX 3060 12GB",
+    "goal": "Return the exact desktop GPU and VRAM/suffix variant while rejecting coolers, fans, cores, laptops, incompatible variants, and broken cards.",
+    "priority": "medium"
+  },
+  {
+    "id": "gpu-core-rtx-3070-8",
+    "category": "gpus",
+    "query": "RTX 3070 8GB",
+    "expected_product_id": "gpu-nvidia-rtx-3070-8gb",
+    "expected_label": "NVIDIA RTX 3070 8GB",
+    "goal": "Return the exact desktop GPU and VRAM/suffix variant while rejecting coolers, fans, cores, laptops, incompatible variants, and broken cards.",
+    "priority": "medium"
+  },
+  {
+    "id": "gpu-core-rtx-3080-10",
+    "category": "gpus",
+    "query": "RTX 3080 10GB",
+    "expected_product_id": "gpu-nvidia-rtx-3080-10gb",
+    "expected_label": "NVIDIA RTX 3080 10GB",
+    "goal": "Return the exact desktop GPU and VRAM/suffix variant while rejecting coolers, fans, cores, laptops, incompatible variants, and broken cards.",
+    "priority": "medium"
+  },
+  {
+    "id": "gpu-core-rtx-4070-super",
+    "category": "gpus",
+    "query": "RTX 4070 Super 12GB",
+    "expected_product_id": "gpu-nvidia-rtx-4070-super-12gb",
+    "expected_label": "NVIDIA RTX 4070 Super 12GB",
+    "goal": "Return the exact desktop GPU and VRAM/suffix variant while rejecting coolers, fans, cores, laptops, incompatible variants, and broken cards.",
+    "priority": "medium"
+  },
+  {
+    "id": "gpu-core-rtx-4090",
+    "category": "gpus",
+    "query": "RTX 4090 24GB",
+    "expected_product_id": "gpu-nvidia-rtx-4090-24gb",
+    "expected_label": "NVIDIA RTX 4090 24GB",
+    "goal": "Return the exact desktop GPU and VRAM/suffix variant while rejecting coolers, fans, cores, laptops, incompatible variants, and broken cards.",
+    "priority": "medium"
+  },
+  {
+    "id": "gpu-core-rx-6600",
+    "category": "gpus",
+    "query": "RX 6600 8GB",
+    "expected_product_id": "gpu-amd-rx-6600-8gb",
+    "expected_label": "AMD RX 6600 8GB",
+    "goal": "Return the exact desktop GPU and VRAM/suffix variant while rejecting coolers, fans, cores, laptops, incompatible variants, and broken cards.",
+    "priority": "medium"
+  },
+  {
+    "id": "gpu-core-rx-6800-xt",
+    "category": "gpus",
+    "query": "RX 6800 XT 16GB",
+    "expected_product_id": "gpu-amd-rx-6800-xt-16gb",
+    "expected_label": "AMD RX 6800 XT 16GB",
+    "goal": "Return the exact desktop GPU and VRAM/suffix variant while rejecting coolers, fans, cores, laptops, incompatible variants, and broken cards.",
+    "priority": "medium"
+  },
+  {
+    "id": "gpu-core-rx-7900-xtx",
+    "category": "gpus",
+    "query": "RX 7900 XTX 24GB",
+    "expected_product_id": "gpu-amd-rx-7900-xtx-24gb",
+    "expected_label": "AMD RX 7900 XTX 24GB",
+    "goal": "Return the exact desktop GPU and VRAM/suffix variant while rejecting coolers, fans, cores, laptops, incompatible variants, and broken cards.",
+    "priority": "medium"
+  },
+  {
+    "id": "gpu-core-arc-a770",
+    "category": "gpus",
+    "query": "Intel Arc A770 16GB",
+    "expected_product_id": "gpu-intel-arc-a770-16gb",
+    "expected_label": "Intel Arc A770 16GB",
+    "goal": "Return the exact desktop GPU and VRAM/suffix variant while rejecting coolers, fans, cores, laptops, incompatible variants, and broken cards.",
+    "priority": "medium"
+  },
+  {
+    "id": "gpu-core-gtx-1660-super",
+    "category": "gpus",
+    "query": "GTX 1660 Super 6GB",
+    "expected_product_id": "gpu-nvidia-gtx-1660-super-6gb",
+    "expected_label": "NVIDIA GTX 1660 Super 6GB",
+    "goal": "Return the exact desktop GPU and VRAM/suffix variant while rejecting coolers, fans, cores, laptops, incompatible variants, and broken cards.",
+    "priority": "medium"
+  },
+  {
+    "id": "gpu-core-rtx-a4000",
+    "category": "gpus",
+    "query": "RTX A4000 16GB",
+    "expected_product_id": "gpu-nvidia-rtx-a4000-16gb",
+    "expected_label": "NVIDIA RTX A4000 16GB",
+    "goal": "Return the exact desktop GPU and VRAM/suffix variant while rejecting coolers, fans, cores, laptops, incompatible variants, and broken cards.",
+    "priority": "medium"
+  },
+  {
+    "id": "gpu-core-tesla-p40",
+    "category": "gpus",
+    "query": "Tesla P40 24GB",
+    "expected_product_id": "gpu-nvidia-tesla-p40-24gb",
+    "expected_label": "NVIDIA Tesla P40 24GB",
+    "goal": "Return the exact desktop GPU and VRAM/suffix variant while rejecting coolers, fans, cores, laptops, incompatible variants, and broken cards.",
+    "priority": "medium"
+  },
+  {
+    "id": "ram-core-ddr3-desktop-16-2x8",
+    "category": "ram",
+    "query": "DDR3 Desktop 16GB 2x8GB 1600 MT/s",
+    "expected_product_id": "ram-desktop-ddr3-16gb-2x8gb-1600",
+    "expected_label": "DDR3 Desktop 16GB 2x8GB 1600 MT/s",
+    "goal": "Require the selected DDR generation, desktop/laptop form factor, total capacity, stick configuration, and any selected speed or brand.",
+    "priority": "medium"
+  },
+  {
+    "id": "ram-core-ddr3-laptop-16-2x8",
+    "category": "ram",
+    "query": "DDR3 Laptop 16GB 2x8GB 1600 MT/s",
+    "expected_product_id": "ram-laptop-ddr3-16gb-2x8gb-1600",
+    "expected_label": "DDR3 Laptop 16GB 2x8GB 1600 MT/s",
+    "goal": "Require the selected DDR generation, desktop/laptop form factor, total capacity, stick configuration, and any selected speed or brand.",
+    "priority": "medium"
+  },
+  {
+    "id": "ram-core-ddr4-desktop-16-2x8",
+    "category": "ram",
+    "query": "DDR4 Desktop 16GB 2x8GB 3200 MT/s",
+    "expected_product_id": "ram-desktop-ddr4-16gb-2x8gb-3200",
+    "expected_label": "DDR4 Desktop 16GB 2x8GB 3200 MT/s",
+    "goal": "Require the selected DDR generation, desktop/laptop form factor, total capacity, stick configuration, and any selected speed or brand.",
+    "priority": "medium"
+  },
+  {
+    "id": "ram-core-ddr4-desktop-32-2x16",
+    "category": "ram",
+    "query": "DDR4 Desktop 32GB 2x16GB 3200 MT/s",
+    "expected_product_id": "ram-desktop-ddr4-32gb-2x16gb-3200",
+    "expected_label": "DDR4 Desktop 32GB 2x16GB 3200 MT/s",
+    "goal": "Require the selected DDR generation, desktop/laptop form factor, total capacity, stick configuration, and any selected speed or brand.",
+    "priority": "medium"
+  },
+  {
+    "id": "ram-core-ddr4-desktop-64-2x32",
+    "category": "ram",
+    "query": "DDR4 Desktop 64GB 2x32GB 3200 MT/s",
+    "expected_product_id": "ram-desktop-ddr4-64gb-2x32gb-3200",
+    "expected_label": "DDR4 Desktop 64GB 2x32GB 3200 MT/s",
+    "goal": "Require the selected DDR generation, desktop/laptop form factor, total capacity, stick configuration, and any selected speed or brand.",
+    "priority": "medium"
+  },
+  {
+    "id": "ram-core-ddr4-laptop-16-2x8",
+    "category": "ram",
+    "query": "DDR4 Laptop 16GB 2x8GB 3200 MT/s",
+    "expected_product_id": "ram-laptop-ddr4-16gb-2x8gb-3200",
+    "expected_label": "DDR4 Laptop 16GB 2x8GB 3200 MT/s",
+    "goal": "Require the selected DDR generation, desktop/laptop form factor, total capacity, stick configuration, and any selected speed or brand.",
+    "priority": "medium"
+  },
+  {
+    "id": "ram-core-ddr4-laptop-32-2x16",
+    "category": "ram",
+    "query": "DDR4 Laptop 32GB 2x16GB 3200 MT/s",
+    "expected_product_id": "ram-laptop-ddr4-32gb-2x16gb-3200",
+    "expected_label": "DDR4 Laptop 32GB 2x16GB 3200 MT/s",
+    "goal": "Require the selected DDR generation, desktop/laptop form factor, total capacity, stick configuration, and any selected speed or brand.",
+    "priority": "medium"
+  },
+  {
+    "id": "ram-core-ddr5-desktop-32-2x16",
+    "category": "ram",
+    "query": "DDR5 Desktop 32GB 2x16GB 6000 MT/s",
+    "expected_product_id": "ram-desktop-ddr5-32gb-2x16gb-6000",
+    "expected_label": "DDR5 Desktop 32GB 2x16GB 6000 MT/s",
+    "goal": "Require the selected DDR generation, desktop/laptop form factor, total capacity, stick configuration, and any selected speed or brand.",
+    "priority": "medium"
+  },
+  {
+    "id": "ram-core-ddr5-desktop-64-2x32",
+    "category": "ram",
+    "query": "DDR5 Desktop 64GB 2x32GB 6000 MT/s",
+    "expected_product_id": "ram-desktop-ddr5-64gb-2x32gb-6000",
+    "expected_label": "DDR5 Desktop 64GB 2x32GB 6000 MT/s",
+    "goal": "Require the selected DDR generation, desktop/laptop form factor, total capacity, stick configuration, and any selected speed or brand.",
+    "priority": "medium"
+  },
+  {
+    "id": "ram-core-ddr5-laptop-32-2x16",
+    "category": "ram",
+    "query": "DDR5 Laptop 32GB 2x16GB 5600 MT/s",
+    "expected_product_id": "ram-laptop-ddr5-32gb-2x16gb-5600",
+    "expected_label": "DDR5 Laptop 32GB 2x16GB 5600 MT/s",
+    "goal": "Require the selected DDR generation, desktop/laptop form factor, total capacity, stick configuration, and any selected speed or brand.",
+    "priority": "medium"
+  },
+  {
+    "id": "ram-core-ddr5-corsair",
+    "category": "ram",
+    "query": "DDR5 Desktop 32GB 2x16GB 6000 MT/s Corsair",
+    "expected_product_id": "ram-desktop-ddr5-32gb-2x16gb-6000-corsair",
+    "expected_label": "Corsair DDR5 Desktop 32GB 2x16GB 6000 MT/s",
+    "goal": "Require the selected DDR generation, desktop/laptop form factor, total capacity, stick configuration, and any selected speed or brand.",
+    "priority": "medium"
+  },
+  {
+    "id": "ram-core-ddr4-crucial",
+    "category": "ram",
+    "query": "DDR4 Laptop 32GB 2x16GB 3200 MT/s Crucial",
+    "expected_product_id": "ram-laptop-ddr4-32gb-2x16gb-3200-crucial",
+    "expected_label": "Crucial DDR4 Laptop 32GB 2x16GB 3200 MT/s",
+    "goal": "Require the selected DDR generation, desktop/laptop form factor, total capacity, stick configuration, and any selected speed or brand.",
+    "priority": "medium"
+  },
+  {
+    "id": "cpu-core-5800x3d",
+    "category": "cpus",
+    "query": "AMD Ryzen 7 5800X3D",
+    "expected_product_id": "cpu-amd-ryzen-7-5800x3d",
+    "expected_label": "AMD Ryzen 7 5800X3D",
+    "goal": "Return the exact desktop CPU suffix variant while accepting tray/OEM or boxed chips and rejecting bundles, coolers, lots, mobile/server chips, samples, and damaged processors.",
+    "priority": "high"
+  },
+  {
+    "id": "cpu-core-5700x",
+    "category": "cpus",
+    "query": "AMD Ryzen 7 5700X",
+    "expected_product_id": "cpu-amd-ryzen-7-5700x",
+    "expected_label": "AMD Ryzen 7 5700X",
+    "goal": "Return the exact desktop CPU suffix variant while accepting tray/OEM or boxed chips and rejecting bundles, coolers, lots, mobile/server chips, samples, and damaged processors.",
+    "priority": "medium"
+  },
+  {
+    "id": "cpu-core-5600g",
+    "category": "cpus",
+    "query": "AMD Ryzen 5 5600G",
+    "expected_product_id": "cpu-amd-ryzen-5-5600g",
+    "expected_label": "AMD Ryzen 5 5600G",
+    "goal": "Return the exact desktop CPU suffix variant while accepting tray/OEM or boxed chips and rejecting bundles, coolers, lots, mobile/server chips, samples, and damaged processors.",
+    "priority": "medium"
+  },
+  {
+    "id": "cpu-core-7800x3d",
+    "category": "cpus",
+    "query": "AMD Ryzen 7 7800X3D",
+    "expected_product_id": "cpu-amd-ryzen-7-7800x3d",
+    "expected_label": "AMD Ryzen 7 7800X3D",
+    "goal": "Return the exact desktop CPU suffix variant while accepting tray/OEM or boxed chips and rejecting bundles, coolers, lots, mobile/server chips, samples, and damaged processors.",
+    "priority": "high"
+  },
+  {
+    "id": "cpu-core-7950x3d",
+    "category": "cpus",
+    "query": "AMD Ryzen 9 7950X3D",
+    "expected_product_id": "cpu-amd-ryzen-9-7950x3d",
+    "expected_label": "AMD Ryzen 9 7950X3D",
+    "goal": "Return the exact desktop CPU suffix variant while accepting tray/OEM or boxed chips and rejecting bundles, coolers, lots, mobile/server chips, samples, and damaged processors.",
+    "priority": "medium"
+  },
+  {
+    "id": "cpu-core-9800x3d",
+    "category": "cpus",
+    "query": "AMD Ryzen 7 9800X3D",
+    "expected_product_id": "cpu-amd-ryzen-7-9800x3d",
+    "expected_label": "AMD Ryzen 7 9800X3D",
+    "goal": "Return the exact desktop CPU suffix variant while accepting tray/OEM or boxed chips and rejecting bundles, coolers, lots, mobile/server chips, samples, and damaged processors.",
+    "priority": "medium"
+  },
+  {
+    "id": "cpu-core-i7-8700k",
+    "category": "cpus",
+    "query": "Intel Core i7-8700K",
+    "expected_product_id": "cpu-intel-core-i7-8700k",
+    "expected_label": "Intel Core i7 8700K",
+    "goal": "Return the exact desktop CPU suffix variant while accepting tray/OEM or boxed chips and rejecting bundles, coolers, lots, mobile/server chips, samples, and damaged processors.",
+    "priority": "medium"
+  },
+  {
+    "id": "cpu-core-i9-9900k",
+    "category": "cpus",
+    "query": "Intel Core i9-9900K",
+    "expected_product_id": "cpu-intel-core-i9-9900k",
+    "expected_label": "Intel Core i9 9900K",
+    "goal": "Return the exact desktop CPU suffix variant while accepting tray/OEM or boxed chips and rejecting bundles, coolers, lots, mobile/server chips, samples, and damaged processors.",
+    "priority": "medium"
+  },
+  {
+    "id": "cpu-core-i5-10400f",
+    "category": "cpus",
+    "query": "Intel Core i5-10400F",
+    "expected_product_id": "cpu-intel-core-i5-10400f",
+    "expected_label": "Intel Core i5 10400F",
+    "goal": "Return the exact desktop CPU suffix variant while accepting tray/OEM or boxed chips and rejecting bundles, coolers, lots, mobile/server chips, samples, and damaged processors.",
+    "priority": "medium"
+  },
+  {
+    "id": "cpu-core-i7-12700k",
+    "category": "cpus",
+    "query": "Intel Core i7-12700K",
+    "expected_product_id": "cpu-intel-core-i7-12700k",
+    "expected_label": "Intel Core i7 12700K",
+    "goal": "Return the exact desktop CPU suffix variant while accepting tray/OEM or boxed chips and rejecting bundles, coolers, lots, mobile/server chips, samples, and damaged processors.",
+    "priority": "high"
+  },
+  {
+    "id": "cpu-core-i7-12700kf",
+    "category": "cpus",
+    "query": "Intel Core i7-12700KF",
+    "expected_product_id": "cpu-intel-core-i7-12700kf",
+    "expected_label": "Intel Core i7 12700KF",
+    "goal": "Return the exact desktop CPU suffix variant while accepting tray/OEM or boxed chips and rejecting bundles, coolers, lots, mobile/server chips, samples, and damaged processors.",
+    "priority": "high"
+  },
+  {
+    "id": "cpu-core-i5-13600k",
+    "category": "cpus",
+    "query": "Intel Core i5-13600K",
+    "expected_product_id": "cpu-intel-core-i5-13600k",
+    "expected_label": "Intel Core i5 13600K",
+    "goal": "Return the exact desktop CPU suffix variant while accepting tray/OEM or boxed chips and rejecting bundles, coolers, lots, mobile/server chips, samples, and damaged processors.",
+    "priority": "medium"
+  },
+  {
+    "id": "cpu-core-i7-14700k",
+    "category": "cpus",
+    "query": "Intel Core i7-14700K",
+    "expected_product_id": "cpu-intel-core-i7-14700k",
+    "expected_label": "Intel Core i7 14700K",
+    "goal": "Return the exact desktop CPU suffix variant while accepting tray/OEM or boxed chips and rejecting bundles, coolers, lots, mobile/server chips, samples, and damaged processors.",
+    "priority": "medium"
+  },
+  {
+    "id": "cpu-core-i9-14900ks",
+    "category": "cpus",
+    "query": "Intel Core i9-14900KS",
+    "expected_product_id": "cpu-intel-core-i9-14900ks",
+    "expected_label": "Intel Core i9 14900KS",
+    "goal": "Return the exact desktop CPU suffix variant while accepting tray/OEM or boxed chips and rejecting bundles, coolers, lots, mobile/server chips, samples, and damaged processors.",
+    "priority": "medium"
+  },
+  {
+    "id": "cpu-core-ultra-7-265k",
+    "category": "cpus",
+    "query": "Intel Core Ultra 7 265K",
+    "expected_product_id": "cpu-intel-core-ultra-7-265k",
+    "expected_label": "Intel Core Ultra 7 265K",
+    "goal": "Return the exact desktop CPU suffix variant while accepting tray/OEM or boxed chips and rejecting bundles, coolers, lots, mobile/server chips, samples, and damaged processors.",
+    "priority": "high"
+  },
+  {
+    "id": "cpu-core-ultra-9-285k",
+    "category": "cpus",
+    "query": "Intel Core Ultra 9 285K",
+    "expected_product_id": "cpu-intel-core-ultra-9-285k",
+    "expected_label": "Intel Core Ultra 9 285K",
+    "goal": "Return the exact desktop CPU suffix variant while accepting tray/OEM or boxed chips and rejecting bundles, coolers, lots, mobile/server chips, samples, and damaged processors.",
+    "priority": "medium"
   }
 ]

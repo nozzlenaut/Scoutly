@@ -454,6 +454,7 @@ const ebayCategoryIds: Record<string, string> = {
   lego: "19006",
   consoles: "139971",
   ram: "170083",
+  cpus: "164",
 };
 
 export function buildEbaySearchUrl(query: string, category?: string): string {

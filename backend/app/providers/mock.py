@@ -113,6 +113,33 @@ def _lego_results(provider_name: str, query: str) -> list[Listing]:
     ]
 
 
+
+def _cpu_results(provider_name: str, query: str) -> list[Listing]:
+    return [
+        Listing(
+            provider=provider_name,
+            title=f"{query} Tested Working CPU Processor Only",
+            price=189.99,
+            shipping=0,
+            total_price=189.99,
+            condition="Used",
+            seller_rating=99.2,
+            url="https://www.ebay.com/itm/555555555501",
+            image_url=None,
+        ),
+        Listing(
+            provider=provider_name,
+            title=f"{query} Motherboard Bundle",
+            price=239.99,
+            shipping=12.99,
+            total_price=252.98,
+            condition="Used",
+            seller_rating=98.0,
+            url="https://www.ebay.com/itm/555555555502",
+            image_url=None,
+        ),
+    ]
+
 def _gpu_results(provider_name: str) -> list[Listing]:
     return [
         Listing(
@@ -166,6 +193,8 @@ class MockEbayProvider(MarketplaceProvider):
             ]
         if category == "lego" or "lego" in lower:
             return _lego_results(self.name, query)
+        if category == "cpus":
+            return _cpu_results(self.name, query)
         if any(term in lower for term in ["sony", "canon", "nikon", "fujifilm", "fuji", "a7", "eos", "z6", "x-t4", "x100v"]):
             if any(term in lower for term in ["24-70", "70-200", "35mm", "50mm", "lens", "fe ", "rf ", "xf "]):
                 return _lens_results(self.name, query)

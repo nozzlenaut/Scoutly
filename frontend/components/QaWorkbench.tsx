@@ -17,7 +17,7 @@ type Props = {
   token: string;
 };
 
-type Filter = "all" | "consoles" | "lego" | "untested" | "review";
+type Filter = string;
 
 const outcomeLabels: Record<QaOutcome, { label: string; detail: string; className: string }> = {
   pass: {
@@ -45,6 +45,9 @@ const outcomeLabels: Record<QaOutcome, { label: string; detail: string; classNam
 const issueOptions = [
   ["wrong_product_resolution", "Wrong product resolution"],
   ["wrong_model", "Wrong model / version"],
+  ["wrong_cpu_suffix", "Wrong CPU suffix / SKU"],
+  ["wrong_ram_spec", "Wrong RAM specification"],
+  ["bundle_or_lot", "Bundle or multi-item lot"],
   ["accessory_or_part", "Accessory or replacement part"],
   ["incomplete_or_broken", "Incomplete or broken"],
   ["wrong_set", "Wrong LEGO set"],
@@ -131,12 +134,19 @@ export function QaWorkbench({ initialCases, initialSummary, token }: Props) {
   const [issueTags, setIssueTags] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
 
+  const categoryFilters = useMemo(
+    () => Array.from(new Set(cases.map((testCase) => testCase.category))).sort(),
+    [cases],
+  );
+
   const filteredCases = useMemo(() => {
     return cases.filter((testCase) => {
       if (filter === "all") return true;
-      if (filter === "consoles" || filter === "lego") return testCase.category === filter;
       if (filter === "untested") return !testCase.latest_evaluation;
-      return testCase.latest_evaluation?.outcome === "fail" || testCase.latest_evaluation?.outcome === "top3_only";
+      if (filter === "review") {
+        return testCase.latest_evaluation?.outcome === "fail" || testCase.latest_evaluation?.outcome === "top3_only";
+      }
+      return testCase.category === filter;
     });
   }, [cases, filter]);
 
@@ -260,13 +270,12 @@ export function QaWorkbench({ initialCases, initialSummary, token }: Props) {
       </section>
 
       <div className="mt-8 flex flex-wrap gap-2">
-        {([
+        {[
           ["all", "All"],
-          ["consoles", "Consoles"],
-          ["lego", "LEGO"],
+          ...categoryFilters.map((category) => [category, category === "lego" ? "LEGO" : category === "cpus" ? "CPUs" : category === "gpus" ? "GPUs" : category === "ram" ? "RAM" : category.charAt(0).toUpperCase() + category.slice(1)]),
           ["untested", "Untested"],
           ["review", "Needs review"],
-        ] as const).map(([value, label]) => (
+        ].map(([value, label]) => (
           <button
             key={value}
             type="button"
