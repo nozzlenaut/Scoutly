@@ -11,7 +11,7 @@ export default function HomePage() {
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,_#164e63,_#050816_45%)] px-6 py-10">
       <section className="mx-auto flex min-h-[80vh] max-w-5xl flex-col items-center justify-center text-center">
         <div className="mb-5 rounded-full border border-emerald-300/30 bg-emerald-300/10 px-4 py-2 text-sm font-medium text-emerald-100">
-          Now testing the RAM specification builder
+          Guided builders for RAM and Consoles
         </div>
         <h1 className="text-5xl font-black tracking-tight text-white sm:text-7xl">
           PriceSift

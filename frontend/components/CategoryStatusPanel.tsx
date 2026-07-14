@@ -10,13 +10,24 @@ export function CategoryStatusPanel() {
             Category status
           </p>
           <p className="mt-1 text-sm text-slate-300">
-            Cameras, GPUs, and Consoles are active. RAM is a new
-            specification-builder lab, LEGO remains an exact set-number lab, and
-            Lenses are paused until results are clean enough to trust.
+            Cameras, Consoles, GPUs, and RAM are active. LEGO is in Beta,
+            and Lenses are paused until results are clean enough to trust.
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs text-slate-400">
-          {allCategories.map((category) => (
+          {[...allCategories]
+            .sort((a, b) =>
+              a.status === b.status
+                ? a.label.localeCompare(b.label)
+                : a.status === "active"
+                  ? -1
+                  : b.status === "active"
+                    ? 1
+                    : a.status === "beta"
+                      ? -1
+                      : 1,
+            )
+            .map((category) => (
             <span
               key={category.id}
               className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/40 px-3 py-1"

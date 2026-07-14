@@ -2,16 +2,15 @@
 
 import { useMemo, useState } from "react";
 import {
-  buildRamQuery,
-  parseRamQuery,
-  ramBrands,
-  ramCapacityOptions,
-  ramConfigurationOptions,
-  ramFormFactors,
-  ramGenerations,
-  ramSelectionIsComplete,
-  ramSpeedOptions,
-  type RamBuilderSelection,
+  buildConsoleQuery,
+  consoleBrands,
+  consoleEditionOptions,
+  consoleFamilyOptions,
+  consoleModelOptions,
+  consoleSelectionIsSearchable,
+  consoleStorageOptions,
+  parseConsoleQuery,
+  type ConsoleBuilderSelection,
   type SpecOption,
 } from "@/lib/specBuilders";
 
@@ -22,7 +21,7 @@ type Props = {
   onSearch: (query: string) => void;
 };
 
-type FieldProps = {
+type ChoiceFieldProps = {
   label: string;
   step: number;
   value: string;
@@ -38,7 +37,7 @@ function ChoiceField({
   options,
   disabled = false,
   onChange,
-}: FieldProps) {
+}: ChoiceFieldProps) {
   return (
     <fieldset disabled={disabled} className="min-w-0">
       <legend className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.17em] text-slate-300">
@@ -71,51 +70,51 @@ function ChoiceField({
   );
 }
 
-export function SpecSearchBuilder({
+export function ConsoleSearchBuilder({
   initialQuery,
   compact = false,
   isNavigating = false,
   onSearch,
 }: Props) {
-  const [selection, setSelection] = useState<RamBuilderSelection>(() =>
-    parseRamQuery(initialQuery),
+  const [selection, setSelection] = useState<ConsoleBuilderSelection>(() =>
+    parseConsoleQuery(initialQuery),
   );
+  const families = useMemo(() => consoleFamilyOptions(selection), [selection]);
+  const models = useMemo(() => consoleModelOptions(selection), [selection]);
+  const storage = useMemo(() => consoleStorageOptions(selection), [selection]);
+  const editions = useMemo(() => consoleEditionOptions(selection), [selection]);
+  const query = buildConsoleQuery(selection);
 
-  const capacities = useMemo(() => ramCapacityOptions(selection), [selection]);
-  const configurations = useMemo(
-    () => ramConfigurationOptions(selection),
-    [selection],
-  );
-  const speeds = useMemo(() => ramSpeedOptions(selection), [selection]);
-  const query = buildRamQuery(selection);
+  function searchNext(next: ConsoleBuilderSelection) {
+    setSelection(next);
+    const nextQuery = buildConsoleQuery(next);
+    if (nextQuery) onSearch(nextQuery);
+  }
 
-  function changeFormFactor(value: string) {
+  function changeBrand(value: string) {
     setSelection({
-      formFactor: value as RamBuilderSelection["formFactor"],
-      generation: "",
-      totalCapacity: "",
-      configuration: "",
-      speed: "",
-      brand: "",
+      brand: value as ConsoleBuilderSelection["brand"],
+      family: "",
+      model: "",
+      storage: "",
+      edition: "",
     });
   }
 
-  function changeGeneration(value: string) {
-    setSelection((current) => ({
-      ...current,
-      generation: value as RamBuilderSelection["generation"],
-      totalCapacity: "",
-      configuration: "",
-      speed: "",
-    }));
+  function changeFamily(value: string) {
+    searchNext({ ...selection, family: value, model: "", storage: "", edition: "" });
   }
 
-  function changeCapacity(value: string) {
-    setSelection((current) => ({
-      ...current,
-      totalCapacity: value,
-      configuration: "",
-    }));
+  function changeModel(value: string) {
+    searchNext({ ...selection, model: value, storage: "", edition: "" });
+  }
+
+  function changeStorage(value: string) {
+    searchNext({ ...selection, storage: value });
+  }
+
+  function changeEdition(value: string) {
+    searchNext({ ...selection, edition: value });
   }
 
   return (
@@ -123,87 +122,71 @@ export function SpecSearchBuilder({
       <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.22em] text-cyan-200">
-            Build your RAM search
+            Build your console search
           </p>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
-            Required choices use strict matching. PriceSift rejects unclear
-            stick counts, conflicting DDR types, laptop/desktop mismatches,
-            ECC/server RAM, and seller variation listings.
+            Pick a brand and console family to see results. Model, storage, and
+            edition are optional refinements—leave them open when the cheapest
+            complete console matters more than a specific version.
           </p>
         </div>
         <span className="w-fit rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1 text-xs font-semibold text-emerald-100">
-          RAM Active
+          Consoles Active
         </span>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
         <ChoiceField
-          label="Desktop or laptop"
+          label="Brand"
           step={1}
-          value={selection.formFactor}
-          options={ramFormFactors}
-          onChange={changeFormFactor}
+          value={selection.brand}
+          options={consoleBrands}
+          onChange={changeBrand}
         />
         <ChoiceField
-          label="DDR generation"
+          label="Family / generation"
           step={2}
-          value={selection.generation}
-          options={ramGenerations}
-          disabled={!selection.formFactor}
-          onChange={changeGeneration}
-        />
-        <ChoiceField
-          label="Total capacity"
-          step={3}
-          value={selection.totalCapacity}
-          options={capacities}
-          disabled={!selection.generation}
-          onChange={changeCapacity}
-        />
-        <ChoiceField
-          label="Stick configuration"
-          step={4}
-          value={selection.configuration}
-          options={configurations}
-          disabled={!selection.totalCapacity}
-          onChange={(value) =>
-            setSelection((current) => ({ ...current, configuration: value }))
-          }
+          value={selection.family}
+          options={families}
+          disabled={!selection.brand || isNavigating}
+          onChange={changeFamily}
         />
       </div>
 
-      {selection.generation === "ddr3" ? (
-        <div className="mt-5 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-sm leading-6 text-amber-100">
-          DDR3L listings may appear because sellers often group DDR3 and DDR3L.
-          PriceSift labels DDR3L results—verify voltage compatibility with your
-          system before buying.
-        </div>
-      ) : null}
-
-      {selection.configuration ? (
+      {selection.family ? (
         <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/35 p-4">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
-            Optional refinements
+            Optional refinements · results update after each choice
           </p>
           <div className="grid gap-5 lg:grid-cols-2">
             <ChoiceField
-              label="Speed"
-              step={5}
-              value={selection.speed}
-              options={speeds}
-              onChange={(value) =>
-                setSelection((current) => ({ ...current, speed: value }))
-              }
+              label="Model"
+              step={3}
+              value={selection.model}
+              options={models}
+              disabled={isNavigating}
+              onChange={changeModel}
             />
-            <ChoiceField
-              label="Brand"
-              step={6}
-              value={selection.brand}
-              options={ramBrands}
-              onChange={(value) =>
-                setSelection((current) => ({ ...current, brand: value }))
-              }
-            />
+            {storage.length > 0 ? (
+              <ChoiceField
+                label="Storage"
+                step={4}
+                value={selection.storage}
+                options={storage}
+                disabled={isNavigating}
+                onChange={changeStorage}
+              />
+            ) : null}
+            {editions.length > 0 ? (
+              <ChoiceField
+                label="Edition / drive"
+                step={5}
+                value={selection.edition}
+                options={editions}
+                disabled={isNavigating}
+                onChange={changeEdition}
+              />
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -214,24 +197,22 @@ export function SpecSearchBuilder({
             Structured search
           </p>
           <p className="mt-1 font-semibold text-white">
-            {query || "Complete the first four choices"}
+            {query || "Choose a brand, then a family / generation"}
           </p>
         </div>
         <button
           type="button"
-          disabled={
-            !ramSelectionIsComplete(selection) || isNavigating || !query
-          }
+          disabled={!consoleSelectionIsSearchable(selection) || isNavigating || !query}
           onClick={() => query && onSearch(query)}
           className="flex min-h-12 items-center justify-center gap-3 rounded-2xl bg-cyan-300 px-6 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isNavigating ? (
             <>
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950" />
-              Searching…
+              Updating…
             </>
           ) : (
-            "Search RAM"
+            "Refresh console results"
           )}
         </button>
       </div>

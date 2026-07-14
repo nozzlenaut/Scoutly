@@ -154,6 +154,9 @@ def _listing_warning_labels(title: str) -> list[str]:
     ]
     if any(clue in normalized_title for clue in bundle_clues):
         warnings.append("Bundle / extras included")
+    compact_title = re.sub(r"[^a-z0-9]+", "", normalized_title)
+    if "ddr3l" in compact_title or "pc3l" in compact_title:
+        warnings.append("DDR3L — verify voltage compatibility")
     shutter_matches = re.findall(r"(?i)(?:shutter\s*(?:count|actuations?)?\s*[:#-]?\s*|)(\d{1,3}(?:,\d{3})+|\d{5,6})\s*(?:shutter|clicks?|actuations?|shots?)", title)
     for raw_count in shutter_matches:
         try:

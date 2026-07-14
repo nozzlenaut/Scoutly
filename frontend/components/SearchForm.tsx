@@ -5,6 +5,7 @@ import { suggestProducts, type ProductMatch } from "@/lib/api";
 import { getCategory, searchCategories } from "@/lib/categoryCatalog";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SpecSearchBuilder } from "@/components/SpecSearchBuilder";
+import { ConsoleSearchBuilder } from "@/components/ConsoleSearchBuilder";
 
 type SearchFormProps = {
   initialCategoryId?: string | null;
@@ -26,7 +27,7 @@ export function SearchForm({
   const selectedCategory = getCategory(categoryId);
   const [query, setQuery] = useState(
     initialQuery === undefined || initialQuery === null
-      ? initialCategory.defaultQuery
+      ? ""
       : initialQuery.trim(),
   );
   const [suggestions, setSuggestions] = useState<ProductMatch[]>([]);
@@ -49,16 +50,16 @@ export function SearchForm({
       return;
     }
 
-    setQuery(selectedCategory.defaultQuery);
+    setQuery("");
     setSuggestions([]);
     setShowSuggestions(false);
     setActiveSuggestionIndex(-1);
-  }, [selectedCategory.defaultQuery]);
+  }, [categoryId]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
-    if (categoryId === "ram") {
+    if (categoryId === "ram" || categoryId === "consoles") {
       requestSequenceRef.current += 1;
       setSuggestions([]);
       setShowSuggestions(false);
@@ -219,6 +220,14 @@ export function SearchForm({
       {selectedCategory.id === "ram" ? (
         <SpecSearchBuilder
           key={`ram-builder:${initialQuery || "new"}`}
+          initialQuery={initialQuery}
+          compact={compact}
+          isNavigating={isNavigating}
+          onSearch={submitSearch}
+        />
+      ) : selectedCategory.id === "consoles" ? (
+        <ConsoleSearchBuilder
+          key={`console-builder:${initialQuery || "new"}`}
           initialQuery={initialQuery}
           compact={compact}
           isNavigating={isNavigating}

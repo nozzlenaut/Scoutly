@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 from app.catalog.catalog import match_product, normalize_category
 from app.catalog.ram import ram_provider_query
+from app.catalog.consoles import console_provider_query
 from app.models.listing import Listing
 from app.models.product import Product, ProductMatch
 from app.models.search import SearchDiagnostics
@@ -141,6 +142,8 @@ async def search_best_deals(
     provider_query = (
         ram_provider_query(product_match.product)
         if product_match and product_match.product.category == "ram"
+        else console_provider_query(product_match.product)
+        if product_match and product_match.product.metadata.get("builder") == "consoles"
         else product_match.product.display_name if product_match else query
     )
     product = product_match.product if product_match else None
@@ -175,6 +178,8 @@ async def search_best_deals_with_auctions(
     provider_query = (
         ram_provider_query(product_match.product)
         if product_match and product_match.product.category == "ram"
+        else console_provider_query(product_match.product)
+        if product_match and product_match.product.metadata.get("builder") == "consoles"
         else product_match.product.display_name if product_match else query
     )
     product = product_match.product if product_match else None
@@ -230,6 +235,8 @@ async def search_auction_deals(
     provider_query = (
         ram_provider_query(product_match.product)
         if product_match and product_match.product.category == "ram"
+        else console_provider_query(product_match.product)
+        if product_match and product_match.product.metadata.get("builder") == "consoles"
         else product_match.product.display_name if product_match else query
     )
     product = product_match.product if product_match else None

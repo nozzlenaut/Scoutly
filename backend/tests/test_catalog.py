@@ -392,10 +392,14 @@ def test_rejects_gpu_problem_notes_but_allows_no_problems():
     ) is True
 
 
-def test_resolves_console_catalog_entries():
-    assert match_product("PS5 Disc", category="consoles").product.id == "console-playstation-5-disc-edition"
+def test_resolves_console_catalog_entries_and_family_scopes():
+    ps5_disc = match_product("PS5 Disc", category="consoles")
+    assert ps5_disc is not None
+    assert ps5_disc.product.metadata["builder"] == "consoles"
+    assert ps5_disc.product.metadata["edition"] == "disc"
     assert match_product("Xbox Series X", category="consoles").product.id == "console-xbox-series-x-1tb"
     assert match_product("Switch OLED", category="consoles").product.id == "console-nintendo-switch-oled"
+    assert match_product("Nintendo 3DS XL", category="consoles").product.id == "console-nintendo-3ds-xl"
 
 
 def test_console_filters_reject_parts_and_switch_tablet_only():
@@ -795,3 +799,67 @@ def test_ram_generation_selection_rejects_multi_generation_spam():
         "DDR3 DDR4 DDR5 Desktop RAM 8GB 16GB 32GB 2x16GB UDIMM",
         match.product,
     ) is False
+
+
+def test_console_builder_supports_family_level_and_optional_refinements():
+    family = match_product("Xbox Series", category="consoles")
+    assert family is not None
+    assert family.product.metadata["builder"] == "consoles"
+    assert family.product.metadata["family"] == "xbox-series"
+    assert listing_matches_product(
+        "Microsoft Xbox Series S 512GB Console White Tested",
+        family.product,
+    ) is True
+    assert listing_matches_product(
+        "Microsoft Xbox Series X 1TB Console Black Tested",
+        family.product,
+    ) is True
+    assert listing_matches_product("Xbox Series X Game Disc Only", family.product) is False
+
+    series_s = match_product("Xbox Series S", category="consoles")
+    assert series_s is not None
+    assert series_s.product.metadata["model_scope"] == "Series S"
+    assert listing_matches_product("Xbox Series S 512GB Console", series_s.product) is True
+    assert listing_matches_product("Xbox Series X 1TB Console", series_s.product) is False
+
+
+def test_console_builder_playstation_family_and_drive_refinement():
+    family = match_product("PlayStation 5", category="consoles")
+    assert family is not None
+    assert listing_matches_product("Sony PS5 Slim Digital Edition Console 1TB", family.product) is True
+    assert listing_matches_product("Sony PS5 Pro 2TB Console", family.product) is True
+
+    disc = match_product("PlayStation 5 Slim Disc Edition", category="consoles")
+    assert disc is not None
+    assert listing_matches_product("Sony PS5 Slim Disc Edition Console 1TB", disc.product) is True
+    assert listing_matches_product("Sony PS5 Slim Digital Edition Console 1TB", disc.product) is False
+
+
+def test_console_builder_switch_family_allows_lite_but_requires_complete_full_size_units():
+    family = match_product("Nintendo Switch", category="consoles")
+    assert family is not None
+    assert listing_matches_product("Nintendo Switch Lite Coral Handheld Console Tested", family.product) is True
+    assert listing_matches_product(
+        "Nintendo Switch OLED Console with White Joy-Con and Dock",
+        family.product,
+    ) is True
+    assert listing_matches_product("Nintendo Switch OLED Tablet Only", family.product) is False
+
+
+def test_lego_rejects_requested_incomplete_unauthentic_and_bulk_phrases():
+    titanic = match_product("LEGO Titanic 10294", category="lego")
+    assert titanic is not None
+    rejected = [
+        "LEGO Titanic 10294 Box No Bricks",
+        "LEGO Titanic 10294 Instructions No Bricks",
+        "LEGO Titanic 10294 Without Minifigures",
+        "LEGO Titanic 10294 MOC Compatible With LEGO",
+        "LEGO Titanic 10294 Bootleg Clone Set",
+        "LEGO Titanic 10294 Loose Bricks Bulk Lot",
+    ]
+    for title in rejected:
+        assert listing_matches_product(title, titanic.product) is False
+    assert listing_matches_product(
+        "LEGO Titanic 10294 Complete Set With Original Box and Instructions",
+        titanic.product,
+    ) is True

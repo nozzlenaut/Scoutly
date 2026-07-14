@@ -2,7 +2,7 @@ export type SearchCategory = {
   id: string;
   label: string;
   group: string;
-  status: "active" | "lab" | "planned" | "coming-soon";
+  status: "active" | "beta" | "planned" | "coming-soon";
   description: string;
   placeholder: string;
   defaultQuery: string;
@@ -16,8 +16,8 @@ export const allCategories: SearchCategory[] = [
     status: "active",
     description:
       "Used camera bodies with eBay Digital Cameras category filtering.",
-    placeholder: "Try Sony A7R V, Canon R5 II, Nikon Z6 III...",
-    defaultQuery: "Sony A7 III Body",
+    placeholder: "Search by camera model",
+    defaultQuery: "",
   },
   {
     id: "lenses",
@@ -27,7 +27,7 @@ export const allCategories: SearchCategory[] = [
     description:
       "Temporarily paused while we validate cleaner eBay lens-category results.",
     placeholder: "Coming soon",
-    defaultQuery: "Sony FE 24-70mm f/2.8 GM",
+    defaultQuery: "",
   },
   {
     id: "gpus",
@@ -36,16 +36,16 @@ export const allCategories: SearchCategory[] = [
     status: "active",
     description:
       "Used desktop graphics cards with strict model and form-factor filtering.",
-    placeholder: "Try RTX 5050, RX 480, RX 9070 XT, Arc A580...",
-    defaultQuery: "RTX 3060 12GB",
+    placeholder: "Search by GPU model",
+    defaultQuery: "",
   },
   {
     id: "ram",
     label: "RAM",
     group: "PC Parts",
-    status: "lab",
+    status: "active",
     description:
-      "Specification-builder testing for strict DDR3, DDR4, and DDR5 memory-kit searches.",
+      "Strict DDR3, DDR4, and DDR5 memory-kit searches built from exact specifications.",
     placeholder: "Build a RAM configuration",
     defaultQuery: "",
   },
@@ -55,24 +55,35 @@ export const allCategories: SearchCategory[] = [
     group: "Gaming",
     status: "active",
     description:
-      "Complete Xbox, PlayStation, and Nintendo systems with accessory filtering.",
-    placeholder: "Try PS5 Disc, Xbox Series X, Switch OLED...",
-    defaultQuery: "Xbox Series X 1TB",
+      "Guided searches for complete Xbox, PlayStation, and Nintendo systems.",
+    placeholder: "Build a console search",
+    defaultQuery: "",
   },
   {
     id: "lego",
     label: "LEGO",
     group: "Collectibles",
-    status: "lab",
-    description: "Early lab prototype for exact LEGO set-number search.",
-    placeholder: "Try 75192, 21325, 10316, 76269...",
-    defaultQuery: "LEGO Millennium Falcon 75192",
+    status: "beta",
+    description: "Beta exact-set search using set names or set numbers.",
+    placeholder: "Search by set name or set number",
+    defaultQuery: "",
   },
 ];
 
-export const searchCategories = allCategories.filter(
-  (category) => category.status !== "coming-soon",
-);
+const statusOrder: Record<SearchCategory["status"], number> = {
+  active: 0,
+  beta: 1,
+  planned: 2,
+  "coming-soon": 3,
+};
+
+export const searchCategories = allCategories
+  .filter((category) => category.status !== "coming-soon")
+  .sort(
+    (left, right) =>
+      statusOrder[left.status] - statusOrder[right.status] ||
+      left.label.localeCompare(right.label),
+  );
 
 export function getCategoryById(id?: string | null): SearchCategory | null {
   if (!id) return null;

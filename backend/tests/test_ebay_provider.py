@@ -232,3 +232,15 @@ def test_ebay_search_adds_ram_category_id():
     provider = _CaptureEbayProvider()
     asyncio.run(provider.search("DDR4 32GB 2x16GB UDIMM RAM", category="ram"))
     assert provider.last_params["category_ids"] == "170083"
+
+
+def test_ddr3l_listing_gets_voltage_compatibility_warning():
+    item = {
+        "title": "Samsung 16GB 2x8GB DDR3L PC3L-12800S SODIMM Laptop Memory",
+        "price": {"value": "24.99", "currency": "USD"},
+        "condition": "Used",
+        "itemWebUrl": "https://www.ebay.com/itm/111111111111",
+    }
+    listing = ebay_item_to_listing(item)
+    assert listing is not None
+    assert "DDR3L — verify voltage compatibility" in listing.warning_labels

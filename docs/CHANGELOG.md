@@ -1,3 +1,16 @@
+# Changelog
+
+## v0.6.1
+
+- Adds a guided Console builder: brand → family/generation → results, with optional model, storage, and edition/drive refinements.
+- Allows safe family-level console searches when the buyer does not care about storage or a specific model.
+- Promotes RAM to Active after precision testing.
+- Renames Lab to Beta and keeps LEGO in Beta.
+- Sorts categories by status and then alphabetically.
+- Removes fresh-page search autofill and adds category-specific placeholders.
+- Adds DDR3L voltage-compatibility warnings.
+- Expands LEGO packaging-only, incomplete, unauthentic, compatible-brick, loose-brick, lot, and bulk exclusions.
+
 # v0.5.10 — Search consistency and trust cleanup
 
 - Rejects LEGO empty outer-box, inner-box-only, and numbered inner-box packaging listings.

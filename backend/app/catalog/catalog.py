@@ -6,6 +6,11 @@ from pathlib import Path
 from app.catalog.normalizer import compact_text, has_term, normalize_text
 from app.models.product import Product, ProductMatch
 from app.catalog.ram import ram_product_match, ram_title_matches_product
+from app.catalog.consoles import (
+    console_builder_title_matches_product,
+    console_product_match,
+    parse_console_query,
+)
 
 CATALOG_PATH = Path(__file__).resolve().parents[1] / "data" / "product_catalog.json"
 
@@ -158,6 +163,10 @@ LEGO_INCOMPLETE_OR_PART_TERMS = [
     "no minifigs",
     "no minifigure",
     "no minifigures",
+    "without minifig",
+    "without minifigs",
+    "without minifigure",
+    "without minifigures",
     "no fig",
     "no figs",
     "no figure",
@@ -208,6 +217,11 @@ LEGO_INCOMPLETE_OR_PART_TERMS = [
     "bag 15 only",
     "lot of 2",
     "lot of two",
+    "loose bricks",
+    "random pieces",
+    "bulk lot",
+    "lot",
+    "bulk",
 ]
 
 LEGO_LOOSE_PART_TERMS = [
@@ -231,9 +245,13 @@ LEGO_INSTRUCTIONS_OR_BOX_ONLY_TERMS = [
     "inner boxes only",
     "box + instructions only",
     "box and instructions only",
+    "box no lego",
+    "box no bricks",
+    "packaging only",
     "instructions only",
     "instruction book only",
     "building instructions only",
+    "instructions no bricks",
     "manual only",
 ]
 
@@ -249,6 +267,22 @@ LEGO_ACCESSORY_TERMS = [
     "storage case",
     "zip bin",
 ]
+
+LEGO_UNAUTHENTIC_TERMS = [
+    "moc",
+    "custom moc",
+    "custom build",
+    "custom set",
+    "bootleg",
+    "lepin",
+    "knockoff",
+    "knock off",
+    "clone",
+    "not lego",
+    "lego compatible",
+    "compatible with lego",
+]
+
 
 LEGO_CHARACTER_ONLY_TERMS = [
     "han solo",
@@ -737,7 +771,13 @@ def _looks_like_console_accessory(title: str, product: Product | None = None) ->
             return True
 
         product_text = normalize_text(f"{product.model} {product.variant or ''}", strip_filler=False)
-        is_full_size_switch = "switch" in product_text and "lite" not in product_text and "switch 2" not in product_text
+        is_console_builder_family = product.metadata.get("builder") == "consoles" and not product.metadata.get("model_scope")
+        is_full_size_switch = (
+            "switch" in product_text
+            and "lite" not in product_text
+            and "switch 2" not in product_text
+            and not is_console_builder_family
+        )
         if is_full_size_switch:
             complete_controls_clues = [
                 "joy con",
@@ -909,6 +949,9 @@ def _looks_like_lego_bundle_or_multi_set(title: str, product: Product) -> bool:
         return True
 
     if _has_any_term(title, LEGO_ACCESSORY_TERMS):
+        return True
+
+    if _has_any_term(title, LEGO_UNAUTHENTIC_TERMS):
         return True
 
     clearly_full_set = _has_any_term(
@@ -1294,6 +1337,23 @@ def match_product(query: str, category: str | None = None) -> ProductMatch | Non
         return ram_product_match(query)
 
     matches = suggest_products(query, category=normalized_category, limit=8)
+
+    if normalized_category == "consoles":
+        spec = parse_console_query(query)
+        if spec is not None:
+            # Preserve exact catalog identities when the query names a unique
+            # console. Use a dynamic builder product only for family/model scopes
+            # that intentionally include multiple valid variants.
+            broad_family = spec.model is None and spec.family != "nintendo-3ds-xl"
+            broad_series_s = spec.family == "xbox-series" and spec.model == "Series S" and spec.storage is None
+            broad_ps5_model = (
+                spec.family == "playstation-5"
+                and spec.model in {"standard", "slim"}
+                and spec.edition is None
+            )
+            if broad_family or broad_series_s or broad_ps5_model:
+                return console_product_match(query)
+
     if not matches:
         return None
     best_match = matches[0]
@@ -1381,6 +1441,8 @@ def listing_matches_product(title: str, product: Product) -> bool:
     if product.category == "consoles":
         if _looks_like_console_accessory(title, product):
             return False
+        if product.metadata.get("builder") == "consoles":
+            return console_builder_title_matches_product(title, product)
         return _console_title_matches_product(title, product)
 
     if product.category == "lego":
