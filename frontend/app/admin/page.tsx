@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { AdminFilterRules } from "@/components/AdminFilterRules";
 import { AdminReports } from "@/components/AdminReports";
+import { AdminBetaFeedback } from "@/components/AdminBetaFeedback";
 import { SiteFooter } from "@/components/SiteFooter";
-import { getActiveReports, getAnalyticsSummary, getManualFilterRules, getRecentClicks, getRecentFilteredListings } from "@/lib/api";
+import { getActiveReports, getAnalyticsSummary, getBetaFeedback, getManualFilterRules, getRecentClicks, getRecentFilteredListings } from "@/lib/api";
 
 function formatDate(value?: string | null): string {
   if (!value) return "—";
@@ -64,11 +65,12 @@ export default async function AdminPage({
       getActiveReports(token),
       getRecentFilteredListings(token),
       getManualFilterRules(token),
+      getBetaFeedback(token),
     ]);
   } catch {
     return <AdminGate invalid />;
   }
-  const [summary, clicks, reports, filtered, manualRules] = data;
+  const [summary, clicks, reports, filtered, manualRules, betaFeedback] = data;
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
@@ -99,7 +101,7 @@ export default async function AdminPage({
           </div>
         </div>
 
-        <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+        <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-7">
           <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
             <p className="text-sm text-slate-400">Total outbound clicks</p>
             <p className="mt-2 text-3xl font-black">{summary.total_clicks}</p>
@@ -119,6 +121,10 @@ export default async function AdminPage({
           <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
             <p className="text-sm text-slate-400">Manual rules</p>
             <p className="mt-2 text-3xl font-black">{summary.manual_filter_rule_count ?? manualRules.length}</p>
+          </div>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
+            <p className="text-sm text-slate-400">Beta feedback</p>
+            <p className="mt-2 text-3xl font-black">{summary.beta_feedback_count ?? betaFeedback.length}</p>
           </div>
           <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
             <p className="text-sm text-slate-400">Persistent storage</p>
@@ -207,6 +213,8 @@ export default async function AdminPage({
             </table>
           </div>
         </section>
+
+        <AdminBetaFeedback feedback={betaFeedback} />
 
         <AdminReports initialReports={reports} token={token} />
 

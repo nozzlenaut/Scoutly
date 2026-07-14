@@ -142,6 +142,7 @@ export type AnalyticsSummary = {
   total_clicks: number;
   affiliate_clicks: number;
   active_bad_result_reports: number;
+  beta_feedback_count?: number;
   filtered_listing_count: number;
   manual_filter_rule_count?: number;
   provider_counts: Record<string, number>;
@@ -340,6 +341,25 @@ export async function suggestProducts(
   return response.json();
 }
 
+export type BetaFeedbackPayload = {
+  feedback_type: string;
+  category?: string;
+  message: string;
+  email?: string;
+  page_url?: string;
+  website?: string;
+};
+
+export type BetaFeedbackRecord = {
+  id: string;
+  submitted_at: string;
+  feedback_type: string;
+  category?: string | null;
+  message: string;
+  email?: string | null;
+  page_url?: string | null;
+};
+
 export type ReportBadResultPayload = {
   url: string;
   title?: string;
@@ -349,6 +369,15 @@ export type ReportBadResultPayload = {
   query?: string;
   reason?: string;
 };
+
+export async function submitBetaFeedback(payload: BetaFeedbackPayload): Promise<void> {
+  const response = await fetch(`${baseUrl}/api/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error("Feedback failed");
+}
 
 export async function reportBadResult(
   payload: ReportBadResultPayload,
@@ -438,6 +467,18 @@ export async function getRecentFilteredListings(
   if (!response.ok) throw new Error("Filtered listing analytics failed");
   const data = await response.json();
   return data.filtered || [];
+}
+
+export async function getBetaFeedback(token?: string): Promise<BetaFeedbackRecord[]> {
+  const separator = token
+    ? `?token=${encodeURIComponent(token)}&limit=100`
+    : "?limit=100";
+  const response = await fetch(`${baseUrl}/api/analytics/beta-feedback${separator}`, {
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error("Beta feedback failed");
+  const data = await response.json();
+  return data.feedback || [];
 }
 
 export async function getManualFilterRules(

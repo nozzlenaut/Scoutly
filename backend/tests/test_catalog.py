@@ -883,6 +883,11 @@ def test_console_core_model_filters_keep_model_boundaries_and_accept_variants():
     ) is True
     assert listing_matches_product(
         "Sony PS5 Disc Edition Console 825GB", ps5.product
+    ) is False
+    broad_ps5 = match_product("PlayStation 5", category="consoles")
+    assert broad_ps5 is not None
+    assert listing_matches_product(
+        "Sony PS5 Disc Edition Console 825GB", broad_ps5.product
     ) is True
     assert listing_matches_product(
         "Sony PS5 Slim Disc Edition Console 1TB", ps5.product
@@ -932,12 +937,34 @@ def test_playstation_disc_and_digital_variants_share_the_core_model():
     ) is True
     assert listing_matches_product(
         "Sony PS5 Slim Disc Edition Console 1TB", slim_digital.product
+    ) is False
+    assert listing_matches_product(
+        "Sony PS5 Slim Digital Edition Console 1TB", slim_disc.product
+    ) is False
+    broad_slim = match_product("PlayStation 5 Slim", category="consoles")
+    assert broad_slim is not None
+    assert listing_matches_product(
+        "Sony PS5 Slim Disc Edition Console 1TB", broad_slim.product
+    ) is True
+    assert listing_matches_product(
+        "Sony PS5 Slim Digital Edition Console 1TB", broad_slim.product
     ) is True
     assert listing_matches_product(
         "Sony PS5 Digital Edition Console 825GB", standard_digital.product
     ) is True
     assert listing_matches_product(
         "Sony PS5 Disc Edition Console 825GB", standard_digital.product
+    ) is False
+    assert listing_matches_product(
+        "Sony PS5 Digital Edition Console 825GB", standard_disc.product
+    ) is False
+    broad_standard = match_product("PlayStation 5", category="consoles")
+    assert broad_standard is not None
+    assert listing_matches_product(
+        "Sony PS5 Disc Edition Console 825GB", broad_standard.product
+    ) is True
+    assert listing_matches_product(
+        "Sony PS5 Digital Edition Console 825GB", broad_standard.product
     ) is True
     assert listing_matches_product(
         "Sony PS5 Slim Digital Edition Console 1TB", standard_digital.product

@@ -98,6 +98,15 @@ LENS_PART_ACCESSORY_TERMS = [
 GPU_PART_ACCESSORY_TERMS = [
     "artifacting",
     "artifacts",
+    "fan defect",
+    "defective fan",
+    "fan broken",
+    "fan not working",
+    "fan does not work",
+    "clicking fan",
+    "grinding fan",
+    "fan noise",
+    "overheating",
     "backplate only",
     "bracket only",
     "cooler only",
@@ -729,7 +738,39 @@ def _looks_like_gpu_accessory(title: str, product: Product | None = None) -> boo
         if is_normal_tesla_pcie_search and _has_any_term(title, disallowed_server_form_factors):
             return True
 
-    if _has_any_term(title, GPU_PART_ACCESSORY_TERMS):
+    gpu_cooling_defect_terms = [
+        "fan defect",
+        "defective fan",
+        "fan broken",
+        "fan not working",
+        "fan does not work",
+        "clicking fan",
+        "grinding fan",
+        "fan noise",
+        "overheating",
+    ]
+    safe_cooling_context = [
+        "no fan defect",
+        "no fan defects",
+        "fan working",
+        "fans working",
+        "fan works",
+        "fans work",
+        "no clicking fan",
+        "no grinding fan",
+        "no fan noise",
+        "without fan noise",
+        "not overheating",
+        "no overheating",
+    ]
+    if _has_any_term(title, gpu_cooling_defect_terms) and not _has_any_term(title, safe_cooling_context):
+        return True
+
+    # Remaining GPU accessory/defect terms are direct rejection signals.
+    # Cooling terms handled above are skipped here so negated phrases such as
+    # "no fan noise" do not become false positives.
+    non_cooling_terms = [term for term in GPU_PART_ACCESSORY_TERMS if term not in gpu_cooling_defect_terms]
+    if _has_any_term(title, non_cooling_terms):
         return True
 
     explicit_heatsink_only = [
@@ -1882,6 +1923,22 @@ def match_product(query: str, category: str | None = None) -> ProductMatch | Non
         return None
     if _gpu_variant_resolution_is_ambiguous(query, matches):
         return None
+
+    # Console catalog rows stay grouped by core model, but explicit user
+    # qualifiers still narrow live listings. Keep the stable product id so
+    # price history remains grouped while the display and matcher honor the
+    # requested Disc/Digital edition.
+    if normalized_category == "consoles":
+        spec = parse_console_query(query)
+        if spec is not None and spec.edition:
+            edition_label = "Digital Edition" if spec.edition == "digital" else "Disc Edition"
+            metadata = dict(best_match.product.metadata)
+            metadata["requested_edition"] = spec.edition
+            product = best_match.product.model_copy(
+                update={"variant": edition_label, "metadata": metadata}
+            )
+            best_match = best_match.model_copy(update={"product": product})
+
     return best_match
 
 
@@ -1953,6 +2010,17 @@ def listing_matches_product(title: str, product: Product) -> bool:
     if product.category == "consoles":
         if _looks_like_console_accessory(title, product):
             return False
+        requested_edition = str(product.metadata.get("requested_edition") or "").lower()
+        title_compact = compact_text(title, strip_filler=False)
+        title_has_digital = has_term(title, "digital edition") or has_term(title, "digital") or "digitaledition" in title_compact
+        title_has_disc = any(
+            has_term(title, clue)
+            for clue in ["disc edition", "disk edition", "disc version", "disk version", "blu ray", "blu-ray"]
+        )
+        if requested_edition == "digital" and (title_has_disc or not title_has_digital):
+            return False
+        if requested_edition == "disc" and (title_has_digital and not title_has_disc):
+            return False
         if product.metadata.get("builder") == "consoles":
             return console_builder_title_matches_product(title, product)
         return _console_title_matches_product(title, product)
@@ -1973,6 +2041,18 @@ def listing_match_rejection_reasons(title: str, product: Product) -> list[str]:
     if product.category == "consoles":
         if _looks_like_console_accessory(title, product):
             return ["console accessory/part/incomplete"]
+        requested_edition = str(product.metadata.get("requested_edition") or "").lower()
+        if requested_edition:
+            title_compact = compact_text(title, strip_filler=False)
+            title_has_digital = has_term(title, "digital edition") or has_term(title, "digital") or "digitaledition" in title_compact
+            title_has_disc = any(
+                has_term(title, clue)
+                for clue in ["disc edition", "disk edition", "disc version", "disk version", "blu ray", "blu-ray"]
+            )
+            if requested_edition == "digital" and (title_has_disc or not title_has_digital):
+                return ["console edition conflict"]
+            if requested_edition == "disc" and (title_has_digital and not title_has_disc):
+                return ["console edition conflict"]
         if product.metadata.get("builder") == "consoles":
             matched = console_builder_title_matches_product(title, product)
         else:

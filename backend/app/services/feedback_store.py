@@ -12,6 +12,7 @@ from urllib.parse import parse_qs, urlsplit
 from app.models.listing import Listing
 from app.services.database import database_configured, database_connection, database_health
 from app.services.filter_rules import list_manual_filter_rules
+from app.services.beta_feedback_store import beta_feedback_count
 
 REPORT_TTL_HOURS = 72
 MAX_REPORTS = 500
@@ -620,6 +621,7 @@ def analytics_summary() -> dict[str, Any]:
                 "active_bad_result_reports": int(report_count or 0),
                 "filtered_listing_count": int(filtered_count or 0),
                 "manual_filter_rule_count": len(list_manual_filter_rules(include_disabled=True)),
+                "beta_feedback_count": beta_feedback_count(),
                 "provider_counts": {str(row["name"]): int(row["count"]) for row in provider_rows},
                 "category_counts": {str(row["name"]): int(row["count"]) for row in category_rows},
                 "latest_click": _serialize_record(dict(latest)) if latest else None,
@@ -649,6 +651,7 @@ def analytics_summary() -> dict[str, Any]:
         "active_bad_result_reports": len(reports),
         "filtered_listing_count": len(filtered),
         "manual_filter_rule_count": len(list_manual_filter_rules(include_disabled=True)),
+        "beta_feedback_count": beta_feedback_count(),
         "provider_counts": provider_counts,
         "category_counts": category_counts,
         "latest_click": clicks[-1] if clicks else None,

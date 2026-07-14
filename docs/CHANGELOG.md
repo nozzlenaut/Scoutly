@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.15
+
+- Fixes the `/admin/prices` page with client-side overview loading and visible retry/error handling.
+- Rejects clear GPU fan/cooling defects while preserving explicitly negated safe phrases.
+- Honors explicit PlayStation Disc/Digital edition wording without splitting grouped core-model catalog IDs.
+- Adds visible `read description` cautions and ranking penalties across all categories.
+- Adds shareable search controls using the native share sheet or clipboard fallback.
+- Marks PriceSift as a public beta and adds clear no-signup testing instructions.
+- Adds a persistent public beta-feedback form and private admin review table.
+- Adds four focused regression areas, bringing the backend suite to 179 passing tests.
+
 ## v0.6.13
 
 - Adds a narrow PAC-MAN Arcade `10323` sub-build rule for named ghosts such as Blinky, Clyde, Pinky, and Inky.

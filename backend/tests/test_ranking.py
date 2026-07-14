@@ -193,3 +193,72 @@ def test_rejects_faulty_cpu_and_partial_function_gpu_titles():
     assert is_bad_listing(faulty_cpu, cpu) is True
     assert is_bad_listing(partial_gpu, gpu) is True
     assert is_bad_listing(clean_cpu, cpu) is False
+
+
+def test_gpu_cooling_defects_are_rejected_but_negated_noise_is_allowed():
+    from app.catalog.catalog import match_product
+
+    product = match_product("RTX 3090 24GB", category="gpus")
+    assert product is not None
+    bad_titles = [
+        "NVIDIA RTX 3090 24GB Fan Defect",
+        "NVIDIA RTX 3090 24GB Defective Fan",
+        "NVIDIA RTX 3090 24GB Clicking Fan",
+        "NVIDIA RTX 3090 24GB Grinding Fan",
+        "NVIDIA RTX 3090 24GB Fan Noise",
+        "NVIDIA RTX 3090 24GB Overheating",
+    ]
+    for index, title in enumerate(bad_titles):
+        listing = Listing(
+            provider="eBay",
+            title=title,
+            price=700 + index,
+            shipping=0,
+            total_price=700 + index,
+            condition="Used",
+            url=f"https://example.com/gpu-{index}",
+        )
+        assert is_bad_listing(listing, product.product) is True
+
+    clean = Listing(
+        provider="eBay",
+        title="NVIDIA RTX 3090 24GB Tested - No Fan Noise",
+        price=800,
+        shipping=0,
+        total_price=800,
+        condition="Used",
+        url="https://example.com/gpu-clean",
+    )
+    assert is_bad_listing(clean, product.product) is False
+
+
+def test_read_language_adds_visible_warning_and_penalty_for_camera():
+    from app.catalog.catalog import match_product
+    from app.ranking.scorer import score_listing
+
+    product = match_product("Nikon Z5", category="cameras")
+    assert product is not None
+    clean = Listing(
+        provider="eBay",
+        title="Nikon Z5 Mirrorless Camera Body Tested",
+        price=700,
+        shipping=0,
+        total_price=700,
+        condition="Used",
+        url="https://example.com/z5-clean",
+    )
+    review = Listing(
+        provider="eBay",
+        title="Nikon Z5 Mirrorless Camera Body *Read",
+        price=700,
+        shipping=0,
+        total_price=700,
+        condition="Used",
+        url="https://example.com/z5-read",
+    )
+
+    clean_score = score_listing(clean, product.product)
+    review_score = score_listing(review, product.product)
+
+    assert review_score < clean_score
+    assert "Seller asks you to review the description" in review.warning_labels

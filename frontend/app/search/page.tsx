@@ -6,6 +6,7 @@ import { ResultCard } from "@/components/ResultCard";
 import { PriceContextPanel } from "@/components/PriceContextPanel";
 import { SearchForm } from "@/components/SearchForm";
 import { SearchTransitionGuard } from "@/components/SearchTransitionGuard";
+import { ShareSearchButton } from "@/components/ShareSearchButton";
 import { SiteFooter } from "@/components/SiteFooter";
 import { buildEbaySearchUrl, buildOutboundUrl, searchDeals } from "@/lib/api";
 import { getCategoryById, getSearchCategoryById } from "@/lib/categoryCatalog";
@@ -57,10 +58,22 @@ export async function generateMetadata({
     };
   }
 
+  const description = `Cleaner eBay used-listing results for ${query}.`;
+  const shareUrl = `/search?category=${encodeURIComponent(category.id)}&q=${encodeURIComponent(query)}`;
   return {
     title: `${query} deals`,
-    description: `Cleaner eBay used-listing results for ${query}.`,
+    description,
     robots: { index: false, follow: true },
+    openGraph: {
+      title: `${query} prices | PriceSift`,
+      description,
+      url: shareUrl,
+    },
+    twitter: {
+      card: "summary",
+      title: `${query} prices | PriceSift`,
+      description,
+    },
   };
 }
 
@@ -169,10 +182,18 @@ export default async function SearchPage({
               {resolved?.product.display_name ?? data.query}
             </h1>
             {resolved ? (
-              <p className="mt-3 text-sm text-slate-300">
-                Catalog item: {resolved.product.display_name} · Product match
-                confidence {Math.round(resolved.confidence * 100)}%
-              </p>
+              <div className="mt-3 space-y-2 text-sm text-slate-300">
+                <p>
+                  Catalog item: {resolved.product.display_name} · Product match confidence {Math.round(resolved.confidence * 100)}%
+                </p>
+                {category.id === "consoles" ? (
+                  <p className="text-slate-400">
+                    {resolved.product.variant?.includes("Edition")
+                      ? `Results are narrowed to the ${resolved.product.variant}.`
+                      : `All ${resolved.product.display_name} variants are grouped unless your search names a specific edition.`}
+                  </p>
+                ) : null}
+              </div>
             ) : (
               <p className="mt-3 text-sm text-amber-200">
                 No single catalog item was selected. Results use the search text
@@ -180,9 +201,13 @@ export default async function SearchPage({
               </p>
             )}
           </div>
-          <p className="text-sm text-slate-300">
-            Live eBay results · Up to 3 Buy It Now options
-          </p>
+          <div className="flex flex-col items-start gap-3 sm:items-end">
+            <p className="text-sm text-slate-300">Live eBay results · Up to 3 Buy It Now options</p>
+            <ShareSearchButton
+              label={resolved?.product.display_name ?? data.query}
+              bestPrice={data.price_context.current_best_price}
+            />
+          </div>
         </div>
 
         <PriceContextPanel context={data.price_context} />

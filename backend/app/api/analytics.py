@@ -12,6 +12,7 @@ from app.services.feedback_store import (
     recent_outbound_clicks,
 )
 from app.services.filter_rules import ManualFilterRule, add_manual_filter_rule, delete_manual_filter_rule, list_manual_filter_rules
+from app.services.beta_feedback_store import list_beta_feedback
 
 router = APIRouter(tags=["Analytics"])
 
@@ -75,6 +76,12 @@ def get_active_reports(limit: int = Query(50, ge=1, le=200), token: str | None =
 def get_recent_filtered(limit: int = Query(50, ge=1, le=200), token: str | None = Query(None)) -> dict:
     _require_admin_token(token)
     return {"filtered": recent_filtered_listings(limit)}
+
+
+@router.get("/analytics/beta-feedback")
+def get_beta_feedback(limit: int = Query(100, ge=1, le=500), token: str | None = Query(None)) -> dict:
+    _require_admin_token(token)
+    return {"feedback": list_beta_feedback(limit)}
 
 
 @router.get("/analytics/filter-rules")

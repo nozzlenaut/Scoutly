@@ -21,13 +21,15 @@ BAD_CONDITION_WORDS = [
     "no power",
 ]
 
-CONSOLE_REVIEW_WORDS = [
+REVIEW_WORDS = [
     "please read",
     "read description",
     "read desc",
     "see description",
     "read",
 ]
+
+REVIEW_WARNING = "Seller asks you to review the description"
 
 
 def _console_title_quality_adjustment(listing: Listing, product: Product | None) -> float:
@@ -39,7 +41,7 @@ def _console_title_quality_adjustment(listing: Listing, product: Product | None)
 
     # Review-caveated listings may still be functional, so keep them eligible
     # but make a clean listing win even when it costs noticeably more.
-    if any(has_term(title, word) for word in CONSOLE_REVIEW_WORDS):
+    if any(has_term(title, word) for word in REVIEW_WORDS):
         adjustment -= 130
 
     if any(has_term(title, word) for word in ["tested", "working", "fully functional"]):
@@ -50,6 +52,13 @@ def _console_title_quality_adjustment(listing: Listing, product: Product | None)
         adjustment += 15
 
     return adjustment
+
+
+def _apply_review_warning(listing: Listing) -> bool:
+    has_review_language = any(has_term(listing.title, word) for word in REVIEW_WORDS)
+    if has_review_language and REVIEW_WARNING not in listing.warning_labels:
+        listing.warning_labels.append(REVIEW_WARNING)
+    return has_review_language
 
 
 def rejection_reasons(listing: Listing, product: Product | None = None) -> list[str]:
@@ -113,6 +122,7 @@ def score_listing(listing: Listing, product: Product | None = None) -> float:
     if is_bad_listing(listing, product):
         return 0
 
+    has_review_language = _apply_review_warning(listing)
     price_score = max(0, 500 - listing.total_price)
     seller_score = (listing.seller_rating if listing.seller_rating is not None else 88) * 0.45
     seller_feedback = listing.seller_feedback_score
@@ -140,6 +150,7 @@ def score_listing(listing: Listing, product: Product | None = None) -> float:
     product_match_bonus = 35 if product is not None else 0
     bundle_penalty = 15 if "Bundle / extras included" in listing.warning_labels else 0
     console_title_adjustment = _console_title_quality_adjustment(listing, product)
+    review_penalty = 45 if has_review_language and (product is None or product.category != "consoles") else 0
 
     return round(
         price_score
@@ -148,7 +159,8 @@ def score_listing(listing: Listing, product: Product | None = None) -> float:
         + shipping_bonus
         + product_match_bonus
         + console_title_adjustment
-        - bundle_penalty,
+        - bundle_penalty
+        - review_penalty,
         2,
     )
 

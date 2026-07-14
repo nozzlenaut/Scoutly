@@ -185,6 +185,21 @@ def initialize_database() -> bool:
         ON scoutly_qa_evaluations (created_at DESC)
         """,
         """
+        CREATE TABLE IF NOT EXISTS scoutly_beta_feedback (
+            id TEXT PRIMARY KEY,
+            submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            feedback_type TEXT NOT NULL,
+            category TEXT,
+            message TEXT NOT NULL,
+            email TEXT,
+            page_url TEXT
+        )
+        """,
+        """
+        CREATE INDEX IF NOT EXISTS scoutly_beta_feedback_recent
+        ON scoutly_beta_feedback (submitted_at DESC)
+        """,
+        """
         CREATE TABLE IF NOT EXISTS scoutly_price_snapshots (
             id TEXT PRIMARY KEY,
             snapshot_bucket TIMESTAMPTZ NOT NULL,
