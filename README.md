@@ -1,4 +1,4 @@
-# Scoutly v0.6.2 / PriceSift console family search fix
+# Scoutly v0.6.3 / PriceSift console family search fix
 
 Scoutly remains the internal project name. This patch makes an unrefined console family search run one exact marketplace search per active model, merge the valid results, remove duplicates, and rank the combined set.
 

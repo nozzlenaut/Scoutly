@@ -87,7 +87,7 @@ def test_family_search_runs_each_model_and_combines_results(monkeypatch):
     assert resolved is not None
     assert [call[0] for call in provider.calls] == [
         "Xbox Series S console",
-        "Xbox Series X console",
+        "Xbox Series X 1TB",
     ]
     assert [listing.title for listing in results] == [
         "Microsoft Xbox Series S 512GB Console White Tested",
@@ -149,3 +149,37 @@ def test_controller_requires_console_and_service_is_rejected():
     assert is_bad_listing(controller_without_console, product) is True
     assert is_bad_listing(controller_with_console, product) is False
     assert is_bad_listing(service_listing, product) is True
+
+
+def test_family_child_uses_same_product_identity_as_direct_model_search():
+    family = match_product("Xbox Series", category="consoles")
+    direct_series_x = match_product("Xbox Series X", category="consoles")
+    assert family is not None
+    assert direct_series_x is not None
+
+    scopes = search_service._search_product_scopes(family.product)
+    series_x_scope = next(product for product in scopes if "Series X" in product.display_name)
+    assert series_x_scope.id == direct_series_x.product.id
+
+
+def test_xbox_storage_accessories_are_rejected_for_direct_and_family_scopes():
+    title = "Xbox Series X|S External Hard Drive 2TB USB Game Storage"
+    listing = Listing(
+        provider="eBay",
+        title=title,
+        price=49.99,
+        shipping=0,
+        total_price=49.99,
+        condition="Used",
+        seller_rating=99.8,
+        seller_feedback_score=500,
+        url="https://www.ebay.com/itm/100000000006",
+    )
+
+    direct = match_product("Xbox Series X", category="consoles")
+    family = match_product("Xbox Series", category="consoles")
+    assert direct is not None
+    assert family is not None
+    assert is_bad_listing(listing, direct.product) is True
+    for scoped_product in search_service._search_product_scopes(family.product):
+        assert is_bad_listing(listing, scoped_product) is True

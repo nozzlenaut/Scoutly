@@ -40,7 +40,21 @@ def _provider_query_for_product(query: str, product: Product | None) -> str:
 
 def _search_product_scopes(product: Product | None) -> list[Product | None]:
     if product is not None and product.metadata.get("builder") == "consoles":
-        return list(console_search_products(product))
+        expanded = list(console_search_products(product))
+        aligned: list[Product] = []
+        seen: set[str] = set()
+        for scoped_product in expanded:
+            # Family searches must use the same exact-product identity and
+            # matching rules as selecting that model directly in the builder.
+            # Otherwise a generated Series X child can be filtered differently
+            # from a direct Series X search backed by the static catalog.
+            direct_match = match_product(scoped_product.display_name, "consoles")
+            resolved_product = direct_match.product if direct_match is not None else scoped_product
+            if resolved_product.id in seen:
+                continue
+            seen.add(resolved_product.id)
+            aligned.append(resolved_product)
+        return aligned or expanded
     return [product]
 
 
