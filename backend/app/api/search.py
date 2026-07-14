@@ -16,7 +16,7 @@ async def search(
     auction_hours: int = Query(24, ge=1, le=168),
 ) -> SearchResponse:
     provider_keys = [provider.strip() for provider in providers.split(",") if provider.strip()]
-    resolved_product, results, auction_results, diagnostics = await search_best_deals_with_auctions(
+    resolved_product, results, auction_results, diagnostics, price_context = await search_best_deals_with_auctions(
         q,
         provider_keys,
         category,
@@ -31,6 +31,7 @@ async def search(
         results=results,
         auction_results=auction_results,
         diagnostics=diagnostics,
+        price_context=price_context,
     )
 
 

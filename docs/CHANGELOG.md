@@ -375,3 +375,13 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Preserved original Nintendo Switch V1, V2, HAC-001, HAC-001(-01), Standard, and Original aliases.
 - Retained multi-query original-Switch coverage and all v0.6.5 precision filters.
 
+
+## v0.6.14 — Price snapshots and typical ranges
+
+- Records live eligible Buy It Now prices in six-hour product/provider snapshots.
+- Persists safe no-inventory snapshots for availability analysis.
+- Adds current price context to search results and delays typical-range claims until enough history exists.
+- Adds `/admin/prices` coverage and history dashboard.
+- Adds a small rotating QA price collector while normal searches and QA runs collect automatically.
+- Adds `scoutly_price_snapshots` PostgreSQL persistence with JSON-file fallback.
+- Keeps all 88 QA cases and product-resolution behavior unchanged.

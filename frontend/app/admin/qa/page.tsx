@@ -57,7 +57,10 @@ export default async function QaPage({
           <Link href={`/admin?token=${encodeURIComponent(token)}`} className="text-sm text-cyan-200 hover:text-cyan-100">
             ← Testing dashboard
           </Link>
-          <Link href="/" className="text-sm text-slate-500 hover:text-slate-300">PriceSift home</Link>
+          <div className="flex gap-4">
+            <Link href={`/admin/prices?token=${encodeURIComponent(token)}`} className="text-sm text-slate-400 hover:text-slate-200">Price history</Link>
+            <Link href="/" className="text-sm text-slate-500 hover:text-slate-300">PriceSift home</Link>
+          </div>
         </div>
 
         <div className="mt-8">

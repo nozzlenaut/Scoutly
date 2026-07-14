@@ -44,6 +44,26 @@ export type SearchResult = {
   item_group_type: string | null;
 };
 
+export type PriceContext = {
+  product_id: string | null;
+  window_days: number;
+  current_eligible_count: number;
+  current_best_price: number | null;
+  current_median_price: number | null;
+  current_low_price: number | null;
+  current_high_price: number | null;
+  snapshot_count: number;
+  available_snapshot_count: number;
+  availability_rate: number | null;
+  history_ready: boolean;
+  typical_low_price: number | null;
+  typical_high_price: number | null;
+  historical_median_price: number | null;
+  current_vs_median_percent: number | null;
+  first_observed_at: string | null;
+  last_observed_at: string | null;
+};
+
 export type SearchDiagnostics = {
   fixed_price_candidates: number;
   fixed_price_filtered: number;
@@ -65,6 +85,49 @@ export type SearchResponse = {
   results: SearchResult[];
   auction_results: SearchResult[];
   diagnostics: SearchDiagnostics;
+  price_context: PriceContext;
+};
+
+export type PriceOverviewProduct = {
+  product_id: string;
+  category?: string | null;
+  product_label?: string | null;
+  provider?: string | null;
+  last_observed_at?: string | null;
+  latest_eligible_count: number;
+  latest_best_price?: number | null;
+  snapshot_count: number;
+  history_ready: boolean;
+  typical_low_price?: number | null;
+  typical_high_price?: number | null;
+  historical_median_price?: number | null;
+  availability_rate?: number | null;
+};
+
+export type PriceOverview = {
+  window_days: number;
+  snapshot_count: number;
+  product_count: number;
+  history_ready_count: number;
+  available_latest_count: number;
+  products: PriceOverviewProduct[];
+};
+
+export type PriceCollectionResponse = {
+  live_ebay: boolean;
+  collected_count: number;
+  remaining_products: number;
+  collected: Array<{
+    case_id?: string | null;
+    query?: string | null;
+    category?: string | null;
+    expected_product_id?: string | null;
+    resolved_product_id?: string | null;
+    result_count: number;
+    eligible_count: number;
+    snapshot_count: number;
+    last_observed_at?: string | null;
+  }>;
 };
 
 export type StorageStatus = {
@@ -493,5 +556,30 @@ export async function saveQaEvaluation(
     },
   );
   if (!response.ok) throw new Error("Could not save QA evaluation");
+  return response.json();
+}
+
+
+export async function getPriceOverview(
+  token?: string,
+  days = 30,
+): Promise<PriceOverview> {
+  const params = new URLSearchParams({ days: String(days), limit: "1000" });
+  if (token) params.set("token", token);
+  const response = await fetch(`${baseUrl}/api/prices/overview?${params.toString()}`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Price overview failed");
+  return response.json();
+}
+
+export async function collectQaPriceBatch(
+  token: string,
+  options: { limit?: number; category?: string } = {},
+): Promise<PriceCollectionResponse> {
+  const response = await fetch(`${baseUrl}/api/prices/collect/qa?token=${encodeURIComponent(token)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ limit: options.limit ?? 5, category: options.category ?? null }),
+  });
+  if (!response.ok) throw new Error("Price collection failed");
   return response.json();
 }

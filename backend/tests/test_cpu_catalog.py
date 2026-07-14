@@ -67,7 +67,7 @@ def test_cpu_rejects_titles_with_multiple_model_codes():
 
 
 def test_cpu_mock_search_returns_exact_cpu_and_filters_bundle():
-    resolved, results, _auctions, diagnostics = asyncio.run(
+    resolved, results, _auctions, diagnostics, price_context = asyncio.run(
         search_best_deals_with_auctions(
             "Intel Core i7-12700K",
             ["ebay"],

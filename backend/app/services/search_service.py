@@ -8,11 +8,12 @@ from app.catalog.cpus import cpu_provider_query
 from app.catalog.consoles import console_provider_queries, console_search_products
 from app.models.listing import Listing
 from app.models.product import Product, ProductMatch
-from app.models.search import SearchDiagnostics
+from app.models.search import PriceContext, SearchDiagnostics
 from app.providers.ebay import EbayProvider, ebay_config_from_env
 from app.providers.mock import MockAmazonProvider, MockEbayProvider
 from app.ranking.scorer import best_listing, is_bad_listing, rejection_reasons, score_listing, top_listings
 from app.services.feedback_store import filter_reported_listings, log_filtered_listings
+from app.services.price_store import build_price_context, record_price_snapshot
 
 
 def _build_providers():
@@ -106,6 +107,27 @@ def _top_scored_listings_with_stats(
 def _top_scored_listings(listings: list[Listing], limit: int = 3) -> list[Listing]:
     selected, _duplicates_removed = _top_scored_listings_with_stats(listings, limit=limit)
     return selected
+
+
+def _unique_eligible_listings(
+    listings: list[Listing],
+    product: Product | None,
+) -> list[Listing]:
+    eligible: list[Listing] = []
+    seen_urls: set[str] = set()
+    seen_titles: set[str] = set()
+    for listing in listings:
+        if rejection_reasons(listing, product):
+            continue
+        url_key = _listing_identity(listing)
+        title_key = _listing_title_identity(listing)
+        if url_key in seen_urls or (title_key and title_key in seen_titles):
+            continue
+        seen_urls.add(url_key)
+        if title_key:
+            seen_titles.add(title_key)
+        eligible.append(listing)
+    return eligible
 
 
 def _listing_rejection_summary(
@@ -301,20 +323,27 @@ async def search_best_deals_with_auctions(
     category: str | None = None,
     include_auctions: bool = True,
     auction_hours: int = 24,
-) -> tuple[ProductMatch | None, list[Listing], list[Listing], SearchDiagnostics]:
+    snapshot_source: str = "search",
+) -> tuple[ProductMatch | None, list[Listing], list[Listing], SearchDiagnostics, PriceContext]:
     product_match = match_product(query, category)
     if _structured_product_required_but_missing(category, product_match):
-        return None, [], [], SearchDiagnostics()
+        return None, [], [], SearchDiagnostics(), PriceContext()
     product = product_match.product if product_match else None
     search_category = product.category if product else category
     search_products = _search_product_scopes(product)
     fixed_results: list[Listing] = []
     auction_results: list[Listing] = []
     diagnostics = SearchDiagnostics()
+    provider_price_candidates: dict[str, list[Listing]] = {}
+    provider_candidate_counts: dict[str, int] = {}
+    provider_filtered_counts: dict[str, int] = {}
 
     for provider_key in provider_keys:
         provider_fixed_candidates: list[Listing] = []
         provider_auction_candidates: list[Listing] = []
+        provider_price_candidates.setdefault(provider_key.lower(), [])
+        provider_candidate_counts.setdefault(provider_key.lower(), 0)
+        provider_filtered_counts.setdefault(provider_key.lower(), 0)
 
         for scoped_product in search_products:
             for provider_query in _provider_queries_for_product(query, scoped_product):
@@ -326,14 +355,19 @@ async def search_best_deals_with_auctions(
                     buying_option="fixed_price",
                 )
                 diagnostics.fixed_price_candidates += fixed_candidate_count
+                provider_candidate_counts[provider_key.lower()] += fixed_candidate_count
                 report_filtered = max(0, fixed_candidate_count - len(fixed_listings))
                 rejected, eligible, reason_counts = _listing_rejection_summary(fixed_listings, scoped_product)
                 diagnostics.fixed_price_filtered += report_filtered + rejected
                 diagnostics.fixed_price_eligible += eligible
+                provider_filtered_counts[provider_key.lower()] += report_filtered + rejected
                 if report_filtered:
                     reason_counts["reported listing filter"] += report_filtered
                 _merge_reason_counts(diagnostics.fixed_price_rejection_reasons, reason_counts)
                 provider_fixed_candidates.extend(top_listings(fixed_listings, scoped_product, limit=3))
+                provider_price_candidates[provider_key.lower()].extend(
+                    _unique_eligible_listings(fixed_listings, scoped_product)
+                )
 
                 if include_auctions and provider_key.lower() == "ebay":
                     auction_listings, auction_candidate_count = await _search_provider(
@@ -373,11 +407,36 @@ async def search_best_deals_with_auctions(
     final_auction_results, auction_duplicates = _top_combined_auctions_with_stats(auction_results, limit=3)
     diagnostics.auction_duplicates_removed += auction_duplicates
 
+    current_prices: list[float] = []
+    if product is not None:
+        for provider_key, candidates in provider_price_candidates.items():
+            unique_candidates = _unique_eligible_listings(candidates, None)
+            prices = [listing.total_price for listing in unique_candidates]
+            current_prices.extend(prices)
+            # Never persist mock-provider data. Production eBay credentials are
+            # the signal that these are real marketplace observations.
+            if provider_key == "ebay" and ebay_config_from_env() is not None:
+                record_price_snapshot(
+                    product_id=product.id,
+                    category=product.category,
+                    product_label=product.display_name,
+                    provider=provider_key,
+                    query=query,
+                    prices=prices,
+                    candidate_count=provider_candidate_counts.get(provider_key, 0),
+                    filtered_count=provider_filtered_counts.get(provider_key, 0),
+                    source=snapshot_source,
+                )
+        price_context = PriceContext(**build_price_context(product_id=product.id, current_prices=current_prices))
+    else:
+        price_context = PriceContext()
+
     return (
         product_match,
         final_fixed_results,
         sorted(final_auction_results, key=lambda item: item.item_end_date or ""),
         diagnostics,
+        price_context,
     )
 
 

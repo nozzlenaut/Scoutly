@@ -74,3 +74,27 @@ When `DATABASE_URL` is configured, Scoutly creates its operational tables automa
 - created_at
 
 Local development falls back to `qa_evaluations.json` inside `SCOUTLY_DATA_DIR` (or `/tmp/scoutly`).
+
+### scoutly_price_snapshots
+
+Price observations are grouped into six-hour provider/product buckets and upserted so repeated page refreshes do not flood storage.
+
+- id
+- snapshot_bucket
+- observed_at
+- product_id
+- category
+- product_label
+- provider
+- query
+- source
+- candidate_count
+- filtered_count
+- eligible_count
+- lowest_price
+- median_price
+- p25_price
+- p75_price
+- sample_prices
+
+The unique key is `(product_id, provider, snapshot_bucket)`. Local development falls back to `price_snapshots.json` inside `SCOUTLY_DATA_DIR` or `/tmp/scoutly`.

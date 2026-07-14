@@ -184,6 +184,36 @@ def initialize_database() -> bool:
         CREATE INDEX IF NOT EXISTS scoutly_qa_evaluations_recent
         ON scoutly_qa_evaluations (created_at DESC)
         """,
+        """
+        CREATE TABLE IF NOT EXISTS scoutly_price_snapshots (
+            id TEXT PRIMARY KEY,
+            snapshot_bucket TIMESTAMPTZ NOT NULL,
+            observed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            product_id TEXT NOT NULL,
+            category TEXT NOT NULL,
+            product_label TEXT NOT NULL,
+            provider TEXT NOT NULL,
+            query TEXT NOT NULL,
+            source TEXT NOT NULL DEFAULT 'search',
+            candidate_count INTEGER NOT NULL DEFAULT 0,
+            filtered_count INTEGER NOT NULL DEFAULT 0,
+            eligible_count INTEGER NOT NULL DEFAULT 0,
+            lowest_price NUMERIC(12, 2),
+            median_price NUMERIC(12, 2),
+            p25_price NUMERIC(12, 2),
+            p75_price NUMERIC(12, 2),
+            sample_prices JSONB NOT NULL DEFAULT '[]'::jsonb,
+            UNIQUE (product_id, provider, snapshot_bucket)
+        )
+        """,
+        """
+        CREATE INDEX IF NOT EXISTS scoutly_price_snapshots_product_recent
+        ON scoutly_price_snapshots (product_id, observed_at DESC)
+        """,
+        """
+        CREATE INDEX IF NOT EXISTS scoutly_price_snapshots_recent
+        ON scoutly_price_snapshots (observed_at DESC)
+        """,
     ]
 
     try:

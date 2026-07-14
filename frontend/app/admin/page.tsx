@@ -83,12 +83,20 @@ export default async function AdminPage({
               PriceSift logs outbound clicks before redirecting to eBay, bad-result reports, and filtered listings that were rejected before ranking. eBay Partner reporting can still lag behind this.
             </p>
           </div>
-          <Link
-            href={`/admin/qa?token=${encodeURIComponent(token)}`}
-            className="w-fit rounded-2xl bg-cyan-200 px-5 py-3 font-bold text-slate-950 transition hover:bg-cyan-100"
-          >
-            Open search QA →
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href={`/admin/prices?token=${encodeURIComponent(token)}`}
+              className="w-fit rounded-2xl border border-cyan-200/25 bg-cyan-200/10 px-5 py-3 font-bold text-cyan-100 transition hover:bg-cyan-200/15"
+            >
+              Price history →
+            </Link>
+            <Link
+              href={`/admin/qa?token=${encodeURIComponent(token)}`}
+              className="w-fit rounded-2xl bg-cyan-200 px-5 py-3 font-bold text-slate-950 transition hover:bg-cyan-100"
+            >
+              Open search QA →
+            </Link>
+          </div>
         </div>
 
         <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-6">

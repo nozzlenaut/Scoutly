@@ -148,3 +148,29 @@ Example evaluation payload:
   }
 }
 ```
+
+## Price history
+
+Resolved live searches include a `price_context` object containing the current eligible-price range and, after enough snapshots exist, a typical recent range and comparison with the recent median.
+
+Private price administration uses the existing `SCOUTLY_ADMIN_TOKEN`:
+
+```text
+GET /api/prices/overview?token=<token>&days=30
+POST /api/prices/collect/qa?token=<token>
+```
+
+Collector payload:
+
+```json
+{
+  "limit": 5,
+  "category": "cpus"
+}
+```
+
+Public product context is also available for a known product ID:
+
+```text
+GET /api/prices/cpu-intel-core-i7-12700k?days=30
+```

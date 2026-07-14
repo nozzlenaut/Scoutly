@@ -42,7 +42,7 @@ def test_direct_console_search_uses_one_core_model_query(monkeypatch):
     provider = RecordingConsoleProvider()
     monkeypatch.setitem(search_service.PROVIDERS, "ebay", provider)
 
-    resolved, results, auctions, diagnostics = asyncio.run(
+    resolved, results, auctions, diagnostics, price_context = asyncio.run(
         search_service.search_best_deals_with_auctions(
             "Xbox Series X 1TB",
             ["ebay"],
@@ -229,7 +229,7 @@ def test_original_switch_combines_revision_results(monkeypatch):
     provider = RecordingSwitchProvider()
     monkeypatch.setitem(search_service.PROVIDERS, "ebay", provider)
 
-    resolved, results, auctions, diagnostics = asyncio.run(
+    resolved, results, auctions, diagnostics, price_context = asyncio.run(
         search_service.search_best_deals_with_auctions(
             "Nintendo Switch V1",
             ["ebay"],
@@ -404,7 +404,7 @@ def test_console_search_preserves_quality_ranking_and_exposes_filter_reasons(mon
     provider = RankingConsoleProvider()
     monkeypatch.setitem(search_service.PROVIDERS, "ebay", provider)
 
-    resolved, results, auctions, diagnostics = asyncio.run(
+    resolved, results, auctions, diagnostics, price_context = asyncio.run(
         search_service.search_best_deals_with_auctions(
             "PS5 Pro",
             ["ebay"],
@@ -470,7 +470,7 @@ def test_console_top_three_collapses_identical_titles_across_marketplace_items(m
     provider = DuplicateTitleSwitchProvider()
     monkeypatch.setitem(search_service.PROVIDERS, "ebay", provider)
 
-    resolved, results, auctions, diagnostics = asyncio.run(
+    resolved, results, auctions, diagnostics, price_context = asyncio.run(
         search_service.search_best_deals_with_auctions(
             "Nintendo Switch",
             ["ebay"],
@@ -486,3 +486,35 @@ def test_console_top_three_collapses_identical_titles_across_marketplace_items(m
     ]
     assert diagnostics.fixed_price_duplicates_removed >= 10
     assert auctions == []
+
+
+def test_live_search_records_price_snapshot(monkeypatch):
+    provider = RecordingConsoleProvider()
+    captured: list[dict] = []
+    monkeypatch.setitem(search_service.PROVIDERS, "ebay", provider)
+    monkeypatch.setattr(search_service, "ebay_config_from_env", lambda: object())
+    monkeypatch.setattr(search_service, "record_price_snapshot", lambda **payload: captured.append(payload))
+    monkeypatch.setattr(
+        search_service,
+        "build_price_context",
+        lambda **payload: {
+            "product_id": payload["product_id"],
+            "current_eligible_count": len(payload["current_prices"]),
+        },
+    )
+
+    resolved, results, _auctions, _diagnostics, price_context = asyncio.run(
+        search_service.search_best_deals_with_auctions(
+            "Xbox Series X",
+            ["ebay"],
+            "consoles",
+            include_auctions=False,
+        )
+    )
+
+    assert resolved is not None
+    assert len(results) == 1
+    assert captured[0]["product_id"] == "console-xbox-series-x"
+    assert captured[0]["prices"] == [329.99]
+    assert captured[0]["source"] == "search"
+    assert price_context.current_eligible_count == 1

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { AuctionResults } from "@/components/AuctionResults";
 import { ResultCard } from "@/components/ResultCard";
+import { PriceContextPanel } from "@/components/PriceContextPanel";
 import { SearchForm } from "@/components/SearchForm";
 import { SearchTransitionGuard } from "@/components/SearchTransitionGuard";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -183,6 +184,8 @@ export default async function SearchPage({
             Live eBay results · Up to 3 Buy It Now options
           </p>
         </div>
+
+        <PriceContextPanel context={data.price_context} />
 
         {!resolved && likelyAlternatives.length > 0 ? (
           <div className="mt-5 rounded-3xl border border-cyan-300/20 bg-cyan-300/10 p-5 text-cyan-50">
