@@ -62,7 +62,7 @@ export function AdminKehDashboard({ initialOverview, token }: { initialOverview:
         <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Scoped inventory</p><p className="mt-2 text-3xl font-black">{overview.active_item_count}</p></div>
         <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Matched listings</p><p className="mt-2 text-3xl font-black">{overview.matched_count}</p></div>
         <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Pilot products found</p><p className="mt-2 text-3xl font-black">{overview.matched_product_count}/{overview.pilot_product_ids.length}</p></div>
-        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Public results</p><p className="mt-2 text-xl font-black text-cyan-200">{overview.public_results_enabled ? "Enabled" : "Shadow only"}</p></div>
+        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Public results</p><p className="mt-2 text-xl font-black text-cyan-200">{overview.public_results_enabled ? `${overview.public_product_ids?.length ?? 0}-product pilot` : "Shadow only"}</p></div>
       </section>
 
       <section className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
@@ -84,7 +84,7 @@ export function AdminKehDashboard({ initialOverview, token }: { initialOverview:
 
       <section className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div><h2 className="text-2xl font-bold">Shadow inventory</h2><p className="mt-1 text-sm text-slate-500">The 12 camera QA products plus the two body models in the sample feed are eligible to match by default.</p></div>
+          <div><h2 className="text-2xl font-bold">KEH inventory</h2><p className="mt-1 text-sm text-slate-500">All matched rows remain reviewable here. Public results are limited to the configured Sony pilot models.</p></div>
           <select value={filter} onChange={(event) => setFilter(event.target.value as typeof filter)} className="rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white">
             <option value="all">All matches</option><option value="matched">Matched</option><option value="ambiguous">Ambiguous</option><option value="unmatched">Unmatched</option>
           </select>
@@ -100,7 +100,7 @@ export function AdminKehDashboard({ initialOverview, token }: { initialOverview:
                   <td className="py-3 pr-4">{item.condition_grade_code || "Used"}<p className="text-xs text-slate-500">{item.condition_grade_label || ""}</p></td>
                   <td className="py-3 pr-4 font-semibold text-white">{money(item.price, item.currency)}</td>
                   <td className="py-3 pr-4"><span className={`rounded-full px-3 py-1 text-xs font-bold ${item.match_status === "matched" ? "bg-emerald-300/15 text-emerald-200" : item.match_status === "ambiguous" ? "bg-amber-300/15 text-amber-200" : "bg-slate-700 text-slate-300"}`}>{item.match_status}</span></td>
-                  <td className="py-3 pr-4">{item.matched_product_label ? <a href={`/search?category=cameras&q=${encodeURIComponent(item.matched_product_label)}`} target="_blank" className="text-cyan-200 hover:text-cyan-100">Open eBay search</a> : "—"}</td>
+                  <td className="py-3 pr-4">{item.matched_product_label ? <a href={`/search?category=cameras&q=${encodeURIComponent(item.matched_product_label)}`} target="_blank" className="text-cyan-200 hover:text-cyan-100">Open PriceSift search</a> : "—"}</td>
                 </tr>
               ))}
               {items.length === 0 ? <tr><td colSpan={6} className="py-5 text-slate-500">No KEH inventory has been synced for this filter yet.</td></tr> : null}

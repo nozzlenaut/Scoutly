@@ -1,20 +1,20 @@
 # PriceSift status
 
-- Cameras: Active — direct exact-model search
+- Cameras: Active — direct exact-model search; eBay plus a controlled KEH public pilot for Sony A7 III, A7 IV, and a6700
 - Consoles: Active — core-model search with storage, color, drive, and revision variants grouped underneath
 - CPUs: Active — exact consumer-desktop model builder with suffix-safe matching
 - GPUs: Active — direct exact-model search
 - RAM: Active — strict DDR3/DDR4/DDR5 specification builder
 - LEGO: Beta — exact set-number/name search with conservative completeness filtering
-- Lenses: Paused — accessory and replacement-part ambiguity remains too high
+- Lenses: Paused — KEH-only lens pilot is a future candidate after exact lens catalog records are added
 
 Scoutly remains the internal repository and infrastructure name.
+
 ## Current validation phase
 
 - Search QA workbench: Active at `/admin/qa`
 - Seed suite: 88 cases across Cameras, GPUs, RAM, CPUs, Consoles, and LEGO
 - Outcome tracking: Pass, Top-3 only, Fail, No inventory
 - Persistence: PostgreSQL production storage with local JSON fallback
-- Current build: v0.6.16 catalog guard and price-admin proxy update
-- Next milestone: Validate the price-admin proxy in production, then add KEH/Awin camera inventory in private shadow mode
-
+- Current build: v0.6.18 controlled KEH Sony public pilot
+- Next milestone: Validate KEH ranking and tracked links on the three Sony models, then decide whether to expand camera bodies or begin a KEH-only lens catalog pilot

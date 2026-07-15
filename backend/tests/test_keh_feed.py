@@ -6,8 +6,11 @@ from app.services.keh_feed import (
     keh_overview,
     normalize_feed_row,
     parse_keh_grade,
+    public_keh_listings,
     sync_keh_feed,
 )
+from app.catalog.catalog import match_product
+from app.models.listing import Listing
 from datetime import UTC, datetime
 
 
@@ -80,3 +83,58 @@ def test_shadow_sync_uses_file_fallback_and_admin_endpoint(monkeypatch, tmp_path
     response = client.get("/api/keh/overview", params={"token": "secret"})
     assert response.status_code == 200
     assert response.json()["public_results_enabled"] is False
+
+
+def test_public_keh_pilot_exposes_only_whitelisted_product(monkeypatch, tmp_path):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("KEH_PUBLIC_RESULTS", "true")
+    monkeypatch.delenv("KEH_PUBLIC_PRODUCT_IDS", raising=False)
+
+    sync_keh_feed(feed_rows=[_row()])
+    product_match = match_product("Sony A7 III Body", "cameras")
+    assert product_match is not None
+
+    listings = public_keh_listings(product_match.product)
+    assert len(listings) == 1
+    assert listings[0].provider == "KEH"
+    assert listings[0].condition == "Used · EX+ · Excellent Plus"
+    assert listings[0].affiliate_url_used is True
+
+    non_public_match = match_product("Nikon Z5 Body", "cameras")
+    assert non_public_match is not None
+    assert public_keh_listings(non_public_match.product) == []
+
+
+def test_public_search_can_merge_keh_pilot_result(monkeypatch):
+    keh_listing = Listing(
+        provider="KEH",
+        title="Sony Alpha a7 III Camera Body - EX+ - Excellent Plus | Used",
+        price=899,
+        shipping=0,
+        total_price=899,
+        condition="Used · EX+ · Excellent Plus",
+        url="https://www.awin1.com/pclick.php?p=1&a=2&m=89435",
+        affiliate_url_used=True,
+        affiliate_url_has_campaign_id=True,
+        score=500,
+    )
+    monkeypatch.setattr(
+        "app.services.search_service.public_keh_listings",
+        lambda product, limit=50: [keh_listing] if product.id == "camera-sony-a7-iii-body" else [],
+    )
+
+    client = TestClient(app)
+    response = client.get(
+        "/api/search",
+        params={
+            "q": "Sony A7 III Body",
+            "category": "cameras",
+            "providers": "none",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["results"][0]["provider"] == "KEH"
+    assert payload["results"][0]["price"] == 899

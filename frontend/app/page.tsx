@@ -19,7 +19,7 @@ export default function HomePage() {
         <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
           Find the best price for what you already want. Pick a category, choose
           the exact item or build a specification search, and PriceSift checks
-          eBay for cleaner used listings — complete items first, not broken
+          supported marketplaces for cleaner used listings — complete items first, not broken
           listings, boxes-only, parts-only junk, or sketchy matches when we can
           catch them.
         </p>
@@ -28,8 +28,8 @@ export default function HomePage() {
           <p>
             PriceSift is supported by affiliate links. If you do not want to use
             those, that is totally fine: use PriceSift to find the right item,
-            then open eBay separately or in a private/incognito window and
-            search normally.
+            then open the marketplace separately or in a private/incognito
+            window and search normally.
           </p>
         </div>
 

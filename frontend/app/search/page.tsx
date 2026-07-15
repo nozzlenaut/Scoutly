@@ -53,12 +53,12 @@ export async function generateMetadata({
   if (!query) {
     return {
       title: `Search ${category.label}`,
-      description: `Search cleaner eBay used-listing results for ${category.label}.`,
+      description: `Search cleaner used-listing results for ${category.label}.`,
       robots: { index: false, follow: true },
     };
   }
 
-  const description = `Cleaner eBay used-listing results for ${query}.`;
+  const description = `Cleaner used-listing results for ${query}.`;
   const shareUrl = `/search?category=${encodeURIComponent(category.id)}&q=${encodeURIComponent(query)}`;
   return {
     title: `${query} deals`,
@@ -142,6 +142,7 @@ export default async function SearchPage({
     auctionHours: 24,
   });
   const resolved = data.resolved_product;
+  const hasKehResults = data.results.some((result) => result.provider.toLowerCase() === "keh");
   const likelyAlternatives = (data.suggested_products || [])
     .filter((match) => match.confidence >= 0.8)
     .slice(0, 4);
@@ -237,7 +238,9 @@ export default async function SearchPage({
             </div>
           </div>
           <div className="flex flex-col items-start gap-3 sm:items-end">
-            <p className="text-sm text-slate-300">Live eBay results · Up to 3 Buy It Now options</p>
+            <p className="text-sm text-slate-300">
+              {hasKehResults ? "Live eBay + KEH results" : "Live eBay results"} · Up to 3 Buy It Now options
+            </p>
             <ShareSearchButton
               label={resolved?.product.display_name ?? data.query}
               bestPrice={data.price_context.current_best_price}

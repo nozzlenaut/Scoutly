@@ -26,6 +26,7 @@ function formatEndDate(value: string | null): string | null {
 }
 
 function sellerLabel(result: SearchResult): string {
+  if (result.provider.toLowerCase() === "keh") return "KEH Camera";
   const rating = result.seller_rating !== null ? `${result.seller_rating}% positive` : null;
   const feedback = result.seller_feedback_score;
   if (rating === null && feedback === null) return "Seller history unavailable";
@@ -35,6 +36,7 @@ function sellerLabel(result: SearchResult): string {
 }
 
 function sellerTrustLabel(result: SearchResult): string | null {
+  if (result.provider.toLowerCase() === "keh") return null;
   const feedback = result.seller_feedback_score;
   if (feedback === null) return "Seller history unavailable";
   if (feedback <= 5) return "New / low-feedback seller";
@@ -138,7 +140,9 @@ export function ResultCard({ result, query, category, productId, variant = "buy_
           </div>
           <div className="rounded-2xl bg-slate-950/35 p-3">
             <span className="block text-xs uppercase tracking-[0.16em] text-slate-400">Shipping</span>
-            <span className="mt-1 block text-lg font-bold text-white">${result.shipping.toFixed(2)}</span>
+            <span className="mt-1 block text-lg font-bold text-white">
+              {result.shipping === 0 ? "Free" : `$${result.shipping.toFixed(2)}`}
+            </span>
           </div>
           <div className="rounded-2xl bg-slate-950/35 p-3">
             <span className="block text-xs uppercase tracking-[0.16em] text-slate-400">{combinedLabel}</span>

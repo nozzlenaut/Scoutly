@@ -13,6 +13,7 @@ from app.providers.ebay import EbayProvider, ebay_config_from_env
 from app.providers.mock import MockAmazonProvider, MockEbayProvider
 from app.ranking.scorer import best_listing, is_bad_listing, rejection_reasons, score_listing, top_listings
 from app.services.feedback_store import filter_reported_listings, log_filtered_listings
+from app.services.keh_feed import public_keh_listings
 from app.services.price_store import build_price_context, record_price_snapshot
 
 
@@ -324,6 +325,11 @@ async def search_best_deals(
         if best_candidates:
             results.append(best_candidates[0])
 
+    if product is not None:
+        keh_candidates = public_keh_listings(product, limit=3)
+        if keh_candidates:
+            results.append(keh_candidates[0])
+
     return product_match, sorted(results, key=lambda item: item.total_price)
 
 
@@ -411,6 +417,16 @@ async def search_best_deals_with_auctions(
         provider_auction_results, auction_duplicates = _top_combined_auctions_with_stats(provider_auction_candidates, limit=3)
         diagnostics.auction_duplicates_removed += auction_duplicates
         auction_results.extend(provider_auction_results)
+
+    if product is not None:
+        keh_candidates = public_keh_listings(product)
+        if keh_candidates:
+            diagnostics.fixed_price_candidates += len(keh_candidates)
+            diagnostics.fixed_price_eligible += len(keh_candidates)
+            fixed_results.extend(keh_candidates)
+            provider_price_candidates["keh"] = keh_candidates
+            provider_candidate_counts["keh"] = len(keh_candidates)
+            provider_filtered_counts["keh"] = 0
 
     final_fixed_results, fixed_duplicates = _top_scored_listings_with_stats(fixed_results, limit=3)
     diagnostics.fixed_price_duplicates_removed += fixed_duplicates

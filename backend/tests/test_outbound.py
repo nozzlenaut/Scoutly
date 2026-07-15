@@ -38,6 +38,25 @@ def test_outbound_rejects_non_ebay_url(monkeypatch, tmp_path):
     assert response.status_code == 400
 
 
+def test_outbound_preserves_awin_affiliate_link(monkeypatch, tmp_path):
+    monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
+    awin_url = "https://www.awin1.com/pclick.php?p=44680921767&a=2980905&m=89435"
+
+    client = TestClient(app, follow_redirects=False)
+    response = client.get(
+        "/api/out",
+        params={
+            "url": awin_url,
+            "provider": "KEH",
+            "category": "cameras",
+            "product_id": "camera-sony-a7-iii-body",
+        },
+    )
+
+    assert response.status_code == 302
+    assert response.headers["location"] == awin_url
+
+
 def test_outbound_logs_click_metadata(monkeypatch, tmp_path):
     monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("EBAY_CLIENT_ID", "client")

@@ -174,6 +174,7 @@ export type KehOverview = {
   enabled: boolean;
   configured: boolean;
   public_results_enabled: boolean;
+  public_product_ids?: string[];
   pilot_product_ids: string[];
   latest_sync?: KehSyncRun | null;
   active_item_count: number;

@@ -16,11 +16,19 @@ from uuid import uuid4
 import httpx
 
 from app.catalog.catalog import listing_matches_product, suggest_products
+from app.models.listing import Listing
+from app.models.product import Product
+from app.ranking.scorer import score_listing
 from app.services.database import database_configured, database_connection
 from app.services.qa_store import load_qa_cases
 
 logger = logging.getLogger(__name__)
 MAX_FILE_ITEMS = 10000
+DEFAULT_PUBLIC_PRODUCT_IDS = {
+    "camera-sony-a7-iii-body",
+    "camera-sony-a7-iv-body",
+    "camera-sony-a6700-body",
+}
 GRADE_PATTERNS: list[tuple[str, str, re.Pattern[str]]] = [
     ("LN", "Like New", re.compile(r"(?:^|\s)-?\s*LN\s*-?\s*-\s*Like New(?:\s|$)", re.I)),
     ("LN-", "Like New Minus", re.compile(r"(?:^|\s)-?\s*LN-\s*-\s*Like New Minus(?:\s|$)", re.I)),
@@ -48,6 +56,23 @@ def keh_feed_enabled() -> bool:
 
 def keh_public_results_enabled() -> bool:
     return os.getenv("KEH_PUBLIC_RESULTS", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def public_product_ids() -> set[str]:
+    configured = {
+        value.strip()
+        for value in os.getenv("KEH_PUBLIC_PRODUCT_IDS", "").split(",")
+        if value.strip()
+    }
+    return configured or set(DEFAULT_PUBLIC_PRODUCT_IDS)
+
+
+def product_is_public(product_id: str | None) -> bool:
+    return bool(
+        product_id
+        and keh_public_results_enabled()
+        and product_id in public_product_ids()
+    )
 
 
 def _data_dir() -> Path:
@@ -261,7 +286,7 @@ def parse_feed_text(text: str) -> list[dict[str, str]]:
 
 def _download_feed(url: str) -> tuple[list[dict[str, str]], dict[str, str | None]]:
     with httpx.Client(timeout=httpx.Timeout(120.0, connect=20.0), follow_redirects=True) as client:
-        response = client.get(url, headers={"User-Agent": "PriceSift-KEH-Shadow/0.6.17"})
+        response = client.get(url, headers={"User-Agent": "PriceSift-KEH-Pilot/0.6.18"})
         response.raise_for_status()
     text = _decode_feed(response.content, response.headers.get("content-type", ""))
     return parse_feed_text(text), {
@@ -502,6 +527,7 @@ def keh_overview(limit: int = 200) -> dict[str, Any]:
         "enabled": keh_feed_enabled(),
         "configured": keh_feed_url() is not None,
         "public_results_enabled": keh_public_results_enabled(),
+        "public_product_ids": sorted(public_product_ids()),
         "pilot_product_ids": sorted(pilot_product_ids()),
         "latest_sync": latest_sync_run(),
         "active_item_count": len(items),
@@ -511,3 +537,80 @@ def keh_overview(limit: int = 200) -> dict[str, Any]:
         "matched_product_count": len(product_counts),
         "items": items[:limit],
     }
+
+
+def public_keh_listings(product: Product, limit: int = 50) -> list[Listing]:
+    """Return public-pilot KEH listings for one exact camera product.
+
+    The feed remains shadow-only for every product except the explicit public
+    whitelist. KEH inventory is already exact-product matched during sync, so
+    this adapter only exposes active, in-stock, for-sale rows as normal
+    PriceSift fixed-price listings.
+    """
+
+    if product.category != "cameras" or not product_is_public(product.id):
+        return []
+
+    items = list_keh_inventory(
+        limit=max(1, min(limit, 200)),
+        status="matched",
+        product_id=product.id,
+    )
+    listings: list[Listing] = []
+    grade_bonus = {"LN": 12, "LN-": 10, "EX+": 8, "EX": 6, "BGN": 2, "UG": -5}
+
+    for item in items:
+        if not item.get("active", True):
+            continue
+        if not item.get("in_stock") or not item.get("is_for_sale"):
+            continue
+
+        price = _float(item.get("price"))
+        affiliate_url = str(item.get("affiliate_url") or "").strip()
+        title = str(item.get("title") or "").strip()
+        if price is None or not affiliate_url or not title:
+            continue
+
+        grade_code = str(item.get("condition_grade_code") or "").strip()
+        grade_label = str(item.get("condition_grade_label") or "").strip()
+        condition_parts = ["Used"]
+        if grade_code:
+            condition_parts.append(grade_code)
+        if grade_label:
+            condition_parts.append(grade_label)
+
+        warning_labels: list[str] = []
+        # KEH currently offers free standard ground shipping on qualifying US
+        # orders over $75. Every public pilot camera body should clear that
+        # threshold; lower-price rows stay visible but do not claim free
+        # shipping without a feed-provided delivery cost.
+        shipping = 0.0
+        if price < 75:
+            warning_labels.append("Shipping confirmed at checkout")
+
+        listing = Listing(
+            provider="KEH",
+            title=title,
+            price=price,
+            shipping=shipping,
+            total_price=round(price + shipping, 2),
+            condition=" · ".join(condition_parts),
+            seller_rating=None,
+            seller_feedback_score=None,
+            url=affiliate_url,
+            image_url=item.get("image_url") or None,
+            affiliate_url_used=True,
+            affiliate_url_has_campaign_id=True,
+            listing_type="fixed_price",
+            buying_options=["FIXED_PRICE"],
+            warning_labels=warning_labels,
+        )
+        # Neutralize the generic missing-marketplace-feedback penalty for a
+        # specialist retailer, then give a small structured-grade adjustment.
+        listing.score = round(
+            score_listing(listing, product) + 12 + grade_bonus.get(grade_code, 0),
+            2,
+        )
+        listings.append(listing)
+
+    return sorted(listings, key=lambda item: item.score, reverse=True)

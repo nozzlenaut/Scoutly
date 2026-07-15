@@ -1,3 +1,15 @@
+# Changelog
+
+## v0.6.18
+
+- Publishes KEH/Awin fixed-price listings for a three-product Sony camera pilot: A7 III, A7 IV, and a6700.
+- Keeps every other KEH match shadow-only behind the admin dashboard.
+- Merges eligible KEH listings into the existing top-three Buy It Now ranking.
+- Preserves Awin tracked deep links through PriceSift outbound click logging.
+- Displays KEH condition grades and retailer identity without marketplace-seller warnings.
+- Keeps KEH out of auctions and historical price snapshots during the pilot.
+- Adds three KEH public-pilot and Awin redirect regressions, bringing the backend suite to 190 passing tests.
+
 ## v0.6.17
 
 - Added KEH Camera/Awin feed ingestion in private shadow mode.
@@ -7,7 +19,6 @@
 - Changed homepage promise to “Free to use. Always.”
 - KEH remains excluded from public results and price history.
 
-# Changelog
 
 ## v0.6.16
 
@@ -147,7 +158,6 @@
 - Rejects LEGO base-only / towers-only / main-build-only style partial listings.
 - Rejects GPU problem/issue listings while allowing “no problems” / “no issues” context.
 
-# Changelog
 
 ## v0.6.13
 
