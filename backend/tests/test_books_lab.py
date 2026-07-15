@@ -215,3 +215,36 @@ def test_books_admin_endpoints_require_token(monkeypatch):
     client = TestClient(app)
     assert client.get("/api/books/lab/status").status_code == 401
     assert client.get("/api/books/lab/status", params={"token": "secret"}).status_code == 200
+
+
+def test_books_rejects_unrelated_common_word_from_dominant_title_cluster():
+    provider = _FakeBookProvider(
+        {
+            "9780306406157": [
+                _listing("Atomic Habits by James Clear", f"atomic-{index}", price=8 + index)
+                for index in range(8)
+            ]
+            + [_listing("Dr. A's Habits of Health by Wayne Scott Andersen", "wrong-habits", price=4)]
+        }
+    )
+    payload = asyncio.run(search_used_books_by_isbn("9780306406157", provider=provider))
+    assert payload["standard_count"] == 8
+    assert all("Atomic Habits" in result["title"] for result in payload["results"])
+    assert payload["rejection_reasons"]["Unverified or inconsistent title identity"] == 1
+
+
+def test_books_separates_multi_book_lots_from_single_copy_results():
+    provider = _FakeBookProvider(
+        {
+            "9780306406157": [
+                _listing("The Name of the Wind Paperback", "single", price=9),
+                _listing("The Name of the Wind + Wise Man's Fear 2 Book Lot", "lot", price=14),
+                _listing("Heretics of Dune and Chapterhouse Dune Set of 2 Books", "bundle", price=18),
+            ]
+        }
+    )
+    payload = asyncio.run(search_used_books_by_isbn("9780306406157", provider=provider))
+    assert payload["standard_count"] == 1
+    assert payload["bundle_count"] == 2
+    assert payload["top_results"][0]["title"] == "The Name of the Wind Paperback"
+    assert all("Multi-book" in result["warning_labels"][0] for result in payload["bundle_results"])

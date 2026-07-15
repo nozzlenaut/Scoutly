@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.24
+
+- Strengthens Books title-consensus matching so a shared generic word cannot admit an unrelated title into a dominant multi-word cluster.
+- Separates multi-book lots, bundles, and sets from normal single-copy Books results.
+- Adds bundle counts and private/public bundle inspection sections while keeping the default top three single-copy only.
+- Rebuilds `/admin/prices` around server-side initial loading using the same direct Railway API pattern as the working KEH admin page.
+- Removes the price dashboard's normal dependency on the browser proxy and adds visible backend error details at the token gate.
+- Adds two Books regressions, bringing the backend suite to 208 passing tests.
+
 ## v0.6.23
 
 - Promotes Books into the public beta with a simple ISBN-10/ISBN-13 search field.

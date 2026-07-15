@@ -34,6 +34,18 @@ BOOK_DERIVATIVE_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\b(?:sparknotes|cliffsnotes|cliff\s+notes)\b", re.IGNORECASE), "Study guide or companion material"),
 )
 
+BOOK_BUNDLE_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"\b(?:book|books|volume|volumes)\s+lot\b", re.IGNORECASE),
+    re.compile(r"\blot\s+of\s+\d+\s+(?:books?|volumes?)\b", re.IGNORECASE),
+    re.compile(r"\bbundle\b", re.IGNORECASE),
+    re.compile(r"\bset\s+of\s+\d+\s+(?:books?|volumes?)\b", re.IGNORECASE),
+    re.compile(r"\b\d+\s*[- ]?(?:book|volume)\s+(?:set|lot|bundle)\b", re.IGNORECASE),
+    re.compile(r"\b\d+\s+(?:books?|volumes?)\b", re.IGNORECASE),
+    re.compile(r"\b(?:two|three|four|five)\s+(?:books?|volumes?)\b", re.IGNORECASE),
+    re.compile(r"\bbooks?\s*\d+\s*(?:and|&|\+)\s*\d+\b", re.IGNORECASE),
+)
+
+
 BOOK_COLLECTIBLE_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"\b(?:author\s+)?signed\b", re.IGNORECASE),
     re.compile(r"\bautograph(?:ed)?\b", re.IGNORECASE),
@@ -212,10 +224,17 @@ def _apply_title_consensus_gate(listings: list[Listing]) -> tuple[list[Listing],
 
     def matches_consensus(tokens: set[str]) -> bool:
         shared = tokens & consensus_set
-        # A single highly dominant title token (for example, "Dune") can be
-        # enough. Otherwise require two shared identity tokens to avoid matching
-        # unrelated books on a common surname or series word.
-        return bool(tokens & anchor_tokens) or len(shared) >= 2 or (len(consensus_tokens) == 1 and len(shared) == 1)
+        shared_anchors = tokens & anchor_tokens
+        # When the ISBN result set has two or more dominant identity tokens
+        # (for example, "atomic" + "habits"), require at least two of them.
+        # This prevents an unrelated title containing only a generic word such
+        # as "habits" from riding the dominant title cluster into the results.
+        if len(anchor_tokens) >= 2:
+            return len(shared_anchors) >= 2
+        # Preserve coherent one-word titles such as Dune or Educated.
+        if len(anchor_tokens) == 1:
+            return bool(shared_anchors)
+        return len(shared) >= 2 or (len(consensus_tokens) == 1 and len(shared) == 1)
 
     accepted = [listing for listing, tokens in zip(listings, token_sets) if matches_consensus(tokens)]
 
@@ -235,16 +254,22 @@ def _derivative_rejection_reason(title: str) -> str | None:
     return None
 
 
+def _is_bundle_listing(title: str) -> bool:
+    return any(pattern.search(title or "") for pattern in BOOK_BUNDLE_PATTERNS)
+
+
 def _is_collectible_listing(title: str) -> bool:
     return any(pattern.search(title or "") for pattern in BOOK_COLLECTIBLE_PATTERNS)
 
 
-def _annotate_book_listing(listing: Listing, *, collectible: bool) -> Listing:
+def _annotate_book_listing(listing: Listing, *, collectible: bool, bundle: bool = False) -> Listing:
     warnings = list(listing.warning_labels)
     if EDITION_YEAR_RE.search(listing.title):
         warnings.append("Seller lists a specific edition year—verify the ISBN and listing details.")
     if collectible:
         warnings.append("Collectible, signed, or special-edition copy—price may not reflect a standard used copy.")
+    if bundle:
+        warnings.append("Multi-book lot or bundle—separated from single-copy price results.")
     # Preserve order while avoiding repeated labels from provider metadata.
     warnings = list(dict.fromkeys(warnings))
     return listing.model_copy(update={"warning_labels": warnings})
@@ -252,7 +277,7 @@ def _annotate_book_listing(listing: Listing, *, collectible: bool) -> Listing:
 
 def _filter_query_candidates(
     candidates: list[Listing],
-) -> tuple[list[Listing], list[Listing], Counter[str], int, list[str]]:
+) -> tuple[list[Listing], list[Listing], list[Listing], Counter[str], int, list[str]]:
     rejection_reasons: Counter[str] = Counter()
     eligible: list[Listing] = []
     seen_urls: set[str] = set()
@@ -281,15 +306,19 @@ def _filter_query_candidates(
 
     standard: list[Listing] = []
     collectible: list[Listing] = []
+    bundles: list[Listing] = []
     for listing in eligible:
+        is_bundle = _is_bundle_listing(listing.title)
         is_collectible = _is_collectible_listing(listing.title)
-        annotated = _annotate_book_listing(listing, collectible=is_collectible)
-        if is_collectible:
+        annotated = _annotate_book_listing(listing, collectible=is_collectible, bundle=is_bundle)
+        if is_bundle:
+            bundles.append(annotated)
+        elif is_collectible:
             collectible.append(annotated)
         else:
             standard.append(annotated)
 
-    return standard, collectible, rejection_reasons, duplicates_removed, consensus_tokens
+    return standard, collectible, bundles, rejection_reasons, duplicates_removed, consensus_tokens
 
 
 def _serialize_listing(listing: Listing) -> dict[str, Any]:
@@ -318,6 +347,7 @@ async def search_used_books_by_isbn(
             "eligible_count": 0,
             "standard_count": 0,
             "collectible_count": 0,
+            "bundle_count": 0,
             "duplicates_removed": 0,
             "rejection_reasons": {"Invalid ISBN check digit or length": 1},
             "query_attempts": [],
@@ -326,6 +356,7 @@ async def search_used_books_by_isbn(
             "top_results": [],
             "results": [],
             "collectible_results": [],
+            "bundle_results": [],
         }
 
     if provider is None:
@@ -338,11 +369,12 @@ async def search_used_books_by_isbn(
     selected_query_isbn: str | None = None
     selected_standard: list[Listing] = []
     selected_collectible: list[Listing] = []
-    collectible_fallback: tuple[str, list[Listing]] | None = None
+    selected_bundles: list[Listing] = []
+    collectible_fallback: tuple[str, list[Listing], list[Listing]] | None = None
 
     for index, isbn in enumerate(identity["query_isbns"]):
         candidates = await provider.search_gtin(isbn, category="books", limit=limit)
-        standard, collectible, rejection_reasons, duplicates_removed, consensus_tokens = _filter_query_candidates(candidates)
+        standard, collectible, bundles, rejection_reasons, duplicates_removed, consensus_tokens = _filter_query_candidates(candidates)
 
         total_candidates += len(candidates)
         total_duplicates_removed += duplicates_removed
@@ -352,9 +384,10 @@ async def search_used_books_by_isbn(
                 "isbn": isbn,
                 "role": "primary" if index == 0 else "fallback",
                 "candidate_count": len(candidates),
-                "eligible_count": len(standard) + len(collectible),
+                "eligible_count": len(standard) + len(collectible) + len(bundles),
                 "standard_count": len(standard),
                 "collectible_count": len(collectible),
+                "bundle_count": len(bundles),
                 "duplicates_removed": duplicates_removed,
                 "consensus_tokens": consensus_tokens,
                 "rejection_reasons": dict(rejection_reasons),
@@ -366,16 +399,17 @@ async def search_used_books_by_isbn(
             selected_query_isbn = isbn
             selected_standard = standard
             selected_collectible = collectible
+            selected_bundles = bundles
             query_attempts[-1]["used_as_results"] = True
             break
 
         # Keep a coherent collectible-only result set, but continue to the
         # alternate ISBN once in case it has normal used copies.
-        if collectible and collectible_fallback is None:
-            collectible_fallback = (isbn, collectible)
+        if (collectible or bundles) and collectible_fallback is None:
+            collectible_fallback = (isbn, collectible, bundles)
 
     if selected_query_isbn is None and collectible_fallback is not None:
-        selected_query_isbn, selected_collectible = collectible_fallback
+        selected_query_isbn, selected_collectible, selected_bundles = collectible_fallback
         for attempt in query_attempts:
             if attempt["isbn"] == selected_query_isbn:
                 attempt["used_as_results"] = True
@@ -389,12 +423,17 @@ async def search_used_books_by_isbn(
         _serialize_listing(listing)
         for listing in selected_collectible[: max(1, min(limit, 100))]
     ]
+    serialized_bundles = [
+        _serialize_listing(listing)
+        for listing in selected_bundles[: max(1, min(limit, 100))]
+    ]
     return {
         "isbn": identity,
         "candidate_count": total_candidates,
-        "eligible_count": len(selected_standard) + len(selected_collectible),
+        "eligible_count": len(selected_standard) + len(selected_collectible) + len(selected_bundles),
         "standard_count": len(selected_standard),
         "collectible_count": len(selected_collectible),
+        "bundle_count": len(selected_bundles),
         "duplicates_removed": total_duplicates_removed,
         "rejection_reasons": dict(aggregate_rejections),
         "query_attempts": query_attempts,
@@ -403,5 +442,6 @@ async def search_used_books_by_isbn(
         "top_results": serialized_standard[:3],
         "results": serialized_standard,
         "collectible_results": serialized_collectible,
+        "bundle_results": serialized_bundles,
     }
 

@@ -171,7 +171,7 @@ export function AdminBookIsbnLab({ token }: { token: string }) {
                     <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{attempt.role}</span>
                   </div>
                   <p className="mt-2 text-sm text-slate-400">
-                    {attempt.candidate_count} candidates · {attempt.standard_count} standard · {attempt.collectible_count} collectible
+                    {attempt.candidate_count} candidates · {attempt.standard_count} standard · {attempt.collectible_count} collectible · {attempt.bundle_count} bundles
                   </p>
                   {attempt.consensus_tokens.length ? (
                     <p className="mt-2 text-xs text-cyan-200">Shared identity: {attempt.consensus_tokens.slice(0, 6).join(", ")}</p>
@@ -216,6 +216,17 @@ export function AdminBookIsbnLab({ token }: { token: string }) {
               </summary>
               <div className="grid gap-4 border-t border-purple-300/10 p-5 md:grid-cols-2 xl:grid-cols-3">
                 {data.collectible_results.map((result, index) => <ResultCard key={`${result.url}-collectible-${index}`} result={result} isbn={data.isbn.normalized} />)}
+              </div>
+            </details>
+          ) : null}
+
+          {data.bundle_results.length ? (
+            <details className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/[0.06]">
+              <summary className="cursor-pointer list-none p-5 font-bold text-amber-100">
+                Inspect {data.bundle_results.length} separated multi-book listings ↓
+              </summary>
+              <div className="grid gap-4 border-t border-amber-300/10 p-5 md:grid-cols-2 xl:grid-cols-3">
+                {data.bundle_results.map((result, index) => <ResultCard key={`${result.url}-bundle-${index}`} result={result} isbn={data.isbn.normalized} />)}
               </div>
             </details>
           ) : null}

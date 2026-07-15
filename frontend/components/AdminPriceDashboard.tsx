@@ -14,9 +14,9 @@ function dateLabel(value?: string | null): string {
   return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString();
 }
 
-export function AdminPriceDashboard({ token }: { token: string }) {
-  const [overview, setOverview] = useState<PriceOverview | null>(null);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+export function AdminPriceDashboard({ initialOverview, token }: { initialOverview: PriceOverview; token: string }) {
+  const [overview, setOverview] = useState<PriceOverview | null>(initialOverview);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("ready");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -31,7 +31,7 @@ export function AdminPriceDashboard({ token }: { token: string }) {
     }
   }, [token]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { setOverview(initialOverview); setStatus("ready"); }, [initialOverview]);
 
   if (status === "loading" && !overview) {
     return <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6 text-slate-300">Loading price history…</div>;

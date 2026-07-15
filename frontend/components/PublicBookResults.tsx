@@ -39,7 +39,7 @@ export function PublicBookResults({ data, query }: { data: BookLabResponse; quer
         </div>
       </div>
 
-      <section className="mt-6 grid gap-4 sm:grid-cols-3">
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-3xl border border-white/10 bg-white/[0.05] p-5">
           <p className="text-sm text-slate-400">eBay candidates</p>
           <p className="mt-2 text-3xl font-black">{data.candidate_count}</p>
@@ -51,6 +51,10 @@ export function PublicBookResults({ data, query }: { data: BookLabResponse; quer
         <div className="rounded-3xl border border-white/10 bg-white/[0.05] p-5">
           <p className="text-sm text-slate-400">Collectible copies separated</p>
           <p className="mt-2 text-3xl font-black">{data.collectible_count}</p>
+        </div>
+        <div className="rounded-3xl border border-white/10 bg-white/[0.05] p-5">
+          <p className="text-sm text-slate-400">Book bundles separated</p>
+          <p className="mt-2 text-3xl font-black">{data.bundle_count}</p>
         </div>
       </section>
 
@@ -70,8 +74,8 @@ export function PublicBookResults({ data, query }: { data: BookLabResponse; quer
       ) : (
         <div className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-6 text-amber-50" role="status">
           <h2 className="text-xl font-bold">
-            {data.collectible_results.length
-              ? "No standard used copies were found, but collectible copies are available below."
+            {data.collectible_results.length || data.bundle_results.length
+              ? "No standard single-copy results were found, but separated alternatives are available below."
               : data.candidate_count > 0
                 ? `eBay returned ${data.candidate_count} candidates, but none passed the exact-title and used-copy checks.`
                 : "No active used Buy It Now copies were returned for this exact ISBN."}
@@ -93,6 +97,28 @@ export function PublicBookResults({ data, query }: { data: BookLabResponse; quer
             {data.collectible_results.slice(0, 3).map((result, index) => (
               <ResultCard
                 key={`collectible-book-${result.url}-${index}`}
+                result={result}
+                query={identity.normalized}
+                category="books"
+                productId={`isbn-${identity.normalized}`}
+                variant="buy_now"
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {data.bundle_results.length ? (
+        <section className="mt-10 rounded-3xl border border-amber-300/20 bg-amber-300/[0.06] p-5 sm:p-6">
+          <p className="text-sm uppercase tracking-[0.2em] text-amber-200">Multi-book alternatives</p>
+          <h2 className="mt-1 text-2xl font-bold">Lots and bundles containing this book</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+            These appear to include the requested ISBN, but they are separated because their prices cannot be compared fairly with one used copy.
+          </p>
+          <div className="mt-5 grid gap-5 xl:grid-cols-3">
+            {data.bundle_results.slice(0, 3).map((result, index) => (
+              <ResultCard
+                key={`bundle-book-${result.url}-${index}`}
                 result={result}
                 query={identity.normalized}
                 category="books"
