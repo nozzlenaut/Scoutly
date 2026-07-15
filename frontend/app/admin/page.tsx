@@ -5,14 +5,7 @@ import { AdminBetaFeedback } from "@/components/AdminBetaFeedback";
 import { AdminAnalyticsDigest } from "@/components/AdminAnalyticsDigest";
 import { SiteFooter } from "@/components/SiteFooter";
 import { getActiveReports, getAnalyticsDigest, getAnalyticsSummary, getBetaFeedback, getManualFilterRules, getRecentClicks, getRecentFilteredListings } from "@/lib/api";
-
-function formatDate(value?: string | null): string {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString();
-}
-
+import { formatAdminDate } from "@/lib/formatAdminDate";
 function joinReasons(reasons?: string[]): string {
   if (!reasons || reasons.length === 0) return "—";
   return reasons.join(", ");
@@ -86,10 +79,16 @@ export default async function AdminPage({
             <p className="text-sm uppercase tracking-[0.25em] text-slate-500">PriceSift admin</p>
             <h1 className="mt-2 text-4xl font-black">Testing dashboard</h1>
             <p className="mt-3 max-w-3xl text-slate-400">
-              PriceSift logs outbound clicks before redirecting to eBay, bad-result reports, and filtered listings that were rejected before ranking. eBay Partner reporting can still lag behind this.
+              PriceSift logs outbound clicks, bad-result reports, filtered listings, and public beta feedback. All activity times below are shown in Eastern Time; eBay Partner reporting can still lag behind this.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
+            <Link
+              href="#feedback"
+              className="w-fit rounded-2xl border border-fuchsia-200/25 bg-fuchsia-200/10 px-5 py-3 font-bold text-fuchsia-100 transition hover:bg-fuchsia-200/15"
+            >
+              Feedback inbox ({betaFeedback.length}) â†“
+            </Link>
             <Link
               href={`/admin/keh?token=${encodeURIComponent(token)}`}
               className="w-fit rounded-2xl border border-emerald-200/25 bg-emerald-200/10 px-5 py-3 font-bold text-emerald-100 transition hover:bg-emerald-200/15"
@@ -145,7 +144,7 @@ export default async function AdminPage({
             <p className="mt-2 text-3xl font-black">{summary.manual_filter_rule_count ?? manualRules.length}</p>
           </div>
           <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
-            <p className="text-sm text-slate-400">Beta feedback</p>
+            <p className="text-sm text-slate-400">Feedback inbox</p>
             <p className="mt-2 text-3xl font-black">{summary.beta_feedback_count ?? betaFeedback.length}</p>
           </div>
           <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
@@ -187,7 +186,7 @@ export default async function AdminPage({
             <table className="w-full min-w-[900px] text-left text-sm">
               <thead className="text-slate-500">
                 <tr>
-                  <th className="py-2 pr-4">Time</th>
+                  <th className="py-2 pr-4">Time (ET)</th>
                   <th className="py-2 pr-4">Category</th>
                   <th className="py-2 pr-4">Query</th>
                   <th className="py-2 pr-4">Title</th>
@@ -198,7 +197,7 @@ export default async function AdminPage({
               <tbody className="divide-y divide-white/10 text-slate-300">
                 {clicks.map((click, index) => (
                   <tr key={`${click.clicked_at}-${click.ebay_item_id}-${index}`}>
-                    <td className="py-3 pr-4 text-slate-400">{formatDate(click.clicked_at)}</td>
+                    <td className="py-3 pr-4 text-slate-400">{formatAdminDate(click.clicked_at)}</td>
                     <td className="py-3 pr-4">{click.category || "—"}</td>
                     <td className="py-3 pr-4">{click.query || "—"}</td>
                     <td className="py-3 pr-4">{click.title || "—"}</td>
@@ -225,7 +224,7 @@ export default async function AdminPage({
             <table className="w-full min-w-[1000px] text-left text-sm">
               <thead className="text-slate-500">
                 <tr>
-                  <th className="py-2 pr-4">Time</th>
+                  <th className="py-2 pr-4">Time (ET)</th>
                   <th className="py-2 pr-4">Category</th>
                   <th className="py-2 pr-4">Type</th>
                   <th className="py-2 pr-4">Query</th>
@@ -237,7 +236,7 @@ export default async function AdminPage({
               <tbody className="divide-y divide-white/10 text-slate-300">
                 {filtered.map((item, index) => (
                   <tr key={`${item.filtered_at}-${item.ebay_item_id}-${index}`}>
-                    <td className="py-3 pr-4 text-slate-400">{formatDate(item.filtered_at)}</td>
+                    <td className="py-3 pr-4 text-slate-400">{formatAdminDate(item.filtered_at)}</td>
                     <td className="py-3 pr-4">{item.category || "—"}</td>
                     <td className="py-3 pr-4">{item.listing_type || "—"}</td>
                     <td className="py-3 pr-4">{item.query || "—"}</td>

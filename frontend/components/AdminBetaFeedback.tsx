@@ -1,32 +1,47 @@
 import type { BetaFeedbackRecord } from "@/lib/api";
-
-function formatDate(value?: string | null): string {
-  if (!value) return "—";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
-}
+import { formatAdminDate } from "@/lib/formatAdminDate";
 
 export function AdminBetaFeedback({ feedback }: { feedback: BetaFeedbackRecord[] }) {
   return (
-    <section className="mt-10 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+    <section id="feedback" className="mt-10 scroll-mt-6 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
       <div>
-        <h2 className="text-2xl font-bold">Beta feedback</h2>
-        <p className="mt-1 text-sm text-slate-500">General tester feedback submitted from the public beta form.</p>
+        <h2 className="text-2xl font-bold">Feedback inbox</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Public beta submissions are stored in PostgreSQL when connected, with local JSON used only as a development fallback.
+        </p>
       </div>
       <div className="mt-5 overflow-x-auto">
-        <table className="w-full min-w-[950px] text-left text-sm">
-          <thead className="text-slate-500"><tr><th className="py-2 pr-4">Submitted</th><th className="py-2 pr-4">Type</th><th className="py-2 pr-4">Category</th><th className="py-2 pr-4">Message</th><th className="py-2 pr-4">Email</th></tr></thead>
+        <table className="w-full min-w-[1100px] text-left text-sm">
+          <thead className="text-slate-500">
+            <tr>
+              <th className="py-2 pr-4">Submitted (ET)</th>
+              <th className="py-2 pr-4">Type</th>
+              <th className="py-2 pr-4">Category</th>
+              <th className="py-2 pr-4">Message</th>
+              <th className="py-2 pr-4">Email</th>
+              <th className="py-2 pr-4">Page</th>
+            </tr>
+          </thead>
           <tbody className="divide-y divide-white/10 text-slate-300">
             {feedback.map((item) => (
               <tr key={item.id}>
-                <td className="py-3 pr-4 text-slate-400">{formatDate(item.submitted_at)}</td>
+                <td className="whitespace-nowrap py-3 pr-4 text-slate-400">{formatAdminDate(item.submitted_at)}</td>
                 <td className="py-3 pr-4">{item.feedback_type}</td>
-                <td className="py-3 pr-4">{item.category || "—"}</td>
-                <td className="max-w-xl py-3 pr-4 whitespace-pre-wrap">{item.message}</td>
-                <td className="py-3 pr-4">{item.email || "—"}</td>
+                <td className="py-3 pr-4">{item.category || "â€”"}</td>
+                <td className="max-w-xl whitespace-pre-wrap py-3 pr-4">{item.message}</td>
+                <td className="break-all py-3 pr-4">{item.email || "â€”"}</td>
+                <td className="py-3 pr-4">
+                  {item.page_url ? (
+                    <a href={item.page_url} target="_blank" rel="noreferrer" className="text-cyan-200 hover:text-cyan-100">
+                      Open page
+                    </a>
+                  ) : "â€”"}
+                </td>
               </tr>
             ))}
-            {feedback.length === 0 ? <tr><td colSpan={5} className="py-4 text-slate-500">No beta feedback yet.</td></tr> : null}
+            {feedback.length === 0 ? (
+              <tr><td colSpan={6} className="py-4 text-slate-500">No feedback submitted yet.</td></tr>
+            ) : null}
           </tbody>
         </table>
       </div>

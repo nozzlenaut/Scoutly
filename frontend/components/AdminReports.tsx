@@ -2,18 +2,12 @@
 
 import { useState } from "react";
 import { deleteBadResultReport, type BadResultReport } from "@/lib/api";
+import { formatAdminDate } from "@/lib/formatAdminDate";
 
 type Props = {
   initialReports: BadResultReport[];
   token?: string;
 };
-
-function formatDate(value?: string | null): string {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString();
-}
 
 export function AdminReports({ initialReports, token }: Props) {
   const [reports, setReports] = useState(initialReports);
@@ -48,8 +42,8 @@ export function AdminReports({ initialReports, token }: Props) {
         <table className="w-full min-w-[1000px] text-left text-sm">
           <thead className="text-slate-500">
             <tr>
-              <th className="py-2 pr-4">Reported</th>
-              <th className="py-2 pr-4">Expires</th>
+              <th className="py-2 pr-4">Reported (ET)</th>
+              <th className="py-2 pr-4">Expires (ET)</th>
               <th className="py-2 pr-4">Reason</th>
               <th className="py-2 pr-4">Category</th>
               <th className="py-2 pr-4">Title</th>
@@ -60,12 +54,12 @@ export function AdminReports({ initialReports, token }: Props) {
           <tbody className="divide-y divide-white/10 text-slate-300">
             {reports.map((report, index) => (
               <tr key={`${report.reported_at}-${report.link_key}-${index}`}>
-                <td className="py-3 pr-4 text-slate-400">{formatDate(report.reported_at)}</td>
-                <td className="py-3 pr-4 text-slate-400">{formatDate(report.expires_at)}</td>
-                <td className="py-3 pr-4">{report.reason || "—"}</td>
-                <td className="py-3 pr-4">{report.category || "—"}</td>
-                <td className="py-3 pr-4">{report.title || "—"}</td>
-                <td className="py-3 pr-4">{report.ebay_item_id || "—"}</td>
+                <td className="whitespace-nowrap py-3 pr-4 text-slate-400">{formatAdminDate(report.reported_at)}</td>
+                <td className="whitespace-nowrap py-3 pr-4 text-slate-400">{formatAdminDate(report.expires_at)}</td>
+                <td className="py-3 pr-4">{report.reason || "â€”"}</td>
+                <td className="py-3 pr-4">{report.category || "â€”"}</td>
+                <td className="py-3 pr-4">{report.title || "â€”"}</td>
+                <td className="py-3 pr-4">{report.ebay_item_id || "â€”"}</td>
                 <td className="py-3 pr-4">
                   <button
                     type="button"

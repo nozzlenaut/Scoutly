@@ -33,7 +33,7 @@ export function BetaFeedbackForm() {
     return (
       <div className="rounded-3xl border border-emerald-300/25 bg-emerald-300/10 p-6 text-emerald-50">
         <h2 className="text-2xl font-bold">Feedback saved</h2>
-        <p className="mt-2 text-sm leading-6 text-emerald-100/90">Thanks for helping test PriceSift. Honest reports are exactly what make the filters better.</p>
+        <p className="mt-2 text-sm leading-6 text-emerald-100/90">Thanks for helping test PriceSift. Your submission is saved to the private feedback inbox for review.</p>
         <button type="button" onClick={() => setStatus("idle")} className="mt-4 rounded-2xl bg-white px-4 py-2 font-semibold text-slate-950">Send another</button>
       </div>
     );

@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.6.28
+
+- Standardizes recent admin activity timestamps in Eastern Time and labels the displayed timezone.
+- Treats legacy offset-free activity timestamps as UTC before display, preventing future-looking click and feedback times.
+- Promotes public beta feedback into a clearly linked admin feedback inbox.
+- Shows the source page for each feedback submission and confirms the storage destination in the admin UI.
+- Requires no database migration or new environment variables.
+
 ## v0.6.27
 
 - Corrects light-analytics click attribution.
