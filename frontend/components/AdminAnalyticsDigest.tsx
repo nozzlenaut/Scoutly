@@ -58,10 +58,16 @@ export function AdminAnalyticsDigest({ digest }: Props) {
         <Metric label="Searches" value={String(digest.search_count)} />
         <Metric label="With results" value={String(digest.with_results_count)} />
         <Metric label="No-result rate" value={formatPercent(digest.no_result_rate)} />
-        <Metric label="Listing clicks" value={String(digest.click_count)} />
+        <Metric label="Tracked clicks" value={String(digest.click_count)} />
         <Metric label="Approx. click rate" value={formatPercent(digest.approximate_click_rate)} />
         <Metric label="US-only use" value={formatPercent(digest.us_only_rate)} />
       </div>
+
+      {digest.historical_click_count > 0 ? (
+        <p className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
+          {digest.historical_click_count} older click{digest.historical_click_count === 1 ? "" : "s"} occurred in this window but could not be linked to a tracked search. They are excluded from the click rate and provider totals.
+        </p>
+      ) : null}
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
         <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">

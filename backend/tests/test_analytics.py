@@ -208,9 +208,11 @@ def test_awin_click_is_counted_as_affiliate(monkeypatch, tmp_path):
 
     from app.services.analytics_store import analytics_digest
     digest = analytics_digest(30)
-    assert digest["click_count"] == 1
-    assert digest["affiliate_click_count"] == 1
-    assert digest["provider_click_counts"] == {"KEH": 1}
+    assert digest["click_count"] == 0
+    assert digest["affiliate_click_count"] == 0
+    assert digest["historical_click_count"] == 1
+    assert digest["historical_affiliate_click_count"] == 1
+    assert digest["provider_click_counts"] == {}
 
 
 def test_public_search_can_record_light_analytics(monkeypatch, tmp_path):
@@ -236,3 +238,60 @@ def test_public_search_can_record_light_analytics(monkeypatch, tmp_path):
     assert payload["search_count"] == 1
     assert payload["us_only_count"] == 1
     assert payload["category_rows"][0]["category"] == "cameras"
+
+
+def test_digest_excludes_clicks_that_predate_matching_search(monkeypatch, tmp_path):
+    from datetime import UTC, datetime, timedelta
+
+    import app.services.analytics_store as analytics_store
+    import app.services.feedback_store as feedback_store
+    from app.services.analytics_store import SearchEvent, analytics_digest, log_search_event
+
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
+    base = datetime(2026, 7, 15, 12, 0, tzinfo=UTC)
+
+    monkeypatch.setattr(feedback_store, "_now", lambda: base)
+    log_outbound_click(
+        url="https://www.ebay.com/itm/old",
+        tracked_url="https://www.ebay.com/itm/old?campid=123",
+        provider="eBay",
+        category="cameras",
+        product_id="camera-sony-a6700-body",
+        query="Sony a6700 Body",
+        title="Old click before analytics search",
+    )
+
+    monkeypatch.setattr(analytics_store, "_now", lambda: base + timedelta(hours=1))
+    log_search_event(
+        SearchEvent(
+            category="cameras",
+            query="Sony a6700 Body",
+            product_id="camera-sony-a6700-body",
+            product_label="Sony a6700 Body",
+            resolved=True,
+            result_count=3,
+            provider_counts={"eBay": 2, "KEH": 1},
+            no_inventory=False,
+        )
+    )
+
+    monkeypatch.setattr(feedback_store, "_now", lambda: base + timedelta(hours=2))
+    log_outbound_click(
+        url="https://www.awin1.com/pclick.php?p=123&a=456&m=89435",
+        tracked_url="https://www.awin1.com/pclick.php?p=123&a=456&m=89435",
+        provider="KEH",
+        category="cameras",
+        product_id="camera-sony-a6700-body",
+        query="Sony a6700 Body",
+        title="Sony a6700 EX+",
+    )
+
+    monkeypatch.setattr(analytics_store, "_now", lambda: base + timedelta(hours=3))
+    digest = analytics_digest(7)
+
+    assert digest["click_count"] == 1
+    assert digest["total_click_count"] == 2
+    assert digest["historical_click_count"] == 1
+    assert digest["provider_click_counts"] == {"KEH": 1}
+    assert digest["approximate_click_rate"] == 100.0

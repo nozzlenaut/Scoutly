@@ -193,8 +193,7 @@ def analytics_digest(days: int = 30) -> dict[str, Any]:
     with_results_count = sum(1 for row in searches if int(row.get("result_count") or 0) > 0)
     no_result_count = search_count - with_results_count
     us_only_count = sum(1 for row in searches if bool(row.get("us_only")))
-    click_count = len(clicks)
-    affiliate_click_count = sum(1 for row in clicks if bool(row.get("affiliate_campaign_present")))
+    total_click_count = len(clicks)
 
     category_searches: Counter[str] = Counter()
     category_no_results: Counter[str] = Counter()
@@ -204,6 +203,7 @@ def analytics_digest(days: int = 30) -> dict[str, Any]:
     query_stats: dict[tuple[str, str, str], dict[str, Any]] = defaultdict(
         lambda: {"searches": 0, "no_results": 0, "clicks": 0}
     )
+    search_refs: list[dict[str, Any]] = []
     daily: dict[str, dict[str, int]] = defaultdict(lambda: {"searches": 0, "clicks": 0, "no_results": 0})
 
     for row in searches:
@@ -219,6 +219,17 @@ def analytics_digest(days: int = 30) -> dict[str, Any]:
         query_stats[key]["searches"] += 1
         if is_no_result:
             query_stats[key]["no_results"] += 1
+        searched_at = _parse_dt(row.get("searched_at"))
+        search_refs.append(
+            {
+                "key": key,
+                "category": category,
+                "product_id": product_id,
+                "query": query.casefold(),
+                "label": label.casefold(),
+                "searched_at": searched_at,
+            }
+        )
         provider_counts = row.get("provider_counts") or {}
         if isinstance(provider_counts, str):
             try:
@@ -228,27 +239,61 @@ def analytics_digest(days: int = 30) -> dict[str, Any]:
         if isinstance(provider_counts, dict):
             for provider, count in provider_counts.items():
                 provider_shown[str(provider)] += int(count or 0)
-        searched_at = _parse_dt(row.get("searched_at"))
         if searched_at:
             day = searched_at.date().isoformat()
             daily[day]["searches"] += 1
             if is_no_result:
                 daily[day]["no_results"] += 1
 
+    linked_click_count = 0
+    linked_affiliate_click_count = 0
+    historical_click_count = 0
+    historical_affiliate_click_count = 0
+
     for row in clicks:
         category = str(row.get("category") or "unknown")
         provider = str(row.get("provider") or "unknown")
         product_id = str(row.get("product_id") or "")
-        label = str(row.get("query") or row.get("title") or "Unknown search")
+        click_query = str(row.get("query") or "").strip().casefold()
+        clicked_at = _parse_dt(row.get("clicked_at"))
+
+        # A click counts toward search analytics only when it can be tied to a
+        # matching public search that happened before the click. This prevents
+        # older affiliate click history from inflating a newly deployed search
+        # analytics window. Prefer exact product IDs; fall back to query/label.
+        matching_refs = []
+        for ref in search_refs:
+            if ref["category"] != category:
+                continue
+            searched_at = ref.get("searched_at")
+            if clicked_at and searched_at and clicked_at < searched_at:
+                continue
+            exact_product = bool(product_id and ref["product_id"] and product_id == ref["product_id"])
+            matching_query = bool(click_query and click_query in {ref["query"], ref["label"]})
+            if exact_product or matching_query:
+                matching_refs.append(ref)
+
+        if not matching_refs:
+            historical_click_count += 1
+            if bool(row.get("affiliate_campaign_present")):
+                historical_affiliate_click_count += 1
+            continue
+
+        matched_ref = max(
+            matching_refs,
+            key=lambda ref: ref.get("searched_at") or datetime.min.replace(tzinfo=UTC),
+        )
+        linked_click_count += 1
+        if bool(row.get("affiliate_campaign_present")):
+            linked_affiliate_click_count += 1
         category_clicks[category] += 1
         provider_clicks[provider] += 1
-        # Prefer product-id matching; otherwise the query still gives a useful approximation.
-        candidates = [key for key in query_stats if key[0] == category and ((product_id and key[1] == product_id) or key[2] == label)]
-        if candidates:
-            query_stats[candidates[0]]["clicks"] += 1
-        clicked_at = _parse_dt(row.get("clicked_at"))
+        query_stats[matched_ref["key"]]["clicks"] += 1
         if clicked_at:
             daily[clicked_at.date().isoformat()]["clicks"] += 1
+
+    click_count = linked_click_count
+    affiliate_click_count = linked_affiliate_click_count
 
     category_rows = []
     for category, count in category_searches.most_common():
@@ -285,8 +330,9 @@ def analytics_digest(days: int = 30) -> dict[str, Any]:
         f"Resolved catalog/ISBN searches: {resolved_count} ({_pct(resolved_count, search_count) or 0}%)",
         f"Searches with results: {with_results_count} ({_pct(with_results_count, search_count) or 0}%)",
         f"No-result searches: {no_result_count} ({_pct(no_result_count, search_count) or 0}%)",
-        f"Outbound listing clicks: {click_count}",
+        f"Tracked listing clicks: {click_count}",
         f"Approximate search-to-click rate: {_pct(click_count, search_count) or 0}%",
+        f"Historical/unlinked affiliate clicks in window: {historical_click_count}",
         f"US-only searches: {us_only_count} ({_pct(us_only_count, search_count) or 0}%)",
     ]
     if category_rows:
@@ -315,6 +361,9 @@ def analytics_digest(days: int = 30) -> dict[str, Any]:
         "us_only_rate": _pct(us_only_count, search_count),
         "click_count": click_count,
         "affiliate_click_count": affiliate_click_count,
+        "total_click_count": total_click_count,
+        "historical_click_count": historical_click_count,
+        "historical_affiliate_click_count": historical_affiliate_click_count,
         "approximate_click_rate": _pct(click_count, search_count),
         "category_rows": category_rows,
         "top_searches": top_searches,

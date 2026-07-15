@@ -278,6 +278,9 @@ export type AnalyticsDigest = {
   us_only_rate: number | null;
   click_count: number;
   affiliate_click_count: number;
+  total_click_count: number;
+  historical_click_count: number;
+  historical_affiliate_click_count: number;
   approximate_click_rate: number | null;
   category_rows: AnalyticsCategoryRow[];
   top_searches: AnalyticsTopSearch[];
