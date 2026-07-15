@@ -20,6 +20,37 @@ USED_CONDITION_WORDS = (
     "acceptable",
 )
 
+
+# These phrases identify a secondary product about the requested book rather
+# than the exact edition itself. Keep the patterns contextual so a legitimate
+# title containing a generic word such as "analysis" is not rejected blindly.
+BOOK_DERIVATIVE_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"\bstudy\s+guide\b", re.IGNORECASE), "Study guide or companion material"),
+    (re.compile(r"\b(?:book\s+)?summary\b", re.IGNORECASE), "Summary or analysis product"),
+    (re.compile(r"\bsummary\s*(?:and|&)\s*analysis\b", re.IGNORECASE), "Summary or analysis product"),
+    (re.compile(r"\banalysis\s+(?:of|for)\b", re.IGNORECASE), "Summary or analysis product"),
+    (re.compile(r"\bworkbook\s+(?:for|to|companion)\b", re.IGNORECASE), "Workbook or companion material"),
+    (re.compile(r"\bcompanion\s+(?:guide|workbook|to)\b", re.IGNORECASE), "Workbook or companion material"),
+    (re.compile(r"\b(?:sparknotes|cliffsnotes|cliff\s+notes)\b", re.IGNORECASE), "Study guide or companion material"),
+)
+
+BOOK_COLLECTIBLE_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"\b(?:author\s+)?signed\b", re.IGNORECASE),
+    re.compile(r"\bautograph(?:ed)?\b", re.IGNORECASE),
+    re.compile(r"\bdeluxe\b", re.IGNORECASE),
+    re.compile(r"\bcollector'?s?\s+edition\b", re.IGNORECASE),
+    re.compile(r"\blimited\s+edition\b", re.IGNORECASE),
+    re.compile(r"\bspecial\s+edition\b", re.IGNORECASE),
+    re.compile(r"\bfirst\s+(?:edition|printing)\b", re.IGNORECASE),
+    re.compile(r"\bnumbered\s+(?:copy|edition)\b", re.IGNORECASE),
+    re.compile(r"\bleather[-\s]?bound\b", re.IGNORECASE),
+)
+
+EDITION_YEAR_RE = re.compile(
+    r"\b(?:(?:19|20)\d{2}\s+edition|edition\s+(?:19|20)\d{2})\b",
+    re.IGNORECASE,
+)
+
 # Words that can appear across unrelated book listings and therefore should not
 # be treated as proof that eBay returned one coherent title/edition.
 BOOK_TITLE_STOPWORDS = {
@@ -197,7 +228,31 @@ def _apply_title_consensus_gate(listings: list[Listing]) -> tuple[list[Listing],
     return accepted, len(listings) - len(accepted), consensus_tokens
 
 
-def _filter_query_candidates(candidates: list[Listing]) -> tuple[list[Listing], Counter[str], int, list[str]]:
+def _derivative_rejection_reason(title: str) -> str | None:
+    for pattern, reason in BOOK_DERIVATIVE_PATTERNS:
+        if pattern.search(title or ""):
+            return reason
+    return None
+
+
+def _is_collectible_listing(title: str) -> bool:
+    return any(pattern.search(title or "") for pattern in BOOK_COLLECTIBLE_PATTERNS)
+
+
+def _annotate_book_listing(listing: Listing, *, collectible: bool) -> Listing:
+    warnings = list(listing.warning_labels)
+    if EDITION_YEAR_RE.search(listing.title):
+        warnings.append("Seller lists a specific edition year—verify the ISBN and listing details.")
+    if collectible:
+        warnings.append("Collectible, signed, or special-edition copy—price may not reflect a standard used copy.")
+    # Preserve order while avoiding repeated labels from provider metadata.
+    warnings = list(dict.fromkeys(warnings))
+    return listing.model_copy(update={"warning_labels": warnings})
+
+
+def _filter_query_candidates(
+    candidates: list[Listing],
+) -> tuple[list[Listing], list[Listing], Counter[str], int, list[str]]:
     rejection_reasons: Counter[str] = Counter()
     eligible: list[Listing] = []
     seen_urls: set[str] = set()
@@ -206,6 +261,11 @@ def _filter_query_candidates(candidates: list[Listing]) -> tuple[list[Listing], 
     for listing in sorted(candidates, key=lambda item: (item.total_price, -item.score)):
         if not _is_used_condition(listing.condition):
             rejection_reasons["Not a used-book condition"] += 1
+            continue
+
+        derivative_reason = _derivative_rejection_reason(listing.title)
+        if derivative_reason:
+            rejection_reasons[derivative_reason] += 1
             continue
 
         url_key = _listing_key(listing)
@@ -219,7 +279,17 @@ def _filter_query_candidates(candidates: list[Listing]) -> tuple[list[Listing], 
     if consensus_rejected:
         rejection_reasons["Unverified or inconsistent title identity"] += consensus_rejected
 
-    return eligible, rejection_reasons, duplicates_removed, consensus_tokens
+    standard: list[Listing] = []
+    collectible: list[Listing] = []
+    for listing in eligible:
+        is_collectible = _is_collectible_listing(listing.title)
+        annotated = _annotate_book_listing(listing, collectible=is_collectible)
+        if is_collectible:
+            collectible.append(annotated)
+        else:
+            standard.append(annotated)
+
+    return standard, collectible, rejection_reasons, duplicates_removed, consensus_tokens
 
 
 def _serialize_listing(listing: Listing) -> dict[str, Any]:
@@ -229,8 +299,8 @@ def _serialize_listing(listing: Listing) -> dict[str, Any]:
 def books_lab_status() -> dict[str, Any]:
     return {
         "configured": ebay_config_from_env() is not None,
-        "public": False,
-        "mode": "eBay ISBN shadow test",
+        "public": True,
+        "mode": "Public beta · exact used eBay ISBN search",
     }
 
 
@@ -246,6 +316,8 @@ async def search_used_books_by_isbn(
             "isbn": identity,
             "candidate_count": 0,
             "eligible_count": 0,
+            "standard_count": 0,
+            "collectible_count": 0,
             "duplicates_removed": 0,
             "rejection_reasons": {"Invalid ISBN check digit or length": 1},
             "query_attempts": [],
@@ -253,6 +325,7 @@ async def search_used_books_by_isbn(
             "fallback_used": False,
             "top_results": [],
             "results": [],
+            "collectible_results": [],
         }
 
     if provider is None:
@@ -263,11 +336,13 @@ async def search_used_books_by_isbn(
     total_candidates = 0
     total_duplicates_removed = 0
     selected_query_isbn: str | None = None
-    selected_results: list[Listing] = []
+    selected_standard: list[Listing] = []
+    selected_collectible: list[Listing] = []
+    collectible_fallback: tuple[str, list[Listing]] | None = None
 
     for index, isbn in enumerate(identity["query_isbns"]):
         candidates = await provider.search_gtin(isbn, category="books", limit=limit)
-        eligible, rejection_reasons, duplicates_removed, consensus_tokens = _filter_query_candidates(candidates)
+        standard, collectible, rejection_reasons, duplicates_removed, consensus_tokens = _filter_query_candidates(candidates)
 
         total_candidates += len(candidates)
         total_duplicates_removed += duplicates_removed
@@ -277,29 +352,56 @@ async def search_used_books_by_isbn(
                 "isbn": isbn,
                 "role": "primary" if index == 0 else "fallback",
                 "candidate_count": len(candidates),
-                "eligible_count": len(eligible),
+                "eligible_count": len(standard) + len(collectible),
+                "standard_count": len(standard),
+                "collectible_count": len(collectible),
                 "duplicates_removed": duplicates_removed,
                 "consensus_tokens": consensus_tokens,
                 "rejection_reasons": dict(rejection_reasons),
-                "used_as_results": bool(eligible),
+                "used_as_results": False,
             }
         )
 
-        if eligible:
+        if standard:
             selected_query_isbn = isbn
-            selected_results = eligible
+            selected_standard = standard
+            selected_collectible = collectible
+            query_attempts[-1]["used_as_results"] = True
             break
 
-    serialized = [_serialize_listing(listing) for listing in selected_results[: max(1, min(limit, 100))]]
+        # Keep a coherent collectible-only result set, but continue to the
+        # alternate ISBN once in case it has normal used copies.
+        if collectible and collectible_fallback is None:
+            collectible_fallback = (isbn, collectible)
+
+    if selected_query_isbn is None and collectible_fallback is not None:
+        selected_query_isbn, selected_collectible = collectible_fallback
+        for attempt in query_attempts:
+            if attempt["isbn"] == selected_query_isbn:
+                attempt["used_as_results"] = True
+                break
+
+    serialized_standard = [
+        _serialize_listing(listing)
+        for listing in selected_standard[: max(1, min(limit, 100))]
+    ]
+    serialized_collectible = [
+        _serialize_listing(listing)
+        for listing in selected_collectible[: max(1, min(limit, 100))]
+    ]
     return {
         "isbn": identity,
         "candidate_count": total_candidates,
-        "eligible_count": len(selected_results),
+        "eligible_count": len(selected_standard) + len(selected_collectible),
+        "standard_count": len(selected_standard),
+        "collectible_count": len(selected_collectible),
         "duplicates_removed": total_duplicates_removed,
         "rejection_reasons": dict(aggregate_rejections),
         "query_attempts": query_attempts,
         "selected_query_isbn": selected_query_isbn,
         "fallback_used": len(query_attempts) > 1 and selected_query_isbn == query_attempts[-1]["isbn"],
-        "top_results": serialized[:3],
-        "results": serialized,
+        "top_results": serialized_standard[:3],
+        "results": serialized_standard,
+        "collectible_results": serialized_collectible,
     }
+

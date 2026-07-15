@@ -157,6 +157,59 @@ def test_books_lab_accepts_a_coherent_single_word_title_cluster():
     assert "dune" in payload["query_attempts"][0]["consensus_tokens"]
 
 
+def test_books_rejects_study_guides_and_companion_products():
+    provider = _FakeBookProvider(
+        {
+            "9780306406157": [
+                _listing("Brave New World by Aldous Huxley", "book", price=7),
+                _listing("Brave New World Study Guide and Analysis", "study", price=3),
+                _listing("Workbook Companion to Brave New World", "workbook", price=4),
+            ]
+        }
+    )
+    payload = asyncio.run(search_used_books_by_isbn("9780306406157", provider=provider))
+    assert payload["standard_count"] == 1
+    assert payload["top_results"][0]["title"] == "Brave New World by Aldous Huxley"
+    assert payload["rejection_reasons"]["Study guide or companion material"] == 1
+    assert payload["rejection_reasons"]["Workbook or companion material"] == 1
+
+
+def test_books_separates_collectible_price_outliers_from_default_top_three():
+    provider = _FakeBookProvider(
+        {
+            "9780306406157": [
+                _listing("Snow Crash Paperback", "standard", price=9),
+                _listing("Snow Crash Signed Deluxe Edition", "signed", price=175),
+            ]
+        }
+    )
+    payload = asyncio.run(search_used_books_by_isbn("9780306406157", provider=provider))
+    assert payload["standard_count"] == 1
+    assert payload["collectible_count"] == 1
+    assert len(payload["top_results"]) == 1
+    assert payload["top_results"][0]["title"] == "Snow Crash Paperback"
+    assert "Collectible" in payload["collectible_results"][0]["warning_labels"][0]
+
+
+def test_books_adds_caution_for_seller_supplied_edition_year():
+    provider = _FakeBookProvider(
+        {"9780306406157": [_listing("The Great Gatsby 2018 Edition", "gatsby", price=8)]}
+    )
+    payload = asyncio.run(search_used_books_by_isbn("9780306406157", provider=provider))
+    assert payload["standard_count"] == 1
+    assert any("edition year" in warning.lower() for warning in payload["top_results"][0]["warning_labels"])
+
+
+def test_public_books_endpoint_does_not_require_admin_token(monkeypatch):
+    async def fake_search(*args, **kwargs):
+        return {"isbn": {"valid": True}, "top_results": [], "results": [], "collectible_results": []}
+
+    monkeypatch.setattr("app.api.books.search_used_books_by_isbn", fake_search)
+    client = TestClient(app)
+    response = client.get("/api/books/search", params={"isbn": "9780306406157"})
+    assert response.status_code == 200
+
+
 def test_books_admin_endpoints_require_token(monkeypatch):
     monkeypatch.setenv("SCOUTLY_ADMIN_TOKEN", "secret")
     client = TestClient(app)

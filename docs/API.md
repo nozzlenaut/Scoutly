@@ -174,3 +174,20 @@ Public product context is also available for a known product ID:
 ```text
 GET /api/prices/cpu-intel-core-i7-12700k?days=30
 ```
+
+## Public Books ISBN search
+
+Books use a separate exact-identifier flow rather than the normal product catalog resolver.
+
+```text
+GET /api/books/search?isbn=9780345539809&limit=35
+```
+
+The endpoint validates ISBN-10/ISBN-13 check digits, tries ISBN-13 first and ISBN-10 only as a fallback, returns standard used copies in `top_results`, and separates signed/deluxe/collectible copies in `collectible_results`. Study guides, summaries, workbooks, companion products, and incoherent catalog matches are rejected.
+
+Private diagnostics remain available with the admin token:
+
+```text
+GET /api/books/lab/status?token=<token>
+GET /api/books/lab/search?token=<token>&isbn=9780345539809
+```

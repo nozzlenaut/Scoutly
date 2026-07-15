@@ -70,6 +70,16 @@ export const allCategories: SearchCategory[] = [
     defaultQuery: "",
   },
   {
+    id: "books",
+    label: "Books",
+    group: "Books & Media",
+    status: "beta",
+    description:
+      "Exact used-book edition search using ISBN-10 or ISBN-13.",
+    placeholder: "Search by ISBN-10 or ISBN-13",
+    defaultQuery: "",
+  },
+  {
     id: "lego",
     label: "LEGO",
     group: "Collectibles",

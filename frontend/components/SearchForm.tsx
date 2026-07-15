@@ -70,7 +70,7 @@ export function SearchForm({
       return;
     }
 
-    if (categoryId === "ram" || categoryId === "cpus") {
+    if (categoryId === "ram" || categoryId === "cpus" || categoryId === "books") {
       requestSequenceRef.current += 1;
       setSuggestions([]);
       setShowSuggestions(false);
@@ -253,12 +253,16 @@ export function SearchForm({
           >
             <div className="relative flex-1">
               <label htmlFor={inputId} className="sr-only">
-                Search exact {selectedCategory.label.toLowerCase()} item
+                {selectedCategory.id === "books"
+                  ? "Search by ISBN-10 or ISBN-13"
+                  : `Search exact ${selectedCategory.label.toLowerCase()} item`}
               </label>
               <input
                 id={inputId}
                 ref={inputRef}
                 value={query}
+                inputMode={selectedCategory.id === "books" ? "text" : undefined}
+                autoComplete="off"
                 onChange={(event) => {
                   setQuery(event.target.value);
                   setSuggestionsEnabled(true);
@@ -275,12 +279,12 @@ export function SearchForm({
                 }}
                 onKeyDown={handleInputKeyDown}
                 placeholder={selectedCategory.placeholder}
-                role="combobox"
-                aria-autocomplete="list"
-                aria-expanded={showSuggestions}
-                aria-controls={showSuggestions ? listboxId : undefined}
+                role={selectedCategory.id === "books" ? undefined : "combobox"}
+                aria-autocomplete={selectedCategory.id === "books" ? undefined : "list"}
+                aria-expanded={selectedCategory.id === "books" ? undefined : showSuggestions}
+                aria-controls={selectedCategory.id !== "books" && showSuggestions ? listboxId : undefined}
                 aria-activedescendant={
-                  showSuggestions && activeSuggestionIndex >= 0
+                  selectedCategory.id !== "books" && showSuggestions && activeSuggestionIndex >= 0
                     ? `${listboxId}-option-${activeSuggestionIndex}`
                     : undefined
                 }
@@ -353,8 +357,9 @@ export function SearchForm({
             aria-live="polite"
             className="mt-3 text-sm text-slate-300"
           >
-            Type or pick a supported catalog item. Unsupported text will not be
-            sent to the marketplace.
+            {selectedCategory.id === "books"
+              ? "Enter an ISBN-10 or ISBN-13. PriceSift searches that exact used-book edition; title-only searches are not sent to eBay."
+              : "Type or pick a supported catalog item. Unsupported text will not be sent to the marketplace."}
             {isLoading ? " Checking catalog…" : ""}
             {isNavigating ? " Loading fresh results…" : ""}
           </p>

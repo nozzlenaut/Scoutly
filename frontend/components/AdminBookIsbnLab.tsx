@@ -90,7 +90,7 @@ export function AdminBookIsbnLab({ token }: { token: string }) {
         <p className="text-sm uppercase tracking-[0.22em] text-cyan-200">Private Books experiment</p>
         <h2 className="mt-2 text-2xl font-bold">Test exact used-book matching</h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-400">
-          Enter an ISBN-10 or ISBN-13. PriceSift tries ISBN-13 first, uses ISBN-10 only as a fallback, rejects incoherent catalog results, and previews the three used copies a future Books category would show.
+          Enter an ISBN-10 or ISBN-13. This page exposes the diagnostics behind the public Books beta: ISBN-13 first, ISBN-10 fallback, title-consistency checks, derivative-book filtering, and collectible separation.
         </p>
 
         <form onSubmit={submit} className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -116,7 +116,7 @@ export function AdminBookIsbnLab({ token }: { token: string }) {
 
       {data?.isbn.valid ? (
         <>
-          <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+          <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-7">
             <div className="rounded-3xl border border-white/10 bg-white/[0.05] p-5">
               <p className="text-sm text-slate-400">Detected format</p>
               <p className="mt-2 text-xl font-black">{data.isbn.input_type}</p>
@@ -134,8 +134,12 @@ export function AdminBookIsbnLab({ token }: { token: string }) {
               <p className="mt-2 text-3xl font-black">{data.candidate_count}</p>
             </div>
             <div className="rounded-3xl border border-white/10 bg-white/[0.05] p-5">
-              <p className="text-sm text-slate-400">Eligible used copies</p>
-              <p className="mt-2 text-3xl font-black">{data.eligible_count}</p>
+              <p className="text-sm text-slate-400">Standard used copies</p>
+              <p className="mt-2 text-3xl font-black">{data.standard_count}</p>
+            </div>
+            <div className="rounded-3xl border border-white/10 bg-white/[0.05] p-5">
+              <p className="text-sm text-slate-400">Collectible copies</p>
+              <p className="mt-2 text-3xl font-black">{data.collectible_count}</p>
             </div>
             <div className="rounded-3xl border border-white/10 bg-white/[0.05] p-5">
               <p className="text-sm text-slate-400">Duplicates removed</p>
@@ -167,7 +171,7 @@ export function AdminBookIsbnLab({ token }: { token: string }) {
                     <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{attempt.role}</span>
                   </div>
                   <p className="mt-2 text-sm text-slate-400">
-                    {attempt.candidate_count} candidates · {attempt.eligible_count} coherent used results
+                    {attempt.candidate_count} candidates · {attempt.standard_count} standard · {attempt.collectible_count} collectible
                   </p>
                   {attempt.consensus_tokens.length ? (
                     <p className="mt-2 text-xs text-cyan-200">Shared identity: {attempt.consensus_tokens.slice(0, 6).join(", ")}</p>
@@ -204,6 +208,17 @@ export function AdminBookIsbnLab({ token }: { token: string }) {
               </div>
             )}
           </section>
+
+          {data.collectible_results.length ? (
+            <details className="mt-8 rounded-3xl border border-purple-300/20 bg-purple-300/[0.06]">
+              <summary className="cursor-pointer list-none p-5 font-bold text-purple-100">
+                Inspect {data.collectible_results.length} separated collectible listings ↓
+              </summary>
+              <div className="grid gap-4 border-t border-purple-300/10 p-5 md:grid-cols-2 xl:grid-cols-3">
+                {data.collectible_results.map((result, index) => <ResultCard key={`${result.url}-collectible-${index}`} result={result} isbn={data.isbn.normalized} />)}
+              </div>
+            </details>
+          ) : null}
 
           {remainingResults.length ? (
             <details className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04]">

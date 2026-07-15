@@ -4,11 +4,12 @@ import Link from "next/link";
 import { AuctionResults } from "@/components/AuctionResults";
 import { ResultCard } from "@/components/ResultCard";
 import { PriceContextPanel } from "@/components/PriceContextPanel";
+import { PublicBookResults } from "@/components/PublicBookResults";
 import { SearchForm } from "@/components/SearchForm";
 import { SearchTransitionGuard } from "@/components/SearchTransitionGuard";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
 import { SiteFooter } from "@/components/SiteFooter";
-import { buildEbaySearchUrl, buildOutboundUrl, searchDeals } from "@/lib/api";
+import { buildEbaySearchUrl, buildOutboundUrl, searchDeals, searchPublicBooksByIsbn } from "@/lib/api";
 import { getCategoryById, getSearchCategoryById } from "@/lib/categoryCatalog";
 
 function PageShell({ children }: { children: ReactNode }) {
@@ -130,9 +131,30 @@ export default async function SearchPage({
                 ? "Choose a CPU manufacturer, socket, generation, and exact model above. Suffix variants remain separate products."
                 : category.id === "consoles"
                   ? "Choose a console brand, family / generation, and core model above. Storage, color, and edition variants are grouped together."
-                  : `Type an exact ${category.label.toLowerCase()} item above. PriceSift will not fall back to a default item from an empty URL.`}
+                  : category.id === "books"
+                    ? "Enter a valid ISBN-10 or ISBN-13 above. PriceSift searches that exact used-book edition rather than guessing from a title."
+                    : `Type an exact ${category.label.toLowerCase()} item above. PriceSift will not fall back to a default item from an empty URL.`}
           </p>
         </div>
+      </PageShell>
+    );
+  }
+
+  if (category.id === "books") {
+    const bookData = await searchPublicBooksByIsbn(rawQuery);
+    return (
+      <PageShell>
+        <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+          <SearchForm
+            key={`${category.id}:${rawQuery}`}
+            initialCategoryId={category.id}
+            initialQuery={rawQuery}
+            compact
+          />
+        </section>
+        <SearchTransitionGuard>
+          <PublicBookResults data={bookData} query={rawQuery} />
+        </SearchTransitionGuard>
       </PageShell>
     );
   }

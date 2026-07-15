@@ -10,8 +10,8 @@ export function CategoryStatusPanel() {
             Category status
           </p>
           <p className="mt-1 text-sm text-slate-300">
-            Cameras, Consoles, CPUs, GPUs, and RAM are active. LEGO is in Beta,
-            and Lenses are paused until results are clean enough to trust.
+            Cameras, Consoles, CPUs, GPUs, and RAM are active. Books and LEGO are in Beta,
+            and Lenses remain in private KEH testing.
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs text-slate-400">

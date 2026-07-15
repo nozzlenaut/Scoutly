@@ -1,3 +1,3 @@
-# PriceSift v0.6.22
+# PriceSift v0.6.23
 
-See `README-v0622.md` for the stricter Books ISBN verification patch.
+See `README-v0623.md` for the public Books ISBN beta release.

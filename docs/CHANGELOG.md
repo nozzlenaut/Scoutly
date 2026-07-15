@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.23
+
+- Promotes Books into the public beta with a simple ISBN-10/ISBN-13 search field.
+- Keeps ISBN-13-first lookup with ISBN-10 fallback and coherent-title verification.
+- Removes study guides, summaries, workbooks, and companion products from exact-book results.
+- Separates signed, deluxe, limited, and collectible copies so price outliers do not replace normal used copies.
+- Adds cautions for seller-supplied edition-year wording while preserving exact ISBN matches.
+- Keeps the private Books diagnostics page for detailed candidate and rejection review.
+
 ## v0.6.22
 
 - Changed Books ISBN lookup to ISBN-13-first with ISBN-10 fallback instead of merging both result sets.

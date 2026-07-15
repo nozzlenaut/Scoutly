@@ -672,6 +672,7 @@ const ebayCategoryIds: Record<string, string> = {
   consoles: "139971",
   ram: "170083",
   cpus: "164",
+  books: "267",
 };
 
 export function buildEbaySearchUrl(query: string, category?: string): string {
@@ -811,6 +812,8 @@ export type BookQueryAttempt = {
   role: "primary" | "fallback" | string;
   candidate_count: number;
   eligible_count: number;
+  standard_count: number;
+  collectible_count: number;
   duplicates_removed: number;
   consensus_tokens: string[];
   rejection_reasons: Record<string, number>;
@@ -821,6 +824,8 @@ export type BookLabResponse = {
   isbn: BookIsbnIdentity;
   candidate_count: number;
   eligible_count: number;
+  standard_count: number;
+  collectible_count: number;
   duplicates_removed: number;
   rejection_reasons: Record<string, number>;
   query_attempts: BookQueryAttempt[];
@@ -828,12 +833,23 @@ export type BookLabResponse = {
   fallback_used: boolean;
   top_results: SearchResult[];
   results: SearchResult[];
+  collectible_results: SearchResult[];
 };
 
 export async function getBooksLabStatus(token: string): Promise<BookLabStatus> {
   const params = new URLSearchParams({ token });
   const response = await fetch(`${baseUrl}/api/books/lab/status?${params.toString()}`, { cache: "no-store" });
   if (!response.ok) throw new Error("Books lab access failed");
+  return response.json();
+}
+
+export async function searchPublicBooksByIsbn(isbn: string, limit = 35): Promise<BookLabResponse> {
+  const params = new URLSearchParams({ isbn, limit: String(limit) });
+  const response = await fetch(`${baseUrl}/api/books/search?${params.toString()}`, { cache: "no-store" });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(detail || `Book search failed (${response.status})`);
+  }
   return response.json();
 }
 

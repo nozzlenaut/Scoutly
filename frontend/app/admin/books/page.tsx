@@ -39,10 +39,10 @@ export default async function BooksAdminPage({ searchParams }: { searchParams: P
           <Link href={`/admin/qa?token=${encodeURIComponent(token)}`} className="text-sm text-slate-400">Search QA</Link>
         </div>
         <div className="mt-8">
-          <p className="text-sm uppercase tracking-[0.25em] text-slate-500">PriceSift private preview</p>
+          <p className="text-sm uppercase tracking-[0.25em] text-slate-500">PriceSift public-beta diagnostics</p>
           <h1 className="mt-2 text-4xl font-black">Books ISBN lab</h1>
           <p className="mt-3 max-w-4xl text-slate-400">
-            Test whether exact ISBN matching makes used eBay books clean enough for PriceSift. This page is private and does not create a public Books category.
+            Inspect the ISBN lookup path, rejections, and collectible separation behind the public Books beta.
           </p>
         </div>
         <AdminBookIsbnLab token={token} />
