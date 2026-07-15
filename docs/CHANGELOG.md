@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.25
+
+- Fixes `/admin/prices` crashing during server rendering when PostgreSQL `NUMERIC` values arrive as decimal strings.
+- Converts backend `Decimal` price fields and decimal arrays into JSON numbers.
+- Adds defensive frontend number coercion before currency and percentage formatting.
+- Adds a regression test for production-style decimal serialization.
+
 ## v0.6.24
 
 - Strengthens Books title-consensus matching so a shared generic word cannot admit an unrelated title into a dominant multi-word cluster.

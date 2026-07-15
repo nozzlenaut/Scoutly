@@ -398,7 +398,7 @@ def parse_feed_text(text: str) -> list[dict[str, str]]:
 
 def _download_feed(url: str) -> tuple[list[dict[str, str]], dict[str, str | None]]:
     with httpx.Client(timeout=httpx.Timeout(120.0, connect=20.0), follow_redirects=True) as client:
-        response = client.get(url, headers={"User-Agent": "PriceSift-KEH-Pilot/0.6.24"})
+        response = client.get(url, headers={"User-Agent": "PriceSift-KEH-Pilot/0.6.25"})
         response.raise_for_status()
     text = _decode_feed(response.content, response.headers.get("content-type", ""))
     return parse_feed_text(text), {

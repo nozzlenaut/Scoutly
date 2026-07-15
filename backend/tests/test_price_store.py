@@ -165,3 +165,16 @@ def test_admin_collector_runs_small_qa_batch(monkeypatch, tmp_path):
     assert payload["live_ebay"] is True
     assert payload["collected_count"] == 1
     assert payload["collected"][0]["eligible_count"] == 4
+
+
+def test_serialize_record_converts_decimal_prices():
+    from decimal import Decimal
+    from app.services.price_store import _serialize_record
+
+    record = _serialize_record({
+        "lowest_price": Decimal("123.45"),
+        "sample_prices": [Decimal("100.00"), Decimal("125.50")],
+    })
+
+    assert record["lowest_price"] == 123.45
+    assert record["sample_prices"] == [100.0, 125.5]

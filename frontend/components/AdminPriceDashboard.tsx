@@ -4,8 +4,20 @@ import { useCallback, useEffect, useState } from "react";
 import { PriceCollector } from "@/components/PriceCollector";
 import { getPriceOverview, type PriceOverview } from "@/lib/api";
 
-function money(value?: number | null): string {
-  return value === null || value === undefined ? "—" : `$${value.toFixed(2)}`;
+function finiteNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function money(value: unknown): string {
+  const parsed = finiteNumber(value);
+  return parsed === null ? "—" : `$${parsed.toFixed(2)}`;
+}
+
+function percent(value: unknown): string {
+  const parsed = finiteNumber(value);
+  return parsed === null ? "—" : `${parsed.toFixed(1)}%`;
 }
 
 function dateLabel(value?: string | null): string {
@@ -77,7 +89,7 @@ export function AdminPriceDashboard({ initialOverview, token }: { initialOvervie
                   <td className="py-3 pr-4">{money(product.latest_best_price)}</td>
                   <td className="py-3 pr-4">{product.latest_eligible_count}</td>
                   <td className="py-3 pr-4">{product.history_ready ? `${money(product.typical_low_price)}–${money(product.typical_high_price)}` : "Building"}</td>
-                  <td className="py-3 pr-4">{product.availability_rate == null ? "—" : `${product.availability_rate.toFixed(1)}%`}</td>
+                  <td className="py-3 pr-4">{percent(product.availability_rate)}</td>
                   <td className="py-3 pr-4">{product.snapshot_count}</td>
                   <td className="py-3 pr-4 text-slate-400">{dateLabel(product.last_observed_at)}</td>
                 </tr>

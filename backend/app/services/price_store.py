@@ -4,6 +4,7 @@ import json
 import logging
 import math
 import os
+from decimal import Decimal
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from statistics import median
@@ -54,6 +55,10 @@ def _serialize_record(record: dict[str, Any]) -> dict[str, Any]:
     for key, value in record.items():
         if isinstance(value, datetime):
             serialized[key] = value.isoformat()
+        elif isinstance(value, Decimal):
+            serialized[key] = float(value)
+        elif isinstance(value, list):
+            serialized[key] = [float(item) if isinstance(item, Decimal) else item for item in value]
         else:
             serialized[key] = value
     return serialized
