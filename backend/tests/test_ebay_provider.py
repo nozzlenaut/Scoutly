@@ -272,3 +272,14 @@ def test_ebay_search_adds_cpu_category_id():
     provider = _CaptureEbayProvider()
     asyncio.run(provider.search("Intel Core i7-12700K CPU", category="cpus"))
     assert provider.last_params["category_ids"] == "164"
+
+
+def test_ebay_gtin_search_uses_exact_isbn_and_books_category():
+    provider = _CaptureEbayProvider()
+
+    asyncio.run(provider.search_gtin("9780306406157", category="books"))
+
+    assert provider.last_params["gtin"] == "9780306406157"
+    assert "q" not in provider.last_params
+    assert provider.last_params["category_ids"] == "261186"
+    assert provider.last_params["filter"] == "conditions:{USED},buyingOptions:{FIXED_PRICE}"

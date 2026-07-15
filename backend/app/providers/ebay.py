@@ -32,6 +32,8 @@ EBAY_US_CATEGORY_IDS = {
     "ram": "170083",
     # Computer Processors (CPUs)
     "cpus": "164",
+    # Books
+    "books": "261186",
 }
 
 
@@ -301,16 +303,19 @@ class EbayProvider(MarketplaceProvider):
         self.config = config
         self.tokens = EbayTokenService(config)
 
-    async def search(self, query: str, category: str | None = None, buying_option: str = "fixed_price") -> list[Listing]:
+    async def _request_headers(self) -> dict[str, str]:
         token = await self.tokens.get_access_token()
         headers = {
             "Authorization": f"Bearer {token}",
             "X-EBAY-C-MARKETPLACE-ID": self.config.marketplace_id,
         }
-
         enduser_context = self._enduser_context_header()
         if enduser_context:
             headers["X-EBAY-C-ENDUSERCTX"] = enduser_context
+        return headers
+
+    async def search(self, query: str, category: str | None = None, buying_option: str = "fixed_price") -> list[Listing]:
+        headers = await self._request_headers()
 
         normalized_option = buying_option.strip().lower()
         if normalized_option == "auction":
@@ -356,6 +361,42 @@ class EbayProvider(MarketplaceProvider):
             if listing is not None:
                 listings.append(listing)
         return listings
+
+    async def search_gtin(
+        self,
+        gtin: str,
+        category: str | None = "books",
+        limit: int = 35,
+    ) -> list[Listing]:
+        """Search eBay's catalog by an exact GTIN such as ISBN-10 or ISBN-13.
+
+        This is intentionally separate from normal keyword search. It powers the
+        private Books lab without making Books a public PriceSift category yet.
+        """
+        headers = await self._request_headers()
+        params = {
+            "gtin": gtin,
+            "limit": str(max(1, min(limit, 200))),
+            "sort": "price",
+            "filter": "conditions:{USED},buyingOptions:{FIXED_PRICE}",
+        }
+        category_id = self._category_id_for(category)
+        if category_id is not None:
+            params["category_ids"] = category_id
+
+        payload = await self._search_request(headers, params)
+        listings: list[Listing] = []
+        for item in payload.get("itemSummaries") or []:
+            listing = ebay_item_to_listing(
+                item,
+                affiliate_campaign_id=self.config.affiliate_campaign_id,
+                affiliate_reference_id=self.config.affiliate_reference_id,
+                requested_listing_type="fixed_price",
+            )
+            if listing is not None:
+                listings.append(listing)
+        return listings
+
 
 
     def _category_id_for(self, category: str | None) -> str | None:

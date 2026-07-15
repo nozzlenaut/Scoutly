@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.21
+
+- Adds a private `/admin/books` ISBN-first test page.
+- Uses exact eBay GTIN/ISBN catalog search instead of title-keyword matching.
+- Accepts ISBN-10 or ISBN-13 and automatically tests the equivalent format when available.
+- Rejects invalid check digits before any marketplace call.
+- Limits results to used Buy It Now copies and preserves distinct sellers with identical book titles.
+- Shows the intended top three by delivered price plus expandable additional eligible copies.
+- Keeps Books private and out of public search, QA, and price history.
+- Adds five focused regressions, bringing the backend suite to 198 passing tests.
+
 ## v0.6.20
 
 - Polishes `/admin/keh/lenses` into the intended KEH-only guided browsing experience.

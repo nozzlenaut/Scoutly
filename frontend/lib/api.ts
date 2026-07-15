@@ -789,3 +789,46 @@ export async function getKehLensBuilder(
   }
   return response.json();
 }
+
+export type BookLabStatus = {
+  configured: boolean;
+  public: boolean;
+  mode: string;
+};
+
+export type BookIsbnIdentity = {
+  input: string;
+  normalized: string;
+  valid: boolean;
+  input_type: "ISBN-10" | "ISBN-13" | null;
+  isbn10: string | null;
+  isbn13: string | null;
+  query_isbns: string[];
+};
+
+export type BookLabResponse = {
+  isbn: BookIsbnIdentity;
+  candidate_count: number;
+  eligible_count: number;
+  duplicates_removed: number;
+  rejection_reasons: Record<string, number>;
+  top_results: SearchResult[];
+  results: SearchResult[];
+};
+
+export async function getBooksLabStatus(token: string): Promise<BookLabStatus> {
+  const params = new URLSearchParams({ token });
+  const response = await fetch(`${baseUrl}/api/books/lab/status?${params.toString()}`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Books lab access failed");
+  return response.json();
+}
+
+export async function searchBooksByIsbn(token: string, isbn: string, limit = 35): Promise<BookLabResponse> {
+  const params = new URLSearchParams({ token, isbn, limit: String(limit) });
+  const response = await fetch(`${baseUrl}/api/books/lab/search?${params.toString()}`, { cache: "no-store" });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(detail || `Book search failed (${response.status})`);
+  }
+  return response.json();
+}

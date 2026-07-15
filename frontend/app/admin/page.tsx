@@ -99,6 +99,12 @@ export default async function AdminPage({
               KEH lens lab →
             </Link>
             <Link
+              href={`/admin/books?token=${encodeURIComponent(token)}`}
+              className="w-fit rounded-2xl border border-amber-200/25 bg-amber-200/10 px-5 py-3 font-bold text-amber-100 transition hover:bg-amber-200/15"
+            >
+              Books ISBN lab →
+            </Link>
+            <Link
               href={`/admin/prices?token=${encodeURIComponent(token)}`}
               className="w-fit rounded-2xl border border-cyan-200/25 bg-cyan-200/10 px-5 py-3 font-bold text-cyan-100 transition hover:bg-cyan-200/15"
             >

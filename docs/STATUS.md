@@ -7,6 +7,7 @@
 - RAM: Active — strict DDR3/DDR4/DDR5 specification builder
 - LEGO: Beta — exact set-number/name search with conservative completeness filtering
 - Lenses: Private preview — polished KEH-only guided browser using live feed models; nothing is public
+- Books: Private ISBN lab — exact used eBay inventory testing; nothing is public
 
 Scoutly remains the internal repository and infrastructure name.
 
@@ -16,5 +17,5 @@ Scoutly remains the internal repository and infrastructure name.
 - Seed suite: 88 cases across Cameras, GPUs, RAM, CPUs, Consoles, and LEGO
 - Outcome tracking: Pass, Top-3 only, Fail, No inventory
 - Persistence: PostgreSQL production storage with local JSON fallback
-- Current build: v0.6.20 polished KEH lens finder preview
-- Next milestone: Continue private lens testing across mounts, brands, and model revisions before deciding on a public Sony E-mount pilot
+- Current build: v0.6.21 private Books ISBN lab
+- Next milestone: Test ISBN quality across editions and conditions while continuing private lens validation
