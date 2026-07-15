@@ -256,13 +256,22 @@ async def _search_provider(
     category: str | None,
     product: Product | None,
     buying_option: str,
+    item_location_country: str | None = None,
 ) -> tuple[list[Listing], int]:
     provider = PROVIDERS.get(provider_key.lower())
     if provider is None:
         return [], 0
 
     try:
-        listings = await provider.search(provider_query, category, buying_option=buying_option)
+        search_options = {}
+        if item_location_country and provider_key.lower() == "ebay":
+            search_options["item_location_country"] = item_location_country
+        listings = await provider.search(
+            provider_query,
+            category,
+            buying_option=buying_option,
+            **search_options,
+        )
     except Exception:
         # One provider should not take the entire search down. We will add
         # structured provider errors in a later sprint once the live API is
@@ -300,6 +309,7 @@ async def search_best_deals(
     query: str,
     provider_keys: list[str],
     category: str | None = None,
+    item_location_country: str | None = None,
 ) -> tuple[ProductMatch | None, list[Listing]]:
     product_match = match_product(query, category)
     if _catalog_product_required_but_missing(category, product_match):
@@ -319,6 +329,7 @@ async def search_best_deals(
                     category=search_category,
                     product=scoped_product,
                     buying_option="fixed_price",
+                    item_location_country=item_location_country,
                 )
                 provider_candidates.extend(top_listings(listings, scoped_product, limit=3))
         best_candidates = _top_scored_listings(provider_candidates, limit=1)
@@ -340,6 +351,7 @@ async def search_best_deals_with_auctions(
     include_auctions: bool = True,
     auction_hours: int = 24,
     snapshot_source: str = "search",
+    item_location_country: str | None = None,
 ) -> tuple[ProductMatch | None, list[Listing], list[Listing], SearchDiagnostics, PriceContext]:
     product_match = match_product(query, category)
     if _catalog_product_required_but_missing(category, product_match):
@@ -369,6 +381,7 @@ async def search_best_deals_with_auctions(
                     category=search_category,
                     product=scoped_product,
                     buying_option="fixed_price",
+                    item_location_country=item_location_country,
                 )
                 diagnostics.fixed_price_candidates += fixed_candidate_count
                 provider_candidate_counts[provider_key.lower()] += fixed_candidate_count
@@ -392,6 +405,7 @@ async def search_best_deals_with_auctions(
                         category=search_category,
                         product=scoped_product,
                         buying_option="auction",
+                        item_location_country=item_location_country,
                     )
                     diagnostics.auction_candidates += auction_candidate_count
                     report_filtered = max(0, auction_candidate_count - len(auction_listings))
@@ -441,7 +455,11 @@ async def search_best_deals_with_auctions(
             current_prices.extend(prices)
             # Never persist mock-provider data. Production eBay credentials are
             # the signal that these are real marketplace observations.
-            if provider_key == "ebay" and ebay_config_from_env() is not None:
+            if (
+                provider_key == "ebay"
+                and ebay_config_from_env() is not None
+                and item_location_country is None
+            ):
                 record_price_snapshot(
                     product_id=product.id,
                     category=product.category,
@@ -471,6 +489,7 @@ async def search_auction_deals(
     provider_keys: list[str],
     category: str | None = None,
     auction_hours: int = 24,
+    item_location_country: str | None = None,
 ) -> tuple[ProductMatch | None, list[Listing], SearchDiagnostics]:
     product_match = match_product(query, category)
     if _catalog_product_required_but_missing(category, product_match):
@@ -493,6 +512,7 @@ async def search_auction_deals(
                 category=search_category,
                 product=scoped_product,
                 buying_option="auction",
+                item_location_country=item_location_country,
             )
             diagnostics.auction_candidates += auction_candidate_count
             report_filtered = max(0, auction_candidate_count - len(auction_listings))

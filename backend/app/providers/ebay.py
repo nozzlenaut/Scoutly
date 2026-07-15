@@ -314,21 +314,33 @@ class EbayProvider(MarketplaceProvider):
             headers["X-EBAY-C-ENDUSERCTX"] = enduser_context
         return headers
 
-    async def search(self, query: str, category: str | None = None, buying_option: str = "fixed_price") -> list[Listing]:
+    async def search(
+        self,
+        query: str,
+        category: str | None = None,
+        buying_option: str = "fixed_price",
+        item_location_country: str | None = None,
+    ) -> list[Listing]:
         headers = await self._request_headers()
 
         normalized_option = buying_option.strip().lower()
         if normalized_option == "auction":
+            filters = ["conditions:{USED}", "buyingOptions:{AUCTION}"]
+            if item_location_country:
+                filters.append(f"itemLocationCountry:{item_location_country.upper()}")
             params = {
                 "q": query,
                 # Auctions are loaded only after the user asks for them, so keep
                 # this call focused on the first page of ending-soon candidates.
                 "limit": "25",
                 "sort": "endingSoonest",
-                "filter": "conditions:{USED},buyingOptions:{AUCTION}",
+                "filter": ",".join(filters),
             }
             requested_listing_type = "auction"
         else:
+            filters = ["conditions:{USED}", "buyingOptions:{FIXED_PRICE}"]
+            if item_location_country:
+                filters.append(f"itemLocationCountry:{item_location_country.upper()}")
             params = {
                 "q": query,
                 # Fetch fewer candidates now that we have stronger category and
@@ -339,7 +351,7 @@ class EbayProvider(MarketplaceProvider):
                 # Keep this conservative for now. Removing the condition filter caused
                 # eBay to return too many parts/accessory listings. Additional safe
                 # conditions can be added once we validate category-specific filters.
-                "filter": "conditions:{USED},buyingOptions:{FIXED_PRICE}",
+                "filter": ",".join(filters),
             }
             requested_listing_type = "fixed_price"
 
@@ -367,6 +379,7 @@ class EbayProvider(MarketplaceProvider):
         gtin: str,
         category: str | None = "books",
         limit: int = 35,
+        item_location_country: str | None = None,
     ) -> list[Listing]:
         """Search eBay's catalog by an exact GTIN such as ISBN-10 or ISBN-13.
 
@@ -374,11 +387,14 @@ class EbayProvider(MarketplaceProvider):
         private Books lab without making Books a public PriceSift category yet.
         """
         headers = await self._request_headers()
+        filters = ["conditions:{USED}", "buyingOptions:{FIXED_PRICE}"]
+        if item_location_country:
+            filters.append(f"itemLocationCountry:{item_location_country.upper()}")
         params = {
             "gtin": gtin,
             "limit": str(max(1, min(limit, 200))),
             "sort": "price",
-            "filter": "conditions:{USED},buyingOptions:{FIXED_PRICE}",
+            "filter": ",".join(filters),
         }
         category_id = self._category_id_for(category)
         if category_id is not None:

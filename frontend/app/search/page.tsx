@@ -37,11 +37,12 @@ function PageShell({ children }: { children: ReactNode }) {
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string }>;
+  searchParams: Promise<{ q?: string; category?: string; us_only?: string }>;
 }): Promise<Metadata> {
   const params = await searchParams;
   const category = getSearchCategoryById(params.category);
   const query = (params.q || "").trim();
+  const usOnly = params.us_only === "1" || params.us_only === "true";
 
   if (!category) {
     return {
@@ -60,7 +61,9 @@ export async function generateMetadata({
   }
 
   const description = `Cleaner used-listing results for ${query}.`;
-  const shareUrl = `/search?category=${encodeURIComponent(category.id)}&q=${encodeURIComponent(query)}`;
+  const shareParams = new URLSearchParams({ category: category.id, q: query });
+  if (usOnly) shareParams.set("us_only", "1");
+  const shareUrl = `/search?${shareParams.toString()}`;
   return {
     title: `${query} deals`,
     description,
@@ -81,11 +84,12 @@ export async function generateMetadata({
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string }>;
+  searchParams: Promise<{ q?: string; category?: string; us_only?: string }>;
 }) {
   const params = await searchParams;
   const rawCategory = (params.category || "").trim();
   const rawQuery = (params.q || "").trim();
+  const usOnly = params.us_only === "1" || params.us_only === "true";
   const knownCategory = getCategoryById(rawCategory);
   const category = getSearchCategoryById(rawCategory);
 
@@ -117,7 +121,7 @@ export default async function SearchPage({
     return (
       <PageShell>
         <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
-          <SearchForm initialCategoryId={category.id} initialQuery="" compact />
+          <SearchForm initialCategoryId={category.id} initialQuery="" initialUsOnly={usOnly} compact />
         </section>
         <div
           className="mt-8 rounded-3xl border border-white/10 bg-white/[0.05] p-6 text-slate-200"
@@ -141,7 +145,7 @@ export default async function SearchPage({
   }
 
   if (category.id === "books") {
-    const bookData = await searchPublicBooksByIsbn(rawQuery);
+    const bookData = await searchPublicBooksByIsbn(rawQuery, 35, { usOnly, trackAnalytics: true });
     return (
       <PageShell>
         <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
@@ -149,6 +153,7 @@ export default async function SearchPage({
             key={`${category.id}:${rawQuery}`}
             initialCategoryId={category.id}
             initialQuery={rawQuery}
+            initialUsOnly={usOnly}
             compact
           />
         </section>
@@ -162,6 +167,8 @@ export default async function SearchPage({
   const data = await searchDeals(rawQuery, category.id, "ebay", {
     includeAuctions: false,
     auctionHours: 24,
+    usOnly,
+    trackAnalytics: true,
   });
   const resolved = data.resolved_product;
   const hasKehResults = data.results.some((result) => result.provider.toLowerCase() === "keh");
@@ -192,6 +199,7 @@ export default async function SearchPage({
             key={`${category.id}:${rawQuery}`}
             initialCategoryId={category.id}
             initialQuery={rawQuery}
+            initialUsOnly={usOnly}
             compact
           />
         </section>
@@ -209,7 +217,7 @@ export default async function SearchPage({
                 {likelyAlternatives.map((match) => (
                   <Link
                     key={match.product.id}
-                    href={`/search?category=${encodeURIComponent(category.id)}&q=${encodeURIComponent(match.product.display_name)}`}
+                    href={`/search?category=${encodeURIComponent(category.id)}&q=${encodeURIComponent(match.product.display_name)}${usOnly ? "&us_only=1" : ""}`}
                     className="rounded-full border border-amber-100/25 bg-slate-950/30 px-4 py-2 text-sm font-semibold text-amber-50 transition hover:bg-slate-950/50"
                   >
                     {match.product.display_name}
@@ -262,6 +270,7 @@ export default async function SearchPage({
           <div className="flex flex-col items-start gap-3 sm:items-end">
             <p className="text-sm text-slate-300">
               {hasKehResults ? "Live eBay + KEH results" : "Live eBay results"} · Up to 3 Buy It Now options
+              {usOnly ? " · eBay limited to US-located items" : ""}
             </p>
             <ShareSearchButton
               label={resolved?.product.display_name ?? data.query}
@@ -324,6 +333,7 @@ export default async function SearchPage({
           category={category.id}
           productId={resolved?.product.id}
           resolved={Boolean(resolved)}
+          usOnly={usOnly}
         />
       </SearchTransitionGuard>
     </PageShell>

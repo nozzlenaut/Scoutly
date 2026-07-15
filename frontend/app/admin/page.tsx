@@ -2,8 +2,9 @@ import Link from "next/link";
 import { AdminFilterRules } from "@/components/AdminFilterRules";
 import { AdminReports } from "@/components/AdminReports";
 import { AdminBetaFeedback } from "@/components/AdminBetaFeedback";
+import { AdminAnalyticsDigest } from "@/components/AdminAnalyticsDigest";
 import { SiteFooter } from "@/components/SiteFooter";
-import { getActiveReports, getAnalyticsSummary, getBetaFeedback, getManualFilterRules, getRecentClicks, getRecentFilteredListings } from "@/lib/api";
+import { getActiveReports, getAnalyticsDigest, getAnalyticsSummary, getBetaFeedback, getManualFilterRules, getRecentClicks, getRecentFilteredListings } from "@/lib/api";
 
 function formatDate(value?: string | null): string {
   if (!value) return "—";
@@ -51,10 +52,12 @@ function AdminGate({ invalid = false }: { invalid?: boolean }) {
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string }>
+  searchParams: Promise<{ token?: string; days?: string }>
 }) {
   const params = await searchParams;
   const token = params.token?.trim();
+  const requestedDays = Number.parseInt(params.days || "30", 10);
+  const days = [7, 30, 90].includes(requestedDays) ? requestedDays : 30;
   if (!token) return <AdminGate />;
 
   let data;
@@ -66,11 +69,12 @@ export default async function AdminPage({
       getRecentFilteredListings(token),
       getManualFilterRules(token),
       getBetaFeedback(token),
+      getAnalyticsDigest(token, days),
     ]);
   } catch {
     return <AdminGate invalid />;
   }
-  const [summary, clicks, reports, filtered, manualRules, betaFeedback] = data;
+  const [summary, clicks, reports, filtered, manualRules, betaFeedback, digest] = data;
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
@@ -151,6 +155,24 @@ export default async function AdminPage({
             </p>
           </div>
         </section>
+
+        <div className="mt-8 flex flex-wrap gap-2">
+          {[7, 30, 90].map((period) => (
+            <Link
+              key={period}
+              href={`/admin?token=${encodeURIComponent(token)}&days=${period}`}
+              className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                days === period
+                  ? "border-cyan-200 bg-cyan-200 text-slate-950"
+                  : "border-white/10 text-slate-300 hover:bg-white/[0.08]"
+              }`}
+            >
+              {period} days
+            </Link>
+          ))}
+        </div>
+
+        <AdminAnalyticsDigest digest={digest} />
 
         <AdminFilterRules initialRules={manualRules} token={token} />
 

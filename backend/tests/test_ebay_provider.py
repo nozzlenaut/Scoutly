@@ -283,3 +283,31 @@ def test_ebay_gtin_search_uses_exact_isbn_and_books_category():
     assert "q" not in provider.last_params
     assert provider.last_params["category_ids"] == "261186"
     assert provider.last_params["filter"] == "conditions:{USED},buyingOptions:{FIXED_PRICE}"
+
+
+def test_ebay_search_can_limit_results_to_us_item_location():
+    provider = _CaptureEbayProvider()
+
+    asyncio.run(
+        provider.search(
+            "Sony A7 IV Body",
+            category="cameras",
+            item_location_country="US",
+        )
+    )
+
+    assert provider.last_params["filter"] == "conditions:{USED},buyingOptions:{FIXED_PRICE},itemLocationCountry:US"
+
+
+def test_ebay_gtin_search_can_limit_results_to_us_item_location():
+    provider = _CaptureEbayProvider()
+
+    asyncio.run(
+        provider.search_gtin(
+            "9780306406157",
+            category="books",
+            item_location_country="US",
+        )
+    )
+
+    assert provider.last_params["filter"] == "conditions:{USED},buyingOptions:{FIXED_PRICE},itemLocationCountry:US"

@@ -9,6 +9,7 @@ type Props = {
   category: string;
   productId?: string;
   resolved?: boolean;
+  usOnly?: boolean;
 };
 
 const emptyDiagnostics: SearchDiagnostics = {
@@ -24,7 +25,7 @@ const emptyDiagnostics: SearchDiagnostics = {
   auction_rejection_reasons: {},
 };
 
-export function AuctionResults({ query, category, productId, resolved = false }: Props) {
+export function AuctionResults({ query, category, productId, resolved = false, usOnly = false }: Props) {
   const [status, setStatus] = useState<"loading" | "done" | "error">("loading");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [diagnostics, setDiagnostics] = useState<SearchDiagnostics>(emptyDiagnostics);
@@ -37,7 +38,7 @@ export function AuctionResults({ query, category, productId, resolved = false }:
       setResults([]);
       setDiagnostics(emptyDiagnostics);
       try {
-        const data = await searchAuctions(query, category, "ebay", { auctionHours: 24 });
+        const data = await searchAuctions(query, category, "ebay", { auctionHours: 24, usOnly });
         if (cancelled) return;
         setResults(data.auction_results || []);
         setDiagnostics(data.diagnostics || emptyDiagnostics);
@@ -52,7 +53,7 @@ export function AuctionResults({ query, category, productId, resolved = false }:
     return () => {
       cancelled = true;
     };
-  }, [category, query]);
+  }, [category, query, usOnly]);
 
   const auctionEmptyMessage =
     diagnostics.auction_candidates > 0
@@ -67,6 +68,7 @@ export function AuctionResults({ query, category, productId, resolved = false }:
           <h2 className="mt-2 text-2xl font-black">Ending soon</h2>
           <p className="mt-2 max-w-2xl text-sm text-slate-300">
             Buy It Now results load first. PriceSift checks auctions after that so the page stays fast.
+            {usOnly ? " eBay auctions are limited to US-located items." : ""}
           </p>
         </div>
         {status === "loading" ? (

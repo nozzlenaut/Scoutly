@@ -17,5 +17,5 @@ Scoutly remains the internal repository and infrastructure name.
 - Seed suite: 88 cases across Cameras, GPUs, RAM, CPUs, Consoles, and LEGO
 - Outcome tracking: Pass, Top-3 only, Fail, No inventory
 - Persistence: PostgreSQL production storage with local JSON fallback
-- Current build: v0.6.25 price-admin numeric serialization fix
+- Current build: v0.6.26 light analytics and US-only search toggle
 - Next milestone: Continue public Books feedback and private KEH lens validation; add AbeBooks if approved

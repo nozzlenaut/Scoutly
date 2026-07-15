@@ -10,6 +10,7 @@ import { CpuSearchBuilder } from "@/components/CpuSearchBuilder";
 type SearchFormProps = {
   initialCategoryId?: string | null;
   initialQuery?: string | null;
+  initialUsOnly?: boolean | null;
   compact?: boolean;
 };
 
@@ -20,6 +21,7 @@ function announceSearchStart() {
 export function SearchForm({
   initialCategoryId,
   initialQuery,
+  initialUsOnly,
   compact = false,
 }: SearchFormProps) {
   const initialCategory = getCategory(initialCategoryId);
@@ -31,6 +33,7 @@ export function SearchForm({
       : initialQuery.trim(),
   );
   const [suggestions, setSuggestions] = useState<ProductMatch[]>([]);
+  const [usOnly, setUsOnly] = useState(Boolean(initialUsOnly));
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionsEnabled, setSuggestionsEnabled] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
@@ -44,6 +47,27 @@ export function SearchForm({
   const listboxId = useId();
   const inputId = useId();
   const statusId = useId();
+
+  useEffect(() => {
+    if (initialUsOnly !== undefined && initialUsOnly !== null) {
+      setUsOnly(Boolean(initialUsOnly));
+      return;
+    }
+    try {
+      setUsOnly(window.localStorage.getItem("pricesift:us-only") === "true");
+    } catch {
+      // Local storage may be unavailable in privacy modes. The toggle still works for this page.
+    }
+  }, [initialUsOnly]);
+
+  function changeUsOnly(next: boolean) {
+    setUsOnly(next);
+    try {
+      window.localStorage.setItem("pricesift:us-only", String(next));
+    } catch {
+      // Keep the in-memory preference even when storage is blocked.
+    }
+  }
 
   useEffect(() => {
     if (!didMountRef.current) {
@@ -122,9 +146,9 @@ export function SearchForm({
     const cleaned = value.trim();
     if (!cleaned) return;
 
-    navigate(
-      `/search?category=${encodeURIComponent(categoryId)}&q=${encodeURIComponent(cleaned)}`,
-    );
+    const params = new URLSearchParams({ category: categoryId, q: cleaned });
+    if (usOnly) params.set("us_only", "1");
+    navigate(`/search?${params.toString()}`);
   }
 
   function handleCategoryChange(nextCategoryId: string) {
@@ -133,7 +157,9 @@ export function SearchForm({
     if (compact) {
       // A results page must never show cards from one category while another
       // category is selected. Start a clean category page immediately.
-      navigate(`/search?category=${encodeURIComponent(nextCategoryId)}&q=`);
+      const params = new URLSearchParams({ category: nextCategoryId, q: "" });
+      if (usOnly) params.set("us_only", "1");
+      navigate(`/search?${params.toString()}`);
       return;
     }
 
@@ -337,19 +363,22 @@ export function SearchForm({
               ) : null}
             </div>
 
-            <button
-              disabled={isNavigating}
-              className="flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-cyan-300 px-7 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-wait disabled:opacity-80"
-            >
-              {isNavigating ? (
-                <>
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950" />
-                  Searching…
-                </>
-              ) : (
-                "Search"
-              )}
-            </button>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <button
+                disabled={isNavigating}
+                className="flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-cyan-300 px-7 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-wait disabled:opacity-80"
+              >
+                {isNavigating ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950" />
+                    Searching…
+                  </>
+                ) : (
+                  "Search"
+                )}
+              </button>
+              <UsOnlyToggle checked={usOnly} onChange={changeUsOnly} />
+            </div>
           </form>
 
           <p
@@ -361,10 +390,31 @@ export function SearchForm({
               ? "Enter an ISBN-10 or ISBN-13. PriceSift searches that exact used-book edition; title-only searches are not sent to eBay."
               : "Type or pick a supported catalog item. Unsupported text will not be sent to the marketplace."}
             {isLoading ? " Checking catalog…" : ""}
+            {usOnly ? " Filtering eBay to US-located items; KEH results are unchanged." : ""}
             {isNavigating ? " Loading fresh results…" : ""}
           </p>
         </>
       )}
+
+      {selectedCategory.id === "ram" || selectedCategory.id === "cpus" ? (
+        <div className="mt-4 flex justify-end">
+          <UsOnlyToggle checked={usOnly} onChange={changeUsOnly} />
+        </div>
+      ) : null}
     </div>
+  );
+}
+
+function UsOnlyToggle({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
+  return (
+    <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.05] px-4 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08]">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="h-4 w-4 accent-cyan-300"
+      />
+      <span>US listings only</span>
+    </label>
   );
 }

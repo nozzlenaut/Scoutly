@@ -293,7 +293,9 @@ def log_outbound_click(
     title: str | None = None,
 ) -> None:
     now = _now()
-    params = parse_qs(urlsplit(tracked_url).query)
+    tracked_parts = urlsplit(tracked_url)
+    params = parse_qs(tracked_parts.query)
+    affiliate_tracked = bool(params.get("campid")) or tracked_parts.netloc.lower().endswith("awin1.com")
     record = {
         "clicked_at": now.isoformat(),
         "provider": provider,
@@ -303,7 +305,7 @@ def log_outbound_click(
         "title": title,
         "link_key": _normalized_link_key(tracked_url),
         "ebay_item_id": ebay_item_id_from_url(tracked_url),
-        "affiliate_campaign_present": bool(params.get("campid")),
+        "affiliate_campaign_present": affiliate_tracked,
         "affiliate_reference": (params.get("customid") or [None])[0],
         "url": url,
         "tracked_url": tracked_url,

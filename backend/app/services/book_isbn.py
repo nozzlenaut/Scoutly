@@ -338,6 +338,7 @@ async def search_used_books_by_isbn(
     *,
     provider: EbayProvider | None = None,
     limit: int = 35,
+    item_location_country: str | None = None,
 ) -> dict[str, Any]:
     identity = isbn_identity(value)
     if not identity["valid"]:
@@ -373,7 +374,15 @@ async def search_used_books_by_isbn(
     collectible_fallback: tuple[str, list[Listing], list[Listing]] | None = None
 
     for index, isbn in enumerate(identity["query_isbns"]):
-        candidates = await provider.search_gtin(isbn, category="books", limit=limit)
+        search_options = {}
+        if item_location_country:
+            search_options["item_location_country"] = item_location_country
+        candidates = await provider.search_gtin(
+            isbn,
+            category="books",
+            limit=limit,
+            **search_options,
+        )
         standard, collectible, bundles, rejection_reasons, duplicates_removed, consensus_tokens = _filter_query_candidates(candidates)
 
         total_candidates += len(candidates)

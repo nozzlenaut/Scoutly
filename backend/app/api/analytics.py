@@ -13,6 +13,7 @@ from app.services.feedback_store import (
 )
 from app.services.filter_rules import ManualFilterRule, add_manual_filter_rule, delete_manual_filter_rule, list_manual_filter_rules
 from app.services.beta_feedback_store import list_beta_feedback
+from app.services.analytics_store import analytics_digest
 
 router = APIRouter(tags=["Analytics"])
 
@@ -58,6 +59,15 @@ def _require_admin_token(token: str | None) -> None:
 def get_analytics_summary(token: str | None = Query(None)) -> dict:
     _require_admin_token(token)
     return analytics_summary()
+
+
+@router.get("/analytics/digest")
+def get_analytics_digest(
+    days: int = Query(30, ge=1, le=365),
+    token: str | None = Query(None),
+) -> dict:
+    _require_admin_token(token)
+    return analytics_digest(days)
 
 
 @router.get("/analytics/clicks")

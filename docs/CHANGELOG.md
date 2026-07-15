@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.26
+
+- Adds privacy-friendly public search analytics without storing IP addresses, cookies, accounts, or personal identifiers.
+- Records category, resolved product/ISBN, result availability, providers shown, candidate/filter counts, US-only usage, and outbound listing clicks.
+- Adds a 7/30/90-day admin analytics digest with category trends, top searches, no-result rates, provider clicks, and a paste-ready summary/JSON export.
+- Adds a persistent “US listings only” toggle near Search that filters eBay Buy It Now, auctions, and Books ISBN searches by item location while leaving KEH unchanged.
+- Preserves the location preference in the browser and in shareable search URLs.
+- Excludes US-only searches from broad-market price snapshot storage so domestic filtering does not distort typical-price history.
+- Counts approved Awin/KEH outbound links as affiliate-tagged clicks.
+- Adds six analytics/location regressions, bringing the backend suite to 215 passing tests.
+
 ## v0.6.25
 
 - Fixes `/admin/prices` crashing during server rendering when PostgreSQL `NUMERIC` values arrive as decimal strings.

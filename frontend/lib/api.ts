@@ -249,6 +249,45 @@ export type StorageStatus = {
   error?: string | null;
 };
 
+export type AnalyticsCategoryRow = {
+  category: string;
+  searches: number;
+  with_results: number;
+  no_results: number;
+  no_result_rate: number | null;
+  clicks: number;
+};
+
+export type AnalyticsTopSearch = {
+  category: string;
+  product_id?: string | null;
+  label: string;
+  searches: number;
+  no_results: number;
+  clicks: number;
+};
+
+export type AnalyticsDigest = {
+  days: number;
+  search_count: number;
+  resolved_count: number;
+  with_results_count: number;
+  no_result_count: number;
+  no_result_rate: number | null;
+  us_only_count: number;
+  us_only_rate: number | null;
+  click_count: number;
+  affiliate_click_count: number;
+  approximate_click_rate: number | null;
+  category_rows: AnalyticsCategoryRow[];
+  top_searches: AnalyticsTopSearch[];
+  provider_shown_counts: Record<string, number>;
+  provider_click_counts: Record<string, number>;
+  daily: Array<{ date: string; searches: number; clicks: number; no_results: number }>;
+  summary_text: string;
+  privacy_note: string;
+};
+
 export type AnalyticsSummary = {
   total_clicks: number;
   affiliate_clicks: number;
@@ -394,7 +433,7 @@ export async function searchDeals(
   query: string,
   category = "cameras",
   providers = "ebay",
-  options: { includeAuctions?: boolean; auctionHours?: number } = {},
+  options: { includeAuctions?: boolean; auctionHours?: number; usOnly?: boolean; trackAnalytics?: boolean } = {},
 ): Promise<SearchResponse> {
   const params = new URLSearchParams({
     q: query,
@@ -402,6 +441,8 @@ export async function searchDeals(
     providers,
     include_auctions: options.includeAuctions ? "true" : "false",
     auction_hours: String(options.auctionHours ?? 24),
+    us_only: options.usOnly ? "true" : "false",
+    analytics: options.trackAnalytics ? "true" : "false",
   });
   const url = `${baseUrl}/api/search?${params.toString()}`;
   const response = await fetch(url, { cache: "no-store" });
@@ -417,13 +458,14 @@ export async function searchAuctions(
   query: string,
   category = "cameras",
   providers = "ebay",
-  options: { auctionHours?: number } = {},
+  options: { auctionHours?: number; usOnly?: boolean } = {},
 ): Promise<SearchResponse> {
   const params = new URLSearchParams({
     q: query,
     category,
     providers,
     auction_hours: String(options.auctionHours ?? 24),
+    us_only: options.usOnly ? "true" : "false",
   });
   const url = `${baseUrl}/api/search/auctions?${params.toString()}`;
   const response = await fetch(url, { cache: "no-store" });
@@ -526,6 +568,17 @@ export function buildOutboundUrl(
 
 function adminQuery(token?: string): string {
   return token ? `?token=${encodeURIComponent(token)}` : "";
+}
+
+export async function getAnalyticsDigest(
+  token?: string,
+  days = 30,
+): Promise<AnalyticsDigest> {
+  const params = new URLSearchParams({ days: String(days) });
+  if (token) params.set("token", token);
+  const response = await fetch(`${baseUrl}/api/analytics/digest?${params.toString()}`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Analytics digest failed");
+  return response.json();
 }
 
 export async function getAnalyticsSummary(
@@ -844,8 +897,17 @@ export async function getBooksLabStatus(token: string): Promise<BookLabStatus> {
   return response.json();
 }
 
-export async function searchPublicBooksByIsbn(isbn: string, limit = 35): Promise<BookLabResponse> {
-  const params = new URLSearchParams({ isbn, limit: String(limit) });
+export async function searchPublicBooksByIsbn(
+  isbn: string,
+  limit = 35,
+  options: { usOnly?: boolean; trackAnalytics?: boolean } = {},
+): Promise<BookLabResponse> {
+  const params = new URLSearchParams({
+    isbn,
+    limit: String(limit),
+    us_only: options.usOnly ? "true" : "false",
+    analytics: options.trackAnalytics ? "true" : "false",
+  });
   const response = await fetch(`${baseUrl}/api/books/search?${params.toString()}`, { cache: "no-store" });
   if (!response.ok) {
     const detail = await response.text().catch(() => "");

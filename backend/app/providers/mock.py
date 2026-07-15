@@ -170,7 +170,13 @@ def _gpu_results(provider_name: str) -> list[Listing]:
 class MockEbayProvider(MarketplaceProvider):
     name = "eBay"
 
-    async def search(self, query: str, category: str | None = None, buying_option: str = "fixed_price") -> list[Listing]:
+    async def search(
+        self,
+        query: str,
+        category: str | None = None,
+        buying_option: str = "fixed_price",
+        item_location_country: str | None = None,
+    ) -> list[Listing]:
         lower = query.lower()
         if buying_option == "auction":
             return [
@@ -205,7 +211,13 @@ class MockEbayProvider(MarketplaceProvider):
 class MockAmazonProvider(MarketplaceProvider):
     name = "Amazon"
 
-    async def search(self, query: str, category: str | None = None, buying_option: str = "fixed_price") -> list[Listing]:
+    async def search(
+        self,
+        query: str,
+        category: str | None = None,
+        buying_option: str = "fixed_price",
+        item_location_country: str | None = None,
+    ) -> list[Listing]:
         lower = query.lower()
         if "a7 iii" in lower or "a7 3" in lower:
             return [

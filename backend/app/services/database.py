@@ -200,6 +200,32 @@ def initialize_database() -> bool:
         ON scoutly_beta_feedback (submitted_at DESC)
         """,
         """
+        CREATE TABLE IF NOT EXISTS scoutly_search_events (
+            id BIGSERIAL PRIMARY KEY,
+            searched_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            category TEXT,
+            query TEXT NOT NULL,
+            product_id TEXT,
+            product_label TEXT,
+            resolved BOOLEAN NOT NULL DEFAULT FALSE,
+            result_count INTEGER NOT NULL DEFAULT 0,
+            provider_counts JSONB NOT NULL DEFAULT '{}'::jsonb,
+            candidate_count INTEGER NOT NULL DEFAULT 0,
+            filtered_count INTEGER NOT NULL DEFAULT 0,
+            no_inventory BOOLEAN NOT NULL DEFAULT TRUE,
+            us_only BOOLEAN NOT NULL DEFAULT FALSE,
+            source TEXT NOT NULL DEFAULT 'public'
+        )
+        """,
+        """
+        CREATE INDEX IF NOT EXISTS scoutly_search_events_recent
+        ON scoutly_search_events (searched_at DESC)
+        """,
+        """
+        CREATE INDEX IF NOT EXISTS scoutly_search_events_category
+        ON scoutly_search_events (category, searched_at DESC)
+        """,
+        """
         CREATE TABLE IF NOT EXISTS scoutly_price_snapshots (
             id TEXT PRIMARY KEY,
             snapshot_bucket TIMESTAMPTZ NOT NULL,
