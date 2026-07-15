@@ -806,12 +806,26 @@ export type BookIsbnIdentity = {
   query_isbns: string[];
 };
 
+export type BookQueryAttempt = {
+  isbn: string;
+  role: "primary" | "fallback" | string;
+  candidate_count: number;
+  eligible_count: number;
+  duplicates_removed: number;
+  consensus_tokens: string[];
+  rejection_reasons: Record<string, number>;
+  used_as_results: boolean;
+};
+
 export type BookLabResponse = {
   isbn: BookIsbnIdentity;
   candidate_count: number;
   eligible_count: number;
   duplicates_removed: number;
   rejection_reasons: Record<string, number>;
+  query_attempts: BookQueryAttempt[];
+  selected_query_isbn: string | null;
+  fallback_used: boolean;
   top_results: SearchResult[];
   results: SearchResult[];
 };

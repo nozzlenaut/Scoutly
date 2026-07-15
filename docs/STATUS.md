@@ -17,5 +17,5 @@ Scoutly remains the internal repository and infrastructure name.
 - Seed suite: 88 cases across Cameras, GPUs, RAM, CPUs, Consoles, and LEGO
 - Outcome tracking: Pass, Top-3 only, Fail, No inventory
 - Persistence: PostgreSQL production storage with local JSON fallback
-- Current build: v0.6.21 private Books ISBN lab
+- Current build: v0.6.22 stricter Books ISBN verification patch
 - Next milestone: Test ISBN quality across editions and conditions while continuing private lens validation

@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.6.22
+
+- Changed Books ISBN lookup to ISBN-13-first with ISBN-10 fallback instead of merging both result sets.
+- Added a title-consistency sanity gate for large ISBN result sets so unrelated eBay catalog matches fail safely.
+- Added per-query diagnostics to the private Books lab.
+
 ## v0.6.21
 
 - Adds a private `/admin/books` ISBN-first test page.

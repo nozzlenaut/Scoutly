@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import re
 from collections import Counter
 from typing import Any
@@ -8,6 +9,7 @@ from app.models.listing import Listing
 from app.providers.ebay import EbayProvider, ebay_config_from_env
 
 ISBN_CLEAN_RE = re.compile(r"[^0-9Xx]")
+TITLE_TOKEN_RE = re.compile(r"[a-z0-9]+")
 USED_CONDITION_WORDS = (
     "used",
     "pre-owned",
@@ -17,6 +19,41 @@ USED_CONDITION_WORDS = (
     "good",
     "acceptable",
 )
+
+# Words that can appear across unrelated book listings and therefore should not
+# be treated as proof that eBay returned one coherent title/edition.
+BOOK_TITLE_STOPWORDS = {
+    "a",
+    "an",
+    "and",
+    "author",
+    "book",
+    "books",
+    "copy",
+    "edition",
+    "english",
+    "fiction",
+    "hardback",
+    "hardcover",
+    "international",
+    "mass",
+    "new",
+    "novel",
+    "of",
+    "paperback",
+    "preowned",
+    "printing",
+    "read",
+    "series",
+    "softcover",
+    "the",
+    "trade",
+    "used",
+    "very",
+    "volume",
+    "vol",
+    "with",
+}
 
 
 def normalize_isbn(value: str) -> str:
@@ -78,6 +115,8 @@ def isbn_identity(value: str) -> dict[str, Any]:
         isbn13 = normalized
         isbn10 = isbn13_to_isbn10(normalized)
 
+    # ISBN-13 is the primary lookup whenever it is available. ISBN-10 is only a
+    # fallback now; blindly merging both result sets caused eBay catalog drift.
     query_isbns = []
     for candidate in (isbn13, isbn10):
         if candidate and candidate not in query_isbns:
@@ -103,6 +142,84 @@ def _listing_key(listing: Listing) -> str:
     # Multiple legitimate used-book sellers commonly reuse the exact same title.
     # Deduplicate only the marketplace item URL so distinct copies remain visible.
     return str(listing.url).split("?", 1)[0].rstrip("/").lower()
+
+
+def _title_tokens(title: str) -> set[str]:
+    tokens: set[str] = set()
+    for token in TITLE_TOKEN_RE.findall((title or "").lower()):
+        if token in BOOK_TITLE_STOPWORDS or len(token) < 3 or token.isdigit():
+            continue
+        # Ignore ISBN-like numbers and common year/printing noise.
+        if len(token) >= 8 and token.isdigit():
+            continue
+        tokens.add(token)
+    return tokens
+
+
+def _apply_title_consensus_gate(listings: list[Listing]) -> tuple[list[Listing], int, list[str]]:
+    """Reject a large ISBN result set when it has no coherent title identity.
+
+    eBay occasionally returns broad catalog soup for a valid ISBN. With five or
+    more used candidates, legitimate copies should share at least one meaningful
+    title/author token. Small result sets are left alone because one exact used
+    copy is a perfectly valid outcome.
+    """
+    if len(listings) < 5:
+        return listings, 0, []
+
+    token_sets = [_title_tokens(listing.title) for listing in listings]
+    frequencies: Counter[str] = Counter(token for tokens in token_sets for token in tokens)
+    threshold = max(3, math.ceil(len(listings) * 0.4))
+    consensus_tokens = sorted(token for token, count in frequencies.items() if count >= threshold)
+
+    if not consensus_tokens:
+        return [], len(listings), []
+
+    consensus_set = set(consensus_tokens)
+    anchor_threshold = max(3, math.ceil(len(listings) * 0.7))
+    anchor_tokens = {token for token in consensus_tokens if frequencies[token] >= anchor_threshold}
+
+    def matches_consensus(tokens: set[str]) -> bool:
+        shared = tokens & consensus_set
+        # A single highly dominant title token (for example, "Dune") can be
+        # enough. Otherwise require two shared identity tokens to avoid matching
+        # unrelated books on a common surname or series word.
+        return bool(tokens & anchor_tokens) or len(shared) >= 2 or (len(consensus_tokens) == 1 and len(shared) == 1)
+
+    accepted = [listing for listing, tokens in zip(listings, token_sets) if matches_consensus(tokens)]
+
+    # A tiny surviving minority is more likely accidental overlap than a real
+    # ISBN identity cluster. Fail safely and let the alternate ISBN try once.
+    minimum_cluster = max(2, math.ceil(len(listings) * 0.3))
+    if len(accepted) < minimum_cluster:
+        return [], len(listings), consensus_tokens
+
+    return accepted, len(listings) - len(accepted), consensus_tokens
+
+
+def _filter_query_candidates(candidates: list[Listing]) -> tuple[list[Listing], Counter[str], int, list[str]]:
+    rejection_reasons: Counter[str] = Counter()
+    eligible: list[Listing] = []
+    seen_urls: set[str] = set()
+    duplicates_removed = 0
+
+    for listing in sorted(candidates, key=lambda item: (item.total_price, -item.score)):
+        if not _is_used_condition(listing.condition):
+            rejection_reasons["Not a used-book condition"] += 1
+            continue
+
+        url_key = _listing_key(listing)
+        if url_key in seen_urls:
+            duplicates_removed += 1
+            continue
+        seen_urls.add(url_key)
+        eligible.append(listing)
+
+    eligible, consensus_rejected, consensus_tokens = _apply_title_consensus_gate(eligible)
+    if consensus_rejected:
+        rejection_reasons["Unverified or inconsistent title identity"] += consensus_rejected
+
+    return eligible, rejection_reasons, duplicates_removed, consensus_tokens
 
 
 def _serialize_listing(listing: Listing) -> dict[str, Any]:
@@ -131,6 +248,9 @@ async def search_used_books_by_isbn(
             "eligible_count": 0,
             "duplicates_removed": 0,
             "rejection_reasons": {"Invalid ISBN check digit or length": 1},
+            "query_attempts": [],
+            "selected_query_isbn": None,
+            "fallback_used": False,
             "top_results": [],
             "results": [],
         }
@@ -138,34 +258,48 @@ async def search_used_books_by_isbn(
     if provider is None:
         provider = EbayProvider()
 
-    candidates: list[Listing] = []
-    for isbn in identity["query_isbns"]:
-        candidates.extend(await provider.search_gtin(isbn, category="books", limit=limit))
+    query_attempts: list[dict[str, Any]] = []
+    aggregate_rejections: Counter[str] = Counter()
+    total_candidates = 0
+    total_duplicates_removed = 0
+    selected_query_isbn: str | None = None
+    selected_results: list[Listing] = []
 
-    rejection_reasons: Counter[str] = Counter()
-    eligible: list[Listing] = []
-    seen_urls: set[str] = set()
-    duplicates_removed = 0
+    for index, isbn in enumerate(identity["query_isbns"]):
+        candidates = await provider.search_gtin(isbn, category="books", limit=limit)
+        eligible, rejection_reasons, duplicates_removed, consensus_tokens = _filter_query_candidates(candidates)
 
-    for listing in sorted(candidates, key=lambda item: (item.total_price, -item.score)):
-        if not _is_used_condition(listing.condition):
-            rejection_reasons["Not a used-book condition"] += 1
-            continue
+        total_candidates += len(candidates)
+        total_duplicates_removed += duplicates_removed
+        aggregate_rejections.update(rejection_reasons)
+        query_attempts.append(
+            {
+                "isbn": isbn,
+                "role": "primary" if index == 0 else "fallback",
+                "candidate_count": len(candidates),
+                "eligible_count": len(eligible),
+                "duplicates_removed": duplicates_removed,
+                "consensus_tokens": consensus_tokens,
+                "rejection_reasons": dict(rejection_reasons),
+                "used_as_results": bool(eligible),
+            }
+        )
 
-        url_key = _listing_key(listing)
-        if url_key in seen_urls:
-            duplicates_removed += 1
-            continue
-        seen_urls.add(url_key)
-        eligible.append(listing)
+        if eligible:
+            selected_query_isbn = isbn
+            selected_results = eligible
+            break
 
-    serialized = [_serialize_listing(listing) for listing in eligible[: max(1, min(limit, 100))]]
+    serialized = [_serialize_listing(listing) for listing in selected_results[: max(1, min(limit, 100))]]
     return {
         "isbn": identity,
-        "candidate_count": len(candidates),
-        "eligible_count": len(eligible),
-        "duplicates_removed": duplicates_removed,
-        "rejection_reasons": dict(rejection_reasons),
+        "candidate_count": total_candidates,
+        "eligible_count": len(selected_results),
+        "duplicates_removed": total_duplicates_removed,
+        "rejection_reasons": dict(aggregate_rejections),
+        "query_attempts": query_attempts,
+        "selected_query_isbn": selected_query_isbn,
+        "fallback_used": len(query_attempts) > 1 and selected_query_isbn == query_attempts[-1]["isbn"],
         "top_results": serialized[:3],
         "results": serialized,
     }

@@ -90,7 +90,7 @@ export function AdminBookIsbnLab({ token }: { token: string }) {
         <p className="text-sm uppercase tracking-[0.22em] text-cyan-200">Private Books experiment</p>
         <h2 className="mt-2 text-2xl font-bold">Test exact used-book matching</h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-400">
-          Enter an ISBN-10 or ISBN-13. PriceSift tests the equivalent ISBN when one exists, requests only used Buy It Now inventory, merges duplicates, and previews the three results a future Books category would show.
+          Enter an ISBN-10 or ISBN-13. PriceSift tries ISBN-13 first, uses ISBN-10 only as a fallback, rejects incoherent catalog results, and previews the three used copies a future Books category would show.
         </p>
 
         <form onSubmit={submit} className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -143,6 +143,45 @@ export function AdminBookIsbnLab({ token }: { token: string }) {
             </div>
           </section>
 
+          <section className="mt-5 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm uppercase tracking-[0.2em] text-cyan-200">ISBN lookup path</p>
+                <p className="mt-1 text-sm text-slate-400">
+                  ISBN-13 is primary. ISBN-10 is attempted only when the primary query produces no coherent used results.
+                </p>
+              </div>
+              {data.fallback_used ? (
+                <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-xs font-bold text-amber-100">Fallback used</span>
+              ) : data.selected_query_isbn ? (
+                <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-xs font-bold text-emerald-100">Primary query accepted</span>
+              ) : (
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-bold text-slate-300">No accepted query</span>
+              )}
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {data.query_attempts.map((attempt) => (
+                <div key={`${attempt.role}-${attempt.isbn}`} className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-mono font-bold text-white">{attempt.isbn}</p>
+                    <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{attempt.role}</span>
+                  </div>
+                  <p className="mt-2 text-sm text-slate-400">
+                    {attempt.candidate_count} candidates · {attempt.eligible_count} coherent used results
+                  </p>
+                  {attempt.consensus_tokens.length ? (
+                    <p className="mt-2 text-xs text-cyan-200">Shared identity: {attempt.consensus_tokens.slice(0, 6).join(", ")}</p>
+                  ) : null}
+                  {Object.keys(attempt.rejection_reasons).length ? (
+                    <p className="mt-2 text-xs text-amber-200">
+                      {Object.entries(attempt.rejection_reasons).map(([reason, count]) => `${reason}: ${count}`).join(" · ")}
+                    </p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </section>
+
           {Object.keys(data.rejection_reasons).length ? (
             <div className="mt-5 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-sm text-amber-100">
               {Object.entries(data.rejection_reasons).map(([reason, count]) => `${reason}: ${count}`).join(" · ")}
@@ -153,7 +192,7 @@ export function AdminBookIsbnLab({ token }: { token: string }) {
             <div>
               <p className="text-sm uppercase tracking-[0.2em] text-cyan-200">Intended PriceSift results</p>
               <h2 className="mt-1 text-2xl font-bold">Top three used copies</h2>
-              <p className="mt-1 text-sm text-slate-500">These are ordered by delivered price after exact ISBN matching and duplicate removal.</p>
+              <p className="mt-1 text-sm text-slate-500">These are ordered by delivered price after sequential ISBN lookup, title-consistency verification, and duplicate removal.</p>
             </div>
             {data.top_results.length ? (
               <div className="mt-5 grid gap-4 lg:grid-cols-3">
@@ -161,7 +200,7 @@ export function AdminBookIsbnLab({ token }: { token: string }) {
               </div>
             ) : (
               <div className="mt-5 rounded-3xl border border-white/10 bg-white/[0.04] p-6 text-slate-400">
-                eBay returned no eligible used Buy It Now copies tied to this ISBN.
+                eBay returned no coherent, eligible used Buy It Now copies for this ISBN. Random catalog matches are now rejected instead of displayed.
               </div>
             )}
           </section>
