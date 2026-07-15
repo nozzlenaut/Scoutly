@@ -87,6 +87,12 @@ export default async function AdminPage({
           </div>
           <div className="flex flex-wrap gap-3">
             <Link
+              href={`/admin/keh?token=${encodeURIComponent(token)}`}
+              className="w-fit rounded-2xl border border-emerald-200/25 bg-emerald-200/10 px-5 py-3 font-bold text-emerald-100 transition hover:bg-emerald-200/15"
+            >
+              KEH shadow feed →
+            </Link>
+            <Link
               href={`/admin/prices?token=${encodeURIComponent(token)}`}
               className="w-fit rounded-2xl border border-cyan-200/25 bg-cyan-200/10 px-5 py-3 font-bold text-cyan-100 transition hover:bg-cyan-200/15"
             >

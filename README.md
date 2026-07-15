@@ -1,3 +1,7 @@
+# PriceSift v0.6.17
+
+See `README-v0617.md` for the KEH shadow-feed setup and testing steps.
+
 # PriceSift v0.6.16
 
 This release keeps public marketplace searches inside PriceSift's supported catalog and repairs the price-history admin networking path.

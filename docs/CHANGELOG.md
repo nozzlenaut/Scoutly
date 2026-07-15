@@ -1,3 +1,12 @@
+## v0.6.17
+
+- Added KEH Camera/Awin feed ingestion in private shadow mode.
+- Added `/admin/keh` matching and sync diagnostics.
+- Added Railway cron-compatible KEH sync runner.
+- Added KEH grade parsing and tracked-link storage.
+- Changed homepage promise to “Free to use. Always.”
+- KEH remains excluded from public results and price history.
+
 # Changelog
 
 ## v0.6.16

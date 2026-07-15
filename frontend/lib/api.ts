@@ -130,6 +130,60 @@ export type PriceCollectionResponse = {
   }>;
 };
 
+
+export type KehInventoryItem = {
+  aw_product_id: string;
+  merchant_product_id?: string | null;
+  title: string;
+  product_type: "camera_body" | "lens" | string;
+  price: number;
+  currency: string;
+  condition_grade_code?: string | null;
+  condition_grade_label?: string | null;
+  affiliate_url: string;
+  merchant_url?: string | null;
+  image_url?: string | null;
+  brand?: string | null;
+  mpn?: string | null;
+  upc?: string | null;
+  in_stock: boolean;
+  is_for_sale: boolean;
+  matched_product_id?: string | null;
+  matched_product_label?: string | null;
+  match_confidence?: number | null;
+  match_status: "matched" | "unmatched" | "ambiguous" | string;
+  match_reason?: string | null;
+  synced_at?: string | null;
+};
+
+export type KehSyncRun = {
+  id: string;
+  started_at: string;
+  completed_at?: string | null;
+  status: string;
+  feed_items: number;
+  scoped_items: number;
+  matched_items: number;
+  unmatched_items: number;
+  ambiguous_items: number;
+  error_items: number;
+  error_message?: string | null;
+};
+
+export type KehOverview = {
+  enabled: boolean;
+  configured: boolean;
+  public_results_enabled: boolean;
+  pilot_product_ids: string[];
+  latest_sync?: KehSyncRun | null;
+  active_item_count: number;
+  matched_count: number;
+  unmatched_count: number;
+  ambiguous_count: number;
+  matched_product_count: number;
+  items: KehInventoryItem[];
+};
+
 export type StorageStatus = {
   configured: boolean;
   connected: boolean;
@@ -633,6 +687,30 @@ export async function collectQaPriceBatch(
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
     throw new Error(detail || `Price collection failed (${response.status})`);
+  }
+  return response.json();
+}
+
+
+export async function getKehOverview(token: string, limit = 500): Promise<KehOverview> {
+  const params = new URLSearchParams({ token, limit: String(limit) });
+  const response = await fetch(`${baseUrl}/api/keh/overview?${params.toString()}`, { cache: "no-store" });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(detail || `KEH overview failed (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function syncKehFeed(token: string): Promise<KehSyncRun> {
+  const response = await fetch(`${baseUrl}/api/keh/sync?token=${encodeURIComponent(token)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ force: true }),
+  });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(detail || `KEH sync failed (${response.status})`);
   }
   return response.json();
 }

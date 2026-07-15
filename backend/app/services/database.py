@@ -229,6 +229,65 @@ def initialize_database() -> bool:
         CREATE INDEX IF NOT EXISTS scoutly_price_snapshots_recent
         ON scoutly_price_snapshots (observed_at DESC)
         """,
+        """
+        CREATE TABLE IF NOT EXISTS scoutly_keh_inventory (
+            aw_product_id TEXT PRIMARY KEY,
+            merchant_product_id TEXT,
+            title TEXT NOT NULL,
+            description TEXT,
+            product_type TEXT NOT NULL,
+            merchant_category_path TEXT,
+            price NUMERIC(12, 2) NOT NULL,
+            currency TEXT NOT NULL DEFAULT 'USD',
+            condition_grade_code TEXT,
+            condition_grade_label TEXT,
+            affiliate_url TEXT NOT NULL,
+            merchant_url TEXT,
+            image_url TEXT,
+            brand TEXT,
+            mpn TEXT,
+            upc TEXT,
+            in_stock BOOLEAN NOT NULL DEFAULT FALSE,
+            is_for_sale BOOLEAN NOT NULL DEFAULT FALSE,
+            matched_product_id TEXT,
+            matched_product_label TEXT,
+            match_confidence NUMERIC(5, 2),
+            match_status TEXT NOT NULL DEFAULT 'unmatched',
+            match_reason TEXT,
+            feed_last_updated TEXT,
+            synced_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            active BOOLEAN NOT NULL DEFAULT TRUE
+        )
+        """,
+        """
+        CREATE INDEX IF NOT EXISTS scoutly_keh_inventory_match
+        ON scoutly_keh_inventory (match_status, matched_product_id, price)
+        """,
+        """
+        CREATE INDEX IF NOT EXISTS scoutly_keh_inventory_active
+        ON scoutly_keh_inventory (active, synced_at DESC)
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS scoutly_keh_sync_runs (
+            id TEXT PRIMARY KEY,
+            started_at TIMESTAMPTZ NOT NULL,
+            completed_at TIMESTAMPTZ,
+            status TEXT NOT NULL,
+            feed_items INTEGER NOT NULL DEFAULT 0,
+            scoped_items INTEGER NOT NULL DEFAULT 0,
+            matched_items INTEGER NOT NULL DEFAULT 0,
+            unmatched_items INTEGER NOT NULL DEFAULT 0,
+            ambiguous_items INTEGER NOT NULL DEFAULT 0,
+            error_items INTEGER NOT NULL DEFAULT 0,
+            etag TEXT,
+            last_modified TEXT,
+            error_message TEXT
+        )
+        """,
+        """
+        CREATE INDEX IF NOT EXISTS scoutly_keh_sync_runs_recent
+        ON scoutly_keh_sync_runs (started_at DESC)
+        """,
     ]
 
     try:

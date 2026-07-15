@@ -1,0 +1,513 @@
+from __future__ import annotations
+
+import csv
+import gzip
+import io
+import json
+import logging
+import os
+import re
+import zipfile
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any, Iterable
+from uuid import uuid4
+
+import httpx
+
+from app.catalog.catalog import listing_matches_product, suggest_products
+from app.services.database import database_configured, database_connection
+from app.services.qa_store import load_qa_cases
+
+logger = logging.getLogger(__name__)
+MAX_FILE_ITEMS = 10000
+GRADE_PATTERNS: list[tuple[str, str, re.Pattern[str]]] = [
+    ("LN", "Like New", re.compile(r"(?:^|\s)-?\s*LN\s*-?\s*-\s*Like New(?:\s|$)", re.I)),
+    ("LN-", "Like New Minus", re.compile(r"(?:^|\s)-?\s*LN-\s*-\s*Like New Minus(?:\s|$)", re.I)),
+    ("EX+", "Excellent Plus", re.compile(r"(?:^|\s)-?\s*EX\+\s*-\s*Excellent Plus(?:\s|$)", re.I)),
+    ("EX", "Excellent", re.compile(r"(?:^|\s)-?\s*EX\s*-\s*Excellent(?:\s|$)", re.I)),
+    ("BGN", "Bargain", re.compile(r"(?:^|\s)-?\s*BGN\s*-\s*Bargain(?:\s|$)", re.I)),
+    ("UG", "Ugly", re.compile(r"(?:^|\s)-?\s*UG\s*-\s*Ugly(?:\s|$)", re.I)),
+]
+
+
+def _now() -> datetime:
+    return datetime.now(UTC)
+
+
+def keh_feed_url() -> str | None:
+    value = os.getenv("AWIN_KEH_FEED_URL", "").strip()
+    if not value or value.startswith("${{"):
+        return None
+    return value
+
+
+def keh_feed_enabled() -> bool:
+    return os.getenv("KEH_FEED_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def keh_public_results_enabled() -> bool:
+    return os.getenv("KEH_PUBLIC_RESULTS", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _data_dir() -> Path:
+    configured = os.getenv("SCOUTLY_DATA_DIR", "").strip()
+    base = Path(configured) if configured else Path("/tmp/scoutly")
+    base.mkdir(parents=True, exist_ok=True)
+    return base
+
+
+def _inventory_path() -> Path:
+    return _data_dir() / "keh_inventory.json"
+
+
+def _runs_path() -> Path:
+    return _data_dir() / "keh_sync_runs.json"
+
+
+def _read_json_list(path: Path) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return []
+    return payload if isinstance(payload, list) else []
+
+
+def _write_json_list(path: Path, records: list[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = path.with_suffix(f"{path.suffix}.tmp")
+    temp_path.write_text(json.dumps(records, indent=2, sort_keys=True), encoding="utf-8")
+    temp_path.replace(path)
+
+
+def _serialize(record: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: value.isoformat() if isinstance(value, datetime) else value
+        for key, value in record.items()
+    }
+
+
+def _truthy(value: Any) -> bool:
+    return str(value or "").strip().lower() in {"1", "true", "yes", "y", "in stock", "available"}
+
+
+def _float(value: Any) -> float | None:
+    try:
+        return round(float(str(value).strip()), 2)
+    except (TypeError, ValueError):
+        return None
+
+
+def parse_keh_grade(title: str, description: str = "") -> tuple[str | None, str | None]:
+    haystack = f"{title} {description}"
+    # Check LN- before LN because the codes overlap.
+    ordered = [GRADE_PATTERNS[1], GRADE_PATTERNS[0], *GRADE_PATTERNS[2:]]
+    for code, label, pattern in ordered:
+        if pattern.search(haystack):
+            return code, label
+    return None, None
+
+
+def classify_keh_product(row: dict[str, str]) -> str | None:
+    title = str(row.get("product_name") or "").lower()
+    category = " ".join(
+        [
+            str(row.get("merchant_category") or ""),
+            str(row.get("merchant_product_category_path") or ""),
+            str(row.get("category_name") or ""),
+        ]
+    ).lower()
+
+    if "used camera lenses" in category or "camera lenses" in category:
+        if any(term in title for term in ["conversion lens", "converter", "teleconverter", "extender", "adapter"]):
+            return None
+        if " lens" in title and re.search(r"\b\d+(?:-\d+)?mm\b", title):
+            return "lens"
+        return None
+
+    body_category = (
+        "used digital cameras" in category
+        or "cameras > digital cameras" in category
+        or "used cameras >" in category
+    )
+    if body_category and any(term in title for term in ["camera", "body", "dslr", "mirrorless"]):
+        # A body listing may legitimately include a battery, charger, flash, or
+        # case. The category path is a safer signal than accessory words in the
+        # title for KEH's structured feed.
+        if " lens" not in title or "body" in title:
+            return "camera_body"
+    return None
+
+
+def pilot_product_ids() -> set[str]:
+    configured = {
+        value.strip()
+        for value in os.getenv("KEH_SHADOW_PRODUCT_IDS", "").split(",")
+        if value.strip()
+    }
+    if configured:
+        return configured
+    qa_products = {
+        str(case.get("expected_product_id"))
+        for case in load_qa_cases()
+        if case.get("category") == "cameras" and case.get("expected_product_id")
+    }
+    # Include the two real body models present in the user's Awin sample so the
+    # parser can be validated immediately before the first full-feed sync.
+    qa_products.update({"camera-fujifilm-x-t2-body", "camera-canon-eos-m200-body"})
+    return qa_products
+
+
+def _match_row(row: dict[str, str], product_type: str) -> dict[str, Any]:
+    title = str(row.get("product_name") or "").strip()
+    matches = suggest_products(title, category="cameras", limit=3)
+    pilot_ids = pilot_product_ids()
+    eligible = [
+        match
+        for match in matches
+        if match.product.id in pilot_ids and match.product.product_type == product_type
+    ]
+    best = eligible[0] if eligible else None
+
+    status = "unmatched"
+    reason = "No pilot catalog match"
+    if best is not None and best.confidence >= 0.7:
+        close_second = eligible[1] if len(eligible) > 1 else None
+        if close_second is not None and close_second.confidence >= best.confidence - 0.03:
+            status = "ambiguous"
+            reason = f"Close match with {close_second.product.display_name}"
+        elif best.product.product_type != product_type:
+            status = "unmatched"
+            reason = "Catalog product type conflict"
+        elif not listing_matches_product(title, best.product):
+            status = "unmatched"
+            reason = "Title failed exact-product listing rules"
+        else:
+            status = "matched"
+            reason = "Pilot product matched"
+
+    return {
+        "pilot_candidate": best is not None,
+        "match_status": status,
+        "match_reason": reason,
+        "matched_product_id": best.product.id if best is not None else None,
+        "matched_product_label": best.product.display_name if best is not None else None,
+        "match_confidence": best.confidence if best is not None else None,
+    }
+
+
+def normalize_feed_row(row: dict[str, str], synced_at: datetime) -> dict[str, Any] | None:
+    product_type = classify_keh_product(row)
+    if product_type is None:
+        return None
+    title = str(row.get("product_name") or "").strip()
+    aw_product_id = str(row.get("aw_product_id") or "").strip()
+    affiliate_url = str(row.get("aw_deep_link") or "").strip()
+    price = _float(row.get("search_price"))
+    if not aw_product_id or not title or not affiliate_url or price is None:
+        return None
+
+    grade_code, grade_label = parse_keh_grade(title, str(row.get("description") or ""))
+    match = _match_row(row, product_type)
+    if not match.pop("pilot_candidate", False):
+        return None
+    return {
+        "aw_product_id": aw_product_id,
+        "merchant_product_id": str(row.get("merchant_product_id") or "").strip() or None,
+        "title": title,
+        "description": str(row.get("description") or "").strip() or None,
+        "product_type": product_type,
+        "merchant_category_path": str(row.get("merchant_product_category_path") or "").strip() or None,
+        "price": price,
+        "currency": str(row.get("currency") or "USD").strip() or "USD",
+        "condition_grade_code": grade_code,
+        "condition_grade_label": grade_label,
+        "affiliate_url": affiliate_url,
+        "merchant_url": str(row.get("merchant_deep_link") or "").strip() or None,
+        "image_url": str(row.get("merchant_image_url") or row.get("large_image") or "").strip() or None,
+        "brand": str(row.get("brand_name") or "").strip() or None,
+        "mpn": str(row.get("mpn") or "").strip() or None,
+        "upc": str(row.get("upc") or "").strip() or None,
+        "in_stock": _truthy(row.get("in_stock")) or _truthy(row.get("stock_status")),
+        "is_for_sale": _truthy(row.get("is_for_sale")) or _truthy(row.get("web_offer")),
+        "feed_last_updated": str(row.get("last_updated") or "").strip() or None,
+        "active": True,
+        "synced_at": synced_at,
+        **match,
+    }
+
+
+def _decode_feed(content: bytes, content_type: str = "") -> str:
+    if content[:2] == b"\x1f\x8b" or "gzip" in content_type.lower():
+        content = gzip.decompress(content)
+    elif content[:4] == b"PK\x03\x04" or "zip" in content_type.lower():
+        with zipfile.ZipFile(io.BytesIO(content)) as archive:
+            names = [name for name in archive.namelist() if not name.endswith("/")]
+            if not names:
+                raise ValueError("Awin feed archive did not contain a file.")
+            content = archive.read(names[0])
+    try:
+        return content.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return content.decode("cp1252")
+
+
+def parse_feed_text(text: str) -> list[dict[str, str]]:
+    reader = csv.DictReader(io.StringIO(text))
+    return [dict(row) for row in reader if row]
+
+
+def _download_feed(url: str) -> tuple[list[dict[str, str]], dict[str, str | None]]:
+    with httpx.Client(timeout=httpx.Timeout(120.0, connect=20.0), follow_redirects=True) as client:
+        response = client.get(url, headers={"User-Agent": "PriceSift-KEH-Shadow/0.6.17"})
+        response.raise_for_status()
+    text = _decode_feed(response.content, response.headers.get("content-type", ""))
+    return parse_feed_text(text), {
+        "etag": response.headers.get("etag"),
+        "last_modified": response.headers.get("last-modified"),
+    }
+
+
+def _replace_inventory_file(items: list[dict[str, Any]]) -> None:
+    _write_json_list(_inventory_path(), [_serialize(item) for item in items[-MAX_FILE_ITEMS:]])
+
+
+def _save_run_file(run: dict[str, Any]) -> None:
+    runs = _read_json_list(_runs_path())
+    runs.append(_serialize(run))
+    _write_json_list(_runs_path(), runs[-100:])
+
+
+def _replace_inventory_db(items: list[dict[str, Any]]) -> None:
+    with database_connection() as connection:
+        connection.execute("UPDATE scoutly_keh_inventory SET active = FALSE")
+        if items:
+            values = [
+                (
+                    item["aw_product_id"], item["merchant_product_id"], item["title"], item["description"],
+                    item["product_type"], item["merchant_category_path"], item["price"], item["currency"],
+                    item["condition_grade_code"], item["condition_grade_label"], item["affiliate_url"],
+                    item["merchant_url"], item["image_url"], item["brand"], item["mpn"], item["upc"],
+                    item["in_stock"], item["is_for_sale"], item["matched_product_id"],
+                    item["matched_product_label"], item["match_confidence"], item["match_status"],
+                    item["match_reason"], item["feed_last_updated"], item["synced_at"], item["active"],
+                )
+                for item in items
+            ]
+            with connection.cursor() as cursor:
+                cursor.executemany(
+                    """
+                    INSERT INTO scoutly_keh_inventory (
+                        aw_product_id, merchant_product_id, title, description, product_type,
+                        merchant_category_path, price, currency, condition_grade_code,
+                        condition_grade_label, affiliate_url, merchant_url, image_url, brand,
+                        mpn, upc, in_stock, is_for_sale, matched_product_id, matched_product_label,
+                        match_confidence, match_status, match_reason, feed_last_updated, synced_at, active
+                    ) VALUES (
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    )
+                    ON CONFLICT (aw_product_id) DO UPDATE SET
+                        merchant_product_id = EXCLUDED.merchant_product_id,
+                        title = EXCLUDED.title,
+                        description = EXCLUDED.description,
+                        product_type = EXCLUDED.product_type,
+                        merchant_category_path = EXCLUDED.merchant_category_path,
+                        price = EXCLUDED.price,
+                        currency = EXCLUDED.currency,
+                        condition_grade_code = EXCLUDED.condition_grade_code,
+                        condition_grade_label = EXCLUDED.condition_grade_label,
+                        affiliate_url = EXCLUDED.affiliate_url,
+                        merchant_url = EXCLUDED.merchant_url,
+                        image_url = EXCLUDED.image_url,
+                        brand = EXCLUDED.brand,
+                        mpn = EXCLUDED.mpn,
+                        upc = EXCLUDED.upc,
+                        in_stock = EXCLUDED.in_stock,
+                        is_for_sale = EXCLUDED.is_for_sale,
+                        matched_product_id = EXCLUDED.matched_product_id,
+                        matched_product_label = EXCLUDED.matched_product_label,
+                        match_confidence = EXCLUDED.match_confidence,
+                        match_status = EXCLUDED.match_status,
+                        match_reason = EXCLUDED.match_reason,
+                        feed_last_updated = EXCLUDED.feed_last_updated,
+                        synced_at = EXCLUDED.synced_at,
+                        active = EXCLUDED.active
+                    """,
+                    values,
+                )
+
+
+def _save_run_db(run: dict[str, Any]) -> None:
+    with database_connection() as connection:
+        connection.execute(
+            """
+            INSERT INTO scoutly_keh_sync_runs (
+                id, started_at, completed_at, status, feed_items, scoped_items,
+                matched_items, unmatched_items, ambiguous_items, error_items,
+                etag, last_modified, error_message
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                run["id"], run["started_at"], run["completed_at"], run["status"],
+                run["feed_items"], run["scoped_items"], run["matched_items"],
+                run["unmatched_items"], run["ambiguous_items"], run["error_items"],
+                run.get("etag"), run.get("last_modified"), run.get("error_message"),
+            ),
+        )
+
+
+def sync_keh_feed(*, feed_rows: Iterable[dict[str, str]] | None = None) -> dict[str, Any]:
+    started_at = _now()
+    run: dict[str, Any] = {
+        "id": str(uuid4()),
+        "started_at": started_at,
+        "completed_at": None,
+        "status": "running",
+        "feed_items": 0,
+        "scoped_items": 0,
+        "matched_items": 0,
+        "unmatched_items": 0,
+        "ambiguous_items": 0,
+        "error_items": 0,
+        "etag": None,
+        "last_modified": None,
+        "error_message": None,
+    }
+
+    try:
+        if feed_rows is None:
+            if not keh_feed_enabled():
+                raise RuntimeError("KEH_FEED_ENABLED is not true.")
+            url = keh_feed_url()
+            if not url:
+                raise RuntimeError("AWIN_KEH_FEED_URL is not configured.")
+            rows, metadata = _download_feed(url)
+            run.update(metadata)
+        else:
+            rows = list(feed_rows)
+
+        run["feed_items"] = len(rows)
+        items: list[dict[str, Any]] = []
+        synced_at = _now()
+        for row in rows:
+            try:
+                item = normalize_feed_row(row, synced_at)
+            except Exception:
+                logger.exception("KEH feed row normalization failed.")
+                run["error_items"] += 1
+                continue
+            if item is None:
+                continue
+            items.append(item)
+
+        run["scoped_items"] = len(items)
+        run["matched_items"] = sum(item["match_status"] == "matched" for item in items)
+        run["unmatched_items"] = sum(item["match_status"] == "unmatched" for item in items)
+        run["ambiguous_items"] = sum(item["match_status"] == "ambiguous" for item in items)
+
+        if database_configured():
+            try:
+                _replace_inventory_db(items)
+            except Exception:
+                logger.exception("PostgreSQL KEH inventory write failed; using file fallback.")
+                _replace_inventory_file(items)
+        else:
+            _replace_inventory_file(items)
+
+        run["status"] = "success"
+    except Exception as error:
+        run["status"] = "failed"
+        run["error_message"] = str(error)[:1000]
+    finally:
+        run["completed_at"] = _now()
+        if database_configured():
+            try:
+                _save_run_db(run)
+            except Exception:
+                logger.exception("PostgreSQL KEH sync-run write failed; using file fallback.")
+                _save_run_file(run)
+        else:
+            _save_run_file(run)
+
+    return _serialize(run)
+
+
+def _db_inventory(limit: int, status: str | None, product_id: str | None) -> list[dict[str, Any]]:
+    clauses = ["active = TRUE"]
+    params: list[Any] = []
+    if status:
+        clauses.append("match_status = %s")
+        params.append(status)
+    if product_id:
+        clauses.append("matched_product_id = %s")
+        params.append(product_id)
+    params.append(limit)
+    with database_connection() as connection:
+        rows = connection.execute(
+            f"""
+            SELECT * FROM scoutly_keh_inventory
+            WHERE {' AND '.join(clauses)}
+            ORDER BY match_status, matched_product_label NULLS LAST, price ASC, title
+            LIMIT %s
+            """,
+            tuple(params),
+        ).fetchall()
+    return [_serialize(dict(row)) for row in rows]
+
+
+def list_keh_inventory(limit: int = 200, status: str | None = None, product_id: str | None = None) -> list[dict[str, Any]]:
+    limit = max(1, min(limit, 2000))
+    if database_configured():
+        try:
+            return _db_inventory(limit, status, product_id)
+        except Exception:
+            logger.exception("PostgreSQL KEH inventory read failed; using file fallback.")
+    items = [item for item in _read_json_list(_inventory_path()) if item.get("active", True)]
+    if status:
+        items = [item for item in items if item.get("match_status") == status]
+    if product_id:
+        items = [item for item in items if item.get("matched_product_id") == product_id]
+    return sorted(items, key=lambda item: (str(item.get("match_status")), str(item.get("matched_product_label") or ""), float(item.get("price") or 0)))[:limit]
+
+
+def latest_sync_run() -> dict[str, Any] | None:
+    if database_configured():
+        try:
+            with database_connection() as connection:
+                row = connection.execute(
+                    "SELECT * FROM scoutly_keh_sync_runs ORDER BY started_at DESC LIMIT 1"
+                ).fetchone()
+            return _serialize(dict(row)) if row else None
+        except Exception:
+            logger.exception("PostgreSQL KEH sync-run read failed; using file fallback.")
+    runs = _read_json_list(_runs_path())
+    return runs[-1] if runs else None
+
+
+def keh_overview(limit: int = 200) -> dict[str, Any]:
+    items = list_keh_inventory(limit=max(limit, 2000))
+    counts = {"matched": 0, "unmatched": 0, "ambiguous": 0}
+    for item in items:
+        status = str(item.get("match_status") or "unmatched")
+        counts[status] = counts.get(status, 0) + 1
+    product_counts: dict[str, int] = {}
+    for item in items:
+        product_id = item.get("matched_product_id")
+        if item.get("match_status") == "matched" and product_id:
+            product_counts[str(product_id)] = product_counts.get(str(product_id), 0) + 1
+    return {
+        "enabled": keh_feed_enabled(),
+        "configured": keh_feed_url() is not None,
+        "public_results_enabled": keh_public_results_enabled(),
+        "pilot_product_ids": sorted(pilot_product_ids()),
+        "latest_sync": latest_sync_run(),
+        "active_item_count": len(items),
+        "matched_count": counts.get("matched", 0),
+        "unmatched_count": counts.get("unmatched", 0),
+        "ambiguous_count": counts.get("ambiguous", 0),
+        "matched_product_count": len(product_counts),
+        "items": items[:limit],
+    }
