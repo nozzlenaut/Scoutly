@@ -1,3 +1,3 @@
-# PriceSift v0.6.19
+# PriceSift v0.6.20
 
-See `README-v0619.md` for the private KEH lens-builder lab and deployment steps.
+See `README-v0620.md` for the polished private KEH lens finder preview.

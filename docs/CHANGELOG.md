@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.20
+
+- Polishes `/admin/keh/lenses` into the intended KEH-only guided browsing experience.
+- Removes the exact-model search field from the main lens flow.
+- Keeps model results hidden until Mount/System, Prime/Zoom, and focal-length group are selected.
+- Keeps lens brand optional and shows all matching in-stock models when no brand is selected.
+- Adds representative model images, inventory counts, lowest/highest prices, and available KEH grade summaries.
+- Expands each model into its three lowest-priced current KEH listings.
+- Keeps all lens inventory private and out of public search, QA, auctions, and price history.
+- Keeps the backend suite at 193 passing tests and adds richer lens-group assertions.
+
 ## v0.6.19
 
 - Adds a private `/admin/keh/lenses` builder lab backed by the live KEH/Awin feed.

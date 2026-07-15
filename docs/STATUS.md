@@ -6,7 +6,7 @@
 - GPUs: Active — direct exact-model search
 - RAM: Active — strict DDR3/DDR4/DDR5 specification builder
 - LEGO: Beta — exact set-number/name search with conservative completeness filtering
-- Lenses: Admin lab — private KEH-only inventory builder using live feed models; nothing is public
+- Lenses: Private preview — polished KEH-only guided browser using live feed models; nothing is public
 
 Scoutly remains the internal repository and infrastructure name.
 
@@ -16,5 +16,5 @@ Scoutly remains the internal repository and infrastructure name.
 - Seed suite: 88 cases across Cameras, GPUs, RAM, CPUs, Consoles, and LEGO
 - Outcome tracking: Pass, Top-3 only, Fail, No inventory
 - Persistence: PostgreSQL production storage with local JSON fallback
-- Current build: v0.6.19 private KEH lens-builder lab
-- Next milestone: Test mount/type/focal-group parsing and unique-model grouping in the KEH lens lab before deciding on a public lens category
+- Current build: v0.6.20 polished KEH lens finder preview
+- Next milestone: Continue private lens testing across mounts, brands, and model revisions before deciding on a public Sony E-mount pilot

@@ -398,7 +398,7 @@ def parse_feed_text(text: str) -> list[dict[str, str]]:
 
 def _download_feed(url: str) -> tuple[list[dict[str, str]], dict[str, str | None]]:
     with httpx.Client(timeout=httpx.Timeout(120.0, connect=20.0), follow_redirects=True) as client:
-        response = client.get(url, headers={"User-Agent": "PriceSift-KEH-Pilot/0.6.19"})
+        response = client.get(url, headers={"User-Agent": "PriceSift-KEH-Pilot/0.6.20"})
         response.raise_for_status()
     text = _decode_feed(response.content, response.headers.get("content-type", ""))
     return parse_feed_text(text), {
@@ -732,7 +732,10 @@ def keh_lens_builder(
                 "brand": item["brand"],
                 "listing_count": 0,
                 "lowest_price": None,
+                "highest_price": None,
                 "currency": item.get("currency") or "USD",
+                "condition_grades": [],
+                "image_url": item.get("image_url"),
                 "listings": [],
             },
         )
@@ -740,6 +743,13 @@ def keh_lens_builder(
         price = _float(item.get("price"))
         if price is not None and (group["lowest_price"] is None or price < group["lowest_price"]):
             group["lowest_price"] = price
+        if price is not None and (group["highest_price"] is None or price > group["highest_price"]):
+            group["highest_price"] = price
+        grade_code = str(item.get("condition_grade_code") or "").strip()
+        if grade_code and grade_code not in group["condition_grades"]:
+            group["condition_grades"].append(grade_code)
+        if not group.get("image_url") and item.get("image_url"):
+            group["image_url"] = item.get("image_url")
         group["listings"].append({
             "aw_product_id": item.get("aw_product_id"),
             "title": item.get("title"),
@@ -753,7 +763,12 @@ def keh_lens_builder(
         })
 
     models = list(grouped.values())
+    grade_order = {"LN": 0, "LN-": 1, "EX+": 2, "EX": 3, "BGN": 4, "UG": 5}
     for model in models:
+        model["condition_grades"] = sorted(
+            model["condition_grades"],
+            key=lambda grade: (grade_order.get(grade, 99), grade),
+        )
         model["listings"] = sorted(
             model["listings"],
             key=lambda listing: (float(listing.get("price") or 10**12), str(listing.get("title") or "")),

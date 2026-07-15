@@ -211,7 +211,10 @@ export type KehLensModel = {
   brand: string;
   listing_count: number;
   lowest_price?: number | null;
+  highest_price?: number | null;
   currency: string;
+  condition_grades: string[];
+  image_url?: string | null;
   listings: KehLensListing[];
 };
 

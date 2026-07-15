@@ -182,6 +182,9 @@ def test_keh_lens_builder_groups_inventory_and_returns_top_three(monkeypatch, tm
     model = payload["models"][0]
     assert model["listing_count"] == 4
     assert model["lowest_price"] == 999.0
+    assert model["highest_price"] == 1199.0
+    assert model["condition_grades"] == ["LN-", "EX+", "BGN"]
+    assert model["image_url"]
     assert len(model["listings"]) == 3
     assert model["listings"][0]["price"] == 999.0
 

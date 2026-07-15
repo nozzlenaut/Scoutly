@@ -27,7 +27,7 @@ export default async function KehLensAdminPage({ searchParams }: { searchParams:
   if (!token) return <Gate />;
   let data;
   try {
-    data = await getKehLensBuilder(token, { limit: 150 });
+    data = await getKehLensBuilder(token, { limit: 1 });
   } catch {
     return <Gate invalid />;
   }
@@ -40,10 +40,10 @@ export default async function KehLensAdminPage({ searchParams }: { searchParams:
           <Link href={`/admin?token=${encodeURIComponent(token)}`} className="text-sm text-slate-400">Testing dashboard</Link>
         </div>
         <div className="mt-8">
-          <p className="text-sm uppercase tracking-[0.25em] text-slate-500">PriceSift admin experiment</p>
-          <h1 className="mt-2 text-4xl font-black">KEH lens builder lab</h1>
+          <p className="text-sm uppercase tracking-[0.25em] text-slate-500">PriceSift private preview</p>
+          <h1 className="mt-2 text-4xl font-black">KEH lens finder preview</h1>
           <p className="mt-3 max-w-4xl text-slate-400">
-            Tests a KEH-only lens flow against the live shadow inventory. It does not add a public category, alter camera results, or publish any lens listing.
+            This is the intended KEH-only lens experience, running privately against the live shadow inventory. It does not add a public category, alter camera results, or publish any lens listing.
           </p>
         </div>
         <AdminKehLensLab initialData={data} token={token} />
