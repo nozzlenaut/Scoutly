@@ -1,3 +1,20 @@
+[CmdletBinding()]
+param(
+    [switch]$Commit,
+    [switch]$Push
+)
+
+$ErrorActionPreference = "Stop"
+
+if (-not (Test-Path ".git")) {
+    throw "Run this script from the root of your Scoutly repository (the folder containing .git)."
+}
+
+if ($Push -and -not $Commit) {
+    throw "Use -Commit together with -Push."
+}
+
+$readme = @'
 # PriceSift
 
 **Find the best price for what you already want.**
@@ -21,16 +38,16 @@ PriceSift is an exact-item price finder for used and secondhand products. Instea
 
 PriceSift uses different search flows depending on how a product is identified:
 
-1. **Direct exact-item search** â€” cameras, GPUs, consoles, and LEGO sets.
-2. **Specification builders** â€” RAM and desktop CPUs.
-3. **Identifier search** â€” Books by ISBN-10 or ISBN-13.
+1. **Direct exact-item search** — cameras, GPUs, consoles, and LEGO sets.
+2. **Specification builders** — RAM and desktop CPUs.
+3. **Identifier search** — Books by ISBN-10 or ISBN-13.
 
 This keeps each category focused on the details that actually define the product instead of forcing every category into the same generic form.
 
 ## Marketplace coverage
 
-- **eBay** â€” used Buy It Now listings and optional ending-soon auctions.
-- **KEH** â€” selected camera inventory through the current public pilot, with additional lens tooling kept private for testing.
+- **eBay** — used Buy It Now listings and optional ending-soon auctions.
+- **KEH** — selected camera inventory through the current public pilot, with additional lens tooling kept private for testing.
 
 Outbound merchant links may be affiliate links. This does not change the displayed price or ranking rules.
 
@@ -114,3 +131,61 @@ The current production setup uses:
 ## License
 
 Licensed under the [MIT License](LICENSE).
+'@
+
+$releaseEntry = @'
+## v0.6.27
+
+- Corrects light-analytics click attribution.
+- Counts a click toward search analytics only when it can be linked to a matching public search that occurred before the click.
+- Excludes older affiliate click history from search-to-click rates, category click totals, and provider click totals.
+- Shows older or unlinked clicks separately so historical records remain visible without distorting current usage.
+- Keeps the existing privacy model: no IP addresses, cookies, accounts, or personal identifiers.
+- Requires no new environment variables or database changes.
+- Brings the backend suite to 216 passing tests; the production Next.js build passes.
+'@
+
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+$readmePath = Join-Path $PWD "README.md"
+[System.IO.File]::WriteAllText($readmePath, $readme + "`n", $utf8NoBom)
+
+$changelogPath = Join-Path $PWD "docs\CHANGELOG.md"
+if (-not (Test-Path $changelogPath)) {
+    throw "Could not find docs\CHANGELOG.md."
+}
+
+$changelog = Get-Content $changelogPath -Raw
+if ($changelog -notmatch '(?m)^## v0\.6\.27\s*$') {
+    $withoutHeading = $changelog -replace '^\uFEFF?# Changelog\s*', ''
+    $updatedChangelog = "# Changelog`r`n`r`n$releaseEntry`r`n`r`n" + $withoutHeading.TrimStart()
+    [System.IO.File]::WriteAllText($changelogPath, $updatedChangelog.TrimEnd() + "`n", $utf8NoBom)
+}
+
+$oldReadmes = @(Get-ChildItem -Path $PWD -Filter "README-v*.md" -File)
+foreach ($file in $oldReadmes) {
+    Remove-Item $file.FullName -Force
+}
+
+Write-Host ""
+Write-Host "README cleanup complete." -ForegroundColor Green
+Write-Host "Replaced README.md with a permanent project overview."
+Write-Host "Added v0.6.27 to docs/CHANGELOG.md when missing."
+Write-Host "Removed $($oldReadmes.Count) versioned README files."
+Write-Host ""
+
+git status --short
+
+if ($Commit) {
+    git add -A
+    git commit -m "Clean up README files"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Git commit failed. Review the output above."
+    }
+
+    if ($Push) {
+        git push
+        if ($LASTEXITCODE -ne 0) {
+            throw "Git push failed. Review the output above."
+        }
+    }
+}

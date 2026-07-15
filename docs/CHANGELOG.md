@@ -1,11 +1,21 @@
 # Changelog
 
+## v0.6.27
+
+- Corrects light-analytics click attribution.
+- Counts a click toward search analytics only when it can be linked to a matching public search that occurred before the click.
+- Excludes older affiliate click history from search-to-click rates, category click totals, and provider click totals.
+- Shows older or unlinked clicks separately so historical records remain visible without distorting current usage.
+- Keeps the existing privacy model: no IP addresses, cookies, accounts, or personal identifiers.
+- Requires no new environment variables or database changes.
+- Brings the backend suite to 216 passing tests; the production Next.js build passes.
+
 ## v0.6.26
 
 - Adds privacy-friendly public search analytics without storing IP addresses, cookies, accounts, or personal identifiers.
 - Records category, resolved product/ISBN, result availability, providers shown, candidate/filter counts, US-only usage, and outbound listing clicks.
 - Adds a 7/30/90-day admin analytics digest with category trends, top searches, no-result rates, provider clicks, and a paste-ready summary/JSON export.
-- Adds a persistent “US listings only” toggle near Search that filters eBay Buy It Now, auctions, and Books ISBN searches by item location while leaving KEH unchanged.
+- Adds a persistent â€œUS listings onlyâ€ toggle near Search that filters eBay Buy It Now, auctions, and Books ISBN searches by item location while leaving KEH unchanged.
 - Preserves the location preference in the browser and in shareable search URLs.
 - Excludes US-only searches from broad-market price snapshot storage so domestic filtering does not distort typical-price history.
 - Counts approved Awin/KEH outbound links as affiliate-tagged clicks.
@@ -91,7 +101,7 @@
 - Added `/admin/keh` matching and sync diagnostics.
 - Added Railway cron-compatible KEH sync runner.
 - Added KEH grade parsing and tracked-link storage.
-- Changed homepage promise to “Free to use. Always.”
+- Changed homepage promise to â€œFree to use. Always.â€
 - KEH remains excluded from public results and price history.
 
 
@@ -188,7 +198,7 @@
 
 ## v0.6.1
 
-- Adds a guided Console builder: brand → family/generation → results, with optional model, storage, and edition/drive refinements.
+- Adds a guided Console builder: brand â†’ family/generation â†’ results, with optional model, storage, and edition/drive refinements.
 - Allows safe family-level console searches when the buyer does not care about storage or a specific model.
 - Promotes RAM to Active after precision testing.
 - Renames Lab to Beta and keeps LEGO in Beta.
@@ -197,7 +207,7 @@
 - Adds DDR3L voltage-compatibility warnings.
 - Expands LEGO packaging-only, incomplete, unauthentic, compatible-brick, loose-brick, lot, and bulk exclusions.
 
-# v0.5.10 — Search consistency and trust cleanup
+# v0.5.10 â€” Search consistency and trust cleanup
 
 - Rejects LEGO empty outer-box, inner-box-only, and numbered inner-box packaging listings.
 - Clears stale result cards immediately when searches or result-page categories change.
@@ -209,7 +219,7 @@
 - Distinguishes absent inventory from candidates removed by automated filters.
 - Improves secondary text contrast.
 
-# v0.5.8 — PriceSift public branding and catalog growth
+# v0.5.8 â€” PriceSift public branding and catalog growth
 
 - Changes all public-facing site, search, disclosure, report, loading, and admin branding from Scoutly to PriceSift while retaining Scoutly for internal repository, package, database, and affiliate identifiers.
 - Adds canonical metadata for `https://www.pricesift.app`, Open Graph/Twitter metadata, a web-app manifest, favicon, robots rules, and sitemap.
@@ -217,13 +227,13 @@
 - Expands the LEGO lab catalog from 318 to 395 sets with 77 additional Star Wars, Winter Village, Icons/vehicles, Ideas, Architecture, Technic, Disney, and collector sets.
 
 
-## v0.5.5 — Affiliate label and LEGO catalog expansion
+## v0.5.5 â€” Affiliate label and LEGO catalog expansion
 
-- Renames visible result-card label from “Sponsored link” to “Affiliate link” so users do not confuse affiliate links with paid placement.
+- Renames visible result-card label from â€œSponsored linkâ€ to â€œAffiliate linkâ€ so users do not confuse affiliate links with paid placement.
 - Expands the LEGO lab catalog from 192 to 318 sets, adding more Star Wars, Icons, Ideas, Harry Potter, Technic, Speed Champions, Disney, Ninjago, Minecraft, and Architecture sets.
 
 
-## v0.4.8 — Live filter rules
+## v0.4.8 â€” Live filter rules
 
 - Adds admin-managed manual filter rules so bad title phrases can be rejected without redeploying.
 - Adds optional category/product scoping and exception phrases for manual rules.
@@ -231,7 +241,7 @@
 - Adds an admin UI panel for live filter rules.
 - Tightens LEGO matching to require the exact set number when a set number exists.
 - Rejects LEGO base-only / towers-only / main-build-only style partial listings.
-- Rejects GPU problem/issue listings while allowing “no problems” / “no issues” context.
+- Rejects GPU problem/issue listings while allowing â€œno problemsâ€ / â€œno issuesâ€ context.
 
 
 ## v0.6.13
@@ -337,7 +347,7 @@
 
 Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount rings, rear mount rings, and metal replacement rings are rejected while real used lens listings can still pass.
 
-## v0.3.6 — Hide lenses + eBay category IDs
+## v0.3.6 â€” Hide lenses + eBay category IDs
 
 - Temporarily removed lenses from the active search UI while lens-part filtering is validated.
 - Added eBay US category IDs for camera-body, lens, and GPU provider searches.
@@ -365,7 +375,7 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Result buttons now use the backend redirect so `campid` is applied at click time even if a cached result URL was missing it.
 - Outbound redirects are restricted to eBay domains.
 
-## v0.4.3 — Click tracking and bad-result reporting
+## v0.4.3 â€” Click tracking and bad-result reporting
 
 - Logs outbound eBay clicks through the `/api/out` redirect before sending users to eBay.
 - Adds metadata to outbound clicks: query, category, product ID, provider, title, eBay item ID, and whether affiliate campaign tracking was present.
@@ -374,16 +384,16 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Auto-prunes report storage to active reports only and caps it at 500 entries.
 - Caps click storage at the latest 2,000 click events for lightweight MVP analytics.
 
-## v0.4.4 — Analytics view and auction comparison
+## v0.4.4 â€” Analytics view and auction comparison
 
 - Adds `/admin` so Scoutly's own click tracking can be viewed without waiting on eBay Partner reporting.
 - Adds `GET /api/analytics/summary`, `/api/analytics/clicks`, and `/api/analytics/reports`.
 - Supports optional `SCOUTLY_ADMIN_TOKEN`; when set, analytics endpoints and `/admin?token=...` require the token.
-- Adds eBay auction search as a separate “Auction ending soon” comparison section.
+- Adds eBay auction search as a separate â€œAuction ending soonâ€ comparison section.
 - Keeps Buy It Now as the primary result so auctions do not replace available-now deals.
 - Uses eBay `buyingOptions:{AUCTION}` and `sort=endingSoonest` for auction comparison searches.
 
-## v0.4.5 — Search cleanup, filtered-debug admin, and LEGO prototype
+## v0.4.5 â€” Search cleanup, filtered-debug admin, and LEGO prototype
 
 - Rejects camera-body listings that are actually filters, UV/CPL/ND filters, or other filter accessories.
 - Rejects SXM/SXM2/SXM3/SXM4, mezzanine, and module results for normal Tesla P100/V100 searches so homelab users are steered toward PCIe cards.
@@ -395,7 +405,7 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Adds LEGO as a lab category with eBay category filtering and 99 starter sets, focused on exact set-number matching.
 - Keeps lenses paused in the active UI.
 
-## v0.4.6 — Match-quality fixes
+## v0.4.6 â€” Match-quality fixes
 
 - Fixes the short-token matching bug where `ti` could match normal words like `edition` or `condition`, causing valid RTX 4070 listings to be rejected.
 - Keeps compact matching for real compact product names like `RTX4070Ti`, `A7III`, `RX6700XT`, and `G2`.
@@ -413,7 +423,7 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Allow complete LEGO set listings that mention manuals/instructions, while still rejecting instructions-only/manual-only listings.
 - Add `Partial / incomplete` as a report reason in the result card UI.
 
-## v0.4.9 — Consoles + testing UX
+## v0.4.9 â€” Consoles + testing UX
 
 - Added Consoles as a lab category covering Xbox, PlayStation, and Nintendo families.
 - Added eBay Video Game Consoles category filtering for console searches.
@@ -423,7 +433,7 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Added console accessory/partial filters for controller-only, dock-only, tablet-only, HDMI-port, power-supply, screen-only, shell-only, and similar listings.
 - Added cleanup filters for recent reports: LEGO cartridge-only listings, minifigure-code/person listings, and GPU fan-missing listings.
 
-## v0.5.1 — Performance pass
+## v0.5.1 â€” Performance pass
 
 - Normal search no longer requests auction results by default.
 - Search page keeps up to three Buy It Now results visible immediately.
@@ -434,7 +444,7 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Changes result lists to a responsive card grid so desktop can scan three results side-by-side.
 - Adds lazy loading to result images.
 
-## v0.5.3 — Trust and polish pass
+## v0.5.3 â€” Trust and polish pass
 
 - Adds stricter console cleanup for covers, accessory bundles, stick drift, monitor bundles, and game-only noise.
 - Adds stricter LEGO cleanup for loose part listings like horses, beds, cartridges, and small lots while still allowing complete sets with normal piece-count wording.
@@ -443,12 +453,12 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Simplifies affiliate messaging on result cards to a small Affiliate link label while keeping the disclosure page/footer.
 - Improves empty-state copy when a resolved product has no safe Buy It Now listings.
 - Adds accessible labels, combobox/listbox roles, keyboard navigation, image alt text, and live status text for search/autocomplete.
-- Adds dynamic search page titles like “Xbox Series X deals | Scoutly.”
+- Adds dynamic search page titles like â€œXbox Series X deals | Scoutly.â€
 - Adds Consoles to the admin live-rule category dropdown via dynamic category options.
 - Adds report restore/delete support in admin for accidental bad-result flags.
 - Adds normalizer caching to speed up catalog matching.
 
-## v0.5.6 — Regression and trust fixes
+## v0.5.6 â€” Regression and trust fixes
 
 - Replaces the sticky local submit flag with React transition state and remounts the compact form by category/query, fixing repeat searches that stayed disabled.
 - Requires positive Joy-Con/controller/dock/completeness wording for full-size Nintendo Switch and Switch OLED listings.
@@ -456,11 +466,11 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Adds Sony A1 II / ILCE-1M2 and prevents explicit generation queries from falling back to earlier camera generations.
 - Tightens explicit GPU modifier/storage matching when users type clues such as Ti, XT, or 16GB.
 - Improves selected Active/Lab badge contrast.
-- Uses “affiliate links” consistently in homepage copy.
+- Uses â€œaffiliate linksâ€ consistently in homepage copy.
 - Uses resolved/unresolved-aware auction empty states.
 - Adds regression coverage for Sony A1 II, Switch completeness, seller sentinels, and common LEGO set aliases.
 
-## v0.5.9 — Result interaction and variation-price cleanup
+## v0.5.9 â€” Result interaction and variation-price cleanup
 
 - Makes listing images and titles clickable using the same tracked outbound link as the result button.
 - Uses a full page navigation for each submitted search so old fixed-price or auction state cannot append to a new query.
@@ -490,7 +500,7 @@ Tightens lens accessory filtering so rubber zoom/focus rings, bayonet mount ring
 - Retained multi-query original-Switch coverage and all v0.6.5 precision filters.
 
 
-## v0.6.14 — Price snapshots and typical ranges
+## v0.6.14 â€” Price snapshots and typical ranges
 
 - Records live eligible Buy It Now prices in six-hour product/provider snapshots.
 - Persists safe no-inventory snapshots for availability analysis.
