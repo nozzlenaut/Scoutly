@@ -138,3 +138,65 @@ def test_public_search_can_merge_keh_pilot_result(monkeypatch):
     payload = response.json()
     assert payload["results"][0]["provider"] == "KEH"
     assert payload["results"][0]["price"] == 899
+
+
+def _lens_row(**overrides):
+    row = _row(
+        aw_product_id="lens-1",
+        merchant_product_id="lens-merchant-1",
+        product_name="Sigma 24-70mm f/2.8 DG DN II Art Lens for Sony E-Mount - EX+ - Excellent Plus - With Caps | Used",
+        description="Sigma 24-70mm f/2.8 DG DN II Art Lens for Sony E-Mount",
+        merchant_category="Cameras & Optics > Camera & Video Camera Lenses > Camera Lenses",
+        merchant_product_category_path="Used Camera Lenses > Used Mirrorless Camera Lenses > 999",
+        search_price="1099.00",
+        brand_name="Sigma",
+        mpn="578965",
+    )
+    row.update(overrides)
+    return row
+
+
+def test_lens_feed_rows_are_retained_for_builder():
+    item = normalize_feed_row(_lens_row(), datetime.now(UTC))
+    assert item is not None
+    assert item["product_type"] == "lens"
+    assert item["match_status"] == "lens_inventory"
+    assert item["matched_product_id"] is None
+
+
+def test_keh_lens_builder_groups_inventory_and_returns_top_three(monkeypatch, tmp_path):
+    from app.services.keh_feed import keh_lens_builder
+
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
+    rows = [
+        _lens_row(aw_product_id="lens-1", search_price="1099.00"),
+        _lens_row(aw_product_id="lens-2", merchant_product_id="lens-merchant-2", search_price="1149.00", product_name="Sigma 24-70mm f/2.8 DG DN II Art Lens for Sony E-Mount - LN- - Like New Minus - With Caps | Used"),
+        _lens_row(aw_product_id="lens-3", merchant_product_id="lens-merchant-3", search_price="999.00", product_name="Sigma 24-70mm f/2.8 DG DN II Art Lens for Sony E-Mount - BGN - Bargain - With Caps | Used"),
+        _lens_row(aw_product_id="lens-4", merchant_product_id="lens-merchant-4", search_price="1199.00"),
+    ]
+    sync_keh_feed(feed_rows=rows)
+    payload = keh_lens_builder(mount="Sony E", lens_type="Zoom", focal_group="Standard zoom", brand="Sigma")
+    assert payload["summary"]["listing_count"] == 4
+    assert payload["summary"]["filtered_model_count"] == 1
+    model = payload["models"][0]
+    assert model["listing_count"] == 4
+    assert model["lowest_price"] == 999.0
+    assert len(model["listings"]) == 3
+    assert model["listings"][0]["price"] == 999.0
+
+
+def test_admin_lens_builder_endpoint_requires_token(monkeypatch, tmp_path):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("SCOUTLY_ADMIN_TOKEN", "secret")
+    sync_keh_feed(feed_rows=[_lens_row()])
+
+    client = TestClient(app)
+    assert client.get("/api/keh/lenses/builder").status_code == 401
+    response = client.get(
+        "/api/keh/lenses/builder",
+        params={"token": "secret", "mount": "Sony E", "lens_type": "Zoom"},
+    )
+    assert response.status_code == 200
+    assert response.json()["models"][0]["model_name"].startswith("Sigma 24-70mm")

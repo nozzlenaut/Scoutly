@@ -32,6 +32,7 @@ export function SearchForm({
   );
   const [suggestions, setSuggestions] = useState<ProductMatch[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestionsEnabled, setSuggestionsEnabled] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const [isLoading, setIsLoading] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -53,11 +54,21 @@ export function SearchForm({
     setQuery("");
     setSuggestions([]);
     setShowSuggestions(false);
+    setSuggestionsEnabled(false);
     setActiveSuggestionIndex(-1);
   }, [categoryId]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (!suggestionsEnabled) {
+      requestSequenceRef.current += 1;
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setActiveSuggestionIndex(-1);
+      setIsLoading(false);
+      return;
+    }
 
     if (categoryId === "ram" || categoryId === "cpus") {
       requestSequenceRef.current += 1;
@@ -95,9 +106,10 @@ export function SearchForm({
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [categoryId, query]);
+  }, [categoryId, query, suggestionsEnabled]);
 
   function navigate(destination: string) {
+    setSuggestionsEnabled(false);
     setShowSuggestions(false);
     setActiveSuggestionIndex(-1);
     inputRef.current?.blur();
@@ -249,10 +261,12 @@ export function SearchForm({
                 value={query}
                 onChange={(event) => {
                   setQuery(event.target.value);
+                  setSuggestionsEnabled(true);
                   setShowSuggestions(false);
                   setActiveSuggestionIndex(-1);
                 }}
                 onFocus={() => {
+                  setSuggestionsEnabled(true);
                   const shouldShow = suggestions.length > 0;
                   setShowSuggestions(shouldShow);
                   setActiveSuggestionIndex(

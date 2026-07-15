@@ -45,7 +45,7 @@ export function AdminKehDashboard({ initialOverview, token }: { initialOverview:
     setMessage(null);
     try {
       const run = await syncKehFeed(token);
-      setMessage(`Sync complete: ${run.matched_items} matched pilot listings from ${run.scoped_items} camera/lens items.`);
+      setMessage(`Sync complete: ${run.matched_items} matched camera listings. Lens inventory is now available in the Lens Builder Lab.`);
       setOverview(await getKehOverview(token, 1000));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "KEH sync failed.");
@@ -57,10 +57,11 @@ export function AdminKehDashboard({ initialOverview, token }: { initialOverview:
   const latest = overview.latest_sync;
   return (
     <>
-      <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Feed status</p><p className={`mt-2 text-xl font-black ${overview.configured && overview.enabled ? "text-emerald-300" : "text-amber-300"}`}>{overview.configured ? (overview.enabled ? "Ready" : "Disabled") : "URL missing"}</p></div>
         <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Scoped inventory</p><p className="mt-2 text-3xl font-black">{overview.active_item_count}</p></div>
         <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Matched listings</p><p className="mt-2 text-3xl font-black">{overview.matched_count}</p></div>
+        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Lens inventory</p><p className="mt-2 text-3xl font-black">{overview.lens_inventory_count ?? 0}</p></div>
         <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Pilot products found</p><p className="mt-2 text-3xl font-black">{overview.matched_product_count}/{overview.pilot_product_ids.length}</p></div>
         <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Public results</p><p className="mt-2 text-xl font-black text-cyan-200">{overview.public_results_enabled ? `${overview.public_product_ids?.length ?? 0}-product pilot` : "Shadow only"}</p></div>
       </section>

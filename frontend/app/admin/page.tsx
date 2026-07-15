@@ -93,6 +93,12 @@ export default async function AdminPage({
               KEH shadow feed →
             </Link>
             <Link
+              href={`/admin/keh/lenses?token=${encodeURIComponent(token)}`}
+              className="w-fit rounded-2xl border border-violet-200/25 bg-violet-200/10 px-5 py-3 font-bold text-violet-100 transition hover:bg-violet-200/15"
+            >
+              KEH lens lab →
+            </Link>
+            <Link
               href={`/admin/prices?token=${encodeURIComponent(token)}`}
               className="w-fit rounded-2xl border border-cyan-200/25 bg-cyan-200/10 px-5 py-3 font-bold text-cyan-100 transition hover:bg-cyan-200/15"
             >

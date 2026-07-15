@@ -6,7 +6,7 @@ import secrets
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel
 
-from app.services.keh_feed import keh_overview, list_keh_inventory, sync_keh_feed
+from app.services.keh_feed import keh_lens_builder, keh_overview, list_keh_inventory, sync_keh_feed
 
 router = APIRouter(tags=["KEH"])
 
@@ -42,6 +42,28 @@ def get_keh_inventory(
     _require_admin_token(token)
     return {"items": list_keh_inventory(limit=limit, status=match_status, product_id=product_id)}
 
+
+
+
+@router.get("/keh/lenses/builder")
+def get_keh_lens_builder(
+    token: str | None = Query(default=None),
+    mount: str | None = Query(default=None, max_length=80),
+    lens_type: str | None = Query(default=None, pattern="^(Prime|Zoom|Other)$"),
+    focal_group: str | None = Query(default=None, max_length=80),
+    brand: str | None = Query(default=None, max_length=100),
+    q: str | None = Query(default=None, max_length=120),
+    limit: int = Query(default=100, ge=1, le=500),
+) -> dict:
+    _require_admin_token(token)
+    return keh_lens_builder(
+        mount=mount,
+        lens_type=lens_type,
+        focal_group=focal_group,
+        brand=brand,
+        query=q,
+        limit=limit,
+    )
 
 @router.post("/keh/sync")
 def run_keh_sync(

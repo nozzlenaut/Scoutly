@@ -24,6 +24,7 @@ from app.services.qa_store import load_qa_cases
 
 logger = logging.getLogger(__name__)
 MAX_FILE_ITEMS = 10000
+MAX_LENS_MODELS = 500
 DEFAULT_PUBLIC_PRODUCT_IDS = {
     "camera-sony-a7-iii-body",
     "camera-sony-a7-iv-body",
@@ -37,6 +38,27 @@ GRADE_PATTERNS: list[tuple[str, str, re.Pattern[str]]] = [
     ("BGN", "Bargain", re.compile(r"(?:^|\s)-?\s*BGN\s*-\s*Bargain(?:\s|$)", re.I)),
     ("UG", "Ugly", re.compile(r"(?:^|\s)-?\s*UG\s*-\s*Ugly(?:\s|$)", re.I)),
 ]
+
+LENS_MOUNT_RULES: list[tuple[str, re.Pattern[str]]] = [
+    ("Canon EF-M", re.compile(r"\b(?:canon\s+ef[- ]?m|ef[- ]?m[- ]mount|for\s+canon\s+ef[- ]?m)\b", re.I)),
+    ("Canon RF", re.compile(r"\b(?:canon\s+rf(?:-s)?|rf(?:-s)?[- ]mount|for\s+canon\s+rf(?:-s)?)\b", re.I)),
+    ("Canon EF", re.compile(r"\b(?:canon\s+ef(?:-s)?|ef(?:-s)?[- ]mount|for\s+canon\s+ef(?:-s)?)\b", re.I)),
+    ("Sony E", re.compile(r"\b(?:sony\s+(?:fe|e)|(?:fe|e)[- ]mount|for\s+sony\s+(?:fe|e))\b", re.I)),
+    ("Sony A", re.compile(r"\b(?:(?:sony|minolta)\s+a|a[- ]mount|for\s+(?:sony|minolta)\s+a)\b", re.I)),
+    ("Nikon Z", re.compile(r"\b(?:nikon\s+z|z[- ]mount|for\s+nikon\s+z)\b", re.I)),
+    ("Nikon F", re.compile(r"\b(?:nikon\s+f|f[- ]mount|for\s+nikon\s+f)\b", re.I)),
+    ("Fujifilm G", re.compile(r"\b(?:(?:fuji|fujifilm)\s+(?:gf|gfx)|(?:gf|gfx)[- ]mount|for\s+(?:fuji|fujifilm)\s+(?:gf|gfx))\b", re.I)),
+    ("Fujifilm X", re.compile(r"\b(?:(?:fuji|fujifilm)\s+x|x[- ]mount|for\s+(?:fuji|fujifilm)\s+x)\b", re.I)),
+    ("Micro Four Thirds", re.compile(r"\b(?:micro\s+four\s+thirds|micro\s*4/3|m4/3|mft)\b", re.I)),
+    ("L-Mount", re.compile(r"\b(?:l[- ]mount|for\s+l[- ]mount)\b", re.I)),
+    ("Leica M", re.compile(r"\b(?:leica\s+m|m[- ]mount|for\s+leica\s+m)\b", re.I)),
+    ("Pentax 645", re.compile(r"\bpentax\s+645\b", re.I)),
+    ("Pentax K", re.compile(r"\b(?:pentax\s+k|k[- ]mount|for\s+pentax\s+k)\b", re.I)),
+    ("Four Thirds", re.compile(r"\bfour\s+thirds\b", re.I)),
+]
+
+LENS_RANGE_PATTERN = re.compile(r"(?<!\d)(\d{1,3}(?:\.\d+)?)\s*[-–]\s*(\d{1,3}(?:\.\d+)?)\s*mm\b", re.I)
+LENS_PRIME_PATTERN = re.compile(r"(?<!\d)(\d{1,3}(?:\.\d+)?)\s*mm\b", re.I)
 
 
 def _now() -> datetime:
@@ -148,7 +170,7 @@ def classify_keh_product(row: dict[str, str]) -> str | None:
     if "used camera lenses" in category or "camera lenses" in category:
         if any(term in title for term in ["conversion lens", "converter", "teleconverter", "extender", "adapter"]):
             return None
-        if " lens" in title and re.search(r"\b\d+(?:-\d+)?mm\b", title):
+        if LENS_RANGE_PATTERN.search(title) or LENS_PRIME_PATTERN.search(title):
             return "lens"
         return None
 
@@ -183,6 +205,87 @@ def pilot_product_ids() -> set[str]:
     # parser can be validated immediately before the first full-feed sync.
     qa_products.update({"camera-fujifilm-x-t2-body", "camera-canon-eos-m200-body"})
     return qa_products
+
+
+def _lens_model_name(title: str) -> str:
+    first_segment = title.split("|", 1)[0].strip()
+    first_segment = re.sub(
+        r"\s+-\s+(?:LN-|LN|EX\+|EX|BGN|UG)\s+-.*$",
+        "",
+        first_segment,
+        flags=re.I,
+    ).strip()
+    return first_segment or title.strip()
+
+
+def _lens_mount(title: str, category_path: str = "") -> str:
+    haystack = f"{title} {category_path}"
+    for label, pattern in LENS_MOUNT_RULES:
+        if pattern.search(haystack):
+            return label
+    return "Other / unknown"
+
+
+def _lens_focal_data(title: str) -> tuple[str, float | None, float | None]:
+    range_match = LENS_RANGE_PATTERN.search(title)
+    if range_match:
+        low = float(range_match.group(1))
+        high = float(range_match.group(2))
+        return "Zoom", min(low, high), max(low, high)
+    prime_match = LENS_PRIME_PATTERN.search(title)
+    if prime_match:
+        focal = float(prime_match.group(1))
+        return "Prime", focal, focal
+    return "Other", None, None
+
+
+def _lens_focal_group(lens_type: str, focal_min: float | None, focal_max: float | None) -> str:
+    if focal_min is None or focal_max is None:
+        return "Other / unknown"
+    if lens_type == "Prime":
+        if focal_min < 20:
+            return "Under 20mm"
+        if focal_min <= 35:
+            return "20–35mm"
+        if focal_min <= 60:
+            return "36–60mm"
+        if focal_min <= 105:
+            return "61–105mm"
+        if focal_min <= 200:
+            return "106–200mm"
+        return "Over 200mm"
+    if lens_type == "Zoom":
+        ratio = focal_max / focal_min if focal_min > 0 else 0
+        if ratio >= 5 and focal_min <= 35:
+            return "All-in-one / travel zoom"
+        if focal_min < 16:
+            return "Ultra-wide zoom"
+        if focal_min < 24:
+            return "Wide zoom"
+        if focal_min < 50:
+            return "Standard zoom"
+        if focal_min < 100:
+            return "Telephoto zoom"
+        return "Super-telephoto zoom"
+    return "Other / unknown"
+
+
+def lens_metadata(item: dict[str, Any]) -> dict[str, Any]:
+    title = str(item.get("title") or "")
+    category_path = str(item.get("merchant_category_path") or "")
+    lens_type, focal_min, focal_max = _lens_focal_data(title)
+    model_name = _lens_model_name(title)
+    normalized_key = re.sub(r"[^a-z0-9]+", " ", model_name.lower()).strip()
+    return {
+        "model_key": normalized_key,
+        "model_name": model_name,
+        "mount": _lens_mount(title, category_path),
+        "lens_type": lens_type,
+        "focal_min": focal_min,
+        "focal_max": focal_max,
+        "focal_group": _lens_focal_group(lens_type, focal_min, focal_max),
+        "brand": str(item.get("brand") or "Unknown").strip() or "Unknown",
+    }
 
 
 def _match_row(row: dict[str, str], product_type: str) -> dict[str, Any]:
@@ -235,9 +338,18 @@ def normalize_feed_row(row: dict[str, str], synced_at: datetime) -> dict[str, An
         return None
 
     grade_code, grade_label = parse_keh_grade(title, str(row.get("description") or ""))
-    match = _match_row(row, product_type)
-    if not match.pop("pilot_candidate", False):
-        return None
+    if product_type == "lens":
+        match = {
+            "match_status": "lens_inventory",
+            "match_reason": "Available KEH lens inventory",
+            "matched_product_id": None,
+            "matched_product_label": None,
+            "match_confidence": None,
+        }
+    else:
+        match = _match_row(row, product_type)
+        if not match.pop("pilot_candidate", False):
+            return None
     return {
         "aw_product_id": aw_product_id,
         "merchant_product_id": str(row.get("merchant_product_id") or "").strip() or None,
@@ -286,7 +398,7 @@ def parse_feed_text(text: str) -> list[dict[str, str]]:
 
 def _download_feed(url: str) -> tuple[list[dict[str, str]], dict[str, str | None]]:
     with httpx.Client(timeout=httpx.Timeout(120.0, connect=20.0), follow_redirects=True) as client:
-        response = client.get(url, headers={"User-Agent": "PriceSift-KEH-Pilot/0.6.18"})
+        response = client.get(url, headers={"User-Agent": "PriceSift-KEH-Pilot/0.6.19"})
         response.raise_for_status()
     text = _decode_feed(response.content, response.headers.get("content-type", ""))
     return parse_feed_text(text), {
@@ -484,7 +596,7 @@ def _db_inventory(limit: int, status: str | None, product_id: str | None) -> lis
 
 
 def list_keh_inventory(limit: int = 200, status: str | None = None, product_id: str | None = None) -> list[dict[str, Any]]:
-    limit = max(1, min(limit, 2000))
+    limit = max(1, min(limit, MAX_FILE_ITEMS))
     if database_configured():
         try:
             return _db_inventory(limit, status, product_id)
@@ -513,7 +625,7 @@ def latest_sync_run() -> dict[str, Any] | None:
 
 
 def keh_overview(limit: int = 200) -> dict[str, Any]:
-    items = list_keh_inventory(limit=max(limit, 2000))
+    items = list_keh_inventory(limit=MAX_FILE_ITEMS)
     counts = {"matched": 0, "unmatched": 0, "ambiguous": 0}
     for item in items:
         status = str(item.get("match_status") or "unmatched")
@@ -523,6 +635,7 @@ def keh_overview(limit: int = 200) -> dict[str, Any]:
         product_id = item.get("matched_product_id")
         if item.get("match_status") == "matched" and product_id:
             product_counts[str(product_id)] = product_counts.get(str(product_id), 0) + 1
+    camera_items = [item for item in items if item.get("product_type") == "camera_body"]
     return {
         "enabled": keh_feed_enabled(),
         "configured": keh_feed_url() is not None,
@@ -534,8 +647,141 @@ def keh_overview(limit: int = 200) -> dict[str, Any]:
         "matched_count": counts.get("matched", 0),
         "unmatched_count": counts.get("unmatched", 0),
         "ambiguous_count": counts.get("ambiguous", 0),
+        "lens_inventory_count": counts.get("lens_inventory", 0),
         "matched_product_count": len(product_counts),
-        "items": items[:limit],
+        "items": camera_items[:limit],
+    }
+
+
+def _all_active_lens_inventory() -> list[dict[str, Any]]:
+    if database_configured():
+        try:
+            with database_connection() as connection:
+                rows = connection.execute(
+                    """
+                    SELECT * FROM scoutly_keh_inventory
+                    WHERE active = TRUE AND product_type = 'lens'
+                      AND in_stock = TRUE AND is_for_sale = TRUE
+                    ORDER BY price ASC, title
+                    LIMIT %s
+                    """,
+                    (MAX_FILE_ITEMS,),
+                ).fetchall()
+            return [_serialize(dict(row)) for row in rows]
+        except Exception:
+            logger.exception("PostgreSQL KEH lens inventory read failed; using file fallback.")
+    return [
+        item for item in _read_json_list(_inventory_path())
+        if item.get("active", True)
+        and item.get("product_type") == "lens"
+        and item.get("in_stock")
+        and item.get("is_for_sale")
+    ][:MAX_FILE_ITEMS]
+
+
+def _facet_values(items: list[dict[str, Any]], key: str) -> list[dict[str, Any]]:
+    counts: dict[str, int] = {}
+    for item in items:
+        value = str(item.get(key) or "Other / unknown")
+        counts[value] = counts.get(value, 0) + 1
+    return [
+        {"value": value, "label": value, "count": count}
+        for value, count in sorted(counts.items(), key=lambda pair: (pair[0] == "Other / unknown", pair[0].lower()))
+    ]
+
+
+def keh_lens_builder(
+    *,
+    mount: str | None = None,
+    lens_type: str | None = None,
+    focal_group: str | None = None,
+    brand: str | None = None,
+    query: str | None = None,
+    limit: int = 100,
+) -> dict[str, Any]:
+    raw_items = _all_active_lens_inventory()
+    enriched = [{**item, **lens_metadata(item)} for item in raw_items]
+
+    mount_items = enriched
+    type_items = [item for item in mount_items if not mount or item["mount"] == mount]
+    group_items = [item for item in type_items if not lens_type or item["lens_type"] == lens_type]
+    brand_items = [item for item in group_items if not focal_group or item["focal_group"] == focal_group]
+    model_items = [item for item in brand_items if not brand or item["brand"] == brand]
+
+    cleaned_query = (query or "").strip().lower()
+    if cleaned_query:
+        model_items = [
+            item for item in model_items
+            if cleaned_query in item["model_name"].lower()
+            or cleaned_query in str(item.get("mpn") or "").lower()
+        ]
+
+    grouped: dict[str, dict[str, Any]] = {}
+    for item in model_items:
+        key = item["model_key"] or str(item.get("aw_product_id"))
+        group = grouped.setdefault(
+            key,
+            {
+                "model_key": key,
+                "model_name": item["model_name"],
+                "mount": item["mount"],
+                "lens_type": item["lens_type"],
+                "focal_group": item["focal_group"],
+                "focal_min": item["focal_min"],
+                "focal_max": item["focal_max"],
+                "brand": item["brand"],
+                "listing_count": 0,
+                "lowest_price": None,
+                "currency": item.get("currency") or "USD",
+                "listings": [],
+            },
+        )
+        group["listing_count"] += 1
+        price = _float(item.get("price"))
+        if price is not None and (group["lowest_price"] is None or price < group["lowest_price"]):
+            group["lowest_price"] = price
+        group["listings"].append({
+            "aw_product_id": item.get("aw_product_id"),
+            "title": item.get("title"),
+            "price": price,
+            "currency": item.get("currency") or "USD",
+            "condition_grade_code": item.get("condition_grade_code"),
+            "condition_grade_label": item.get("condition_grade_label"),
+            "affiliate_url": item.get("affiliate_url"),
+            "image_url": item.get("image_url"),
+            "mpn": item.get("mpn"),
+        })
+
+    models = list(grouped.values())
+    for model in models:
+        model["listings"] = sorted(
+            model["listings"],
+            key=lambda listing: (float(listing.get("price") or 10**12), str(listing.get("title") or "")),
+        )[:3]
+    models.sort(key=lambda model: (-int(model["listing_count"]), float(model["lowest_price"] or 10**12), model["model_name"].lower()))
+    limit = max(1, min(limit, MAX_LENS_MODELS))
+
+    return {
+        "summary": {
+            "listing_count": len(enriched),
+            "model_count": len({item["model_key"] for item in enriched if item["model_key"]}),
+            "filtered_listing_count": len(model_items),
+            "filtered_model_count": len(models),
+        },
+        "selected": {
+            "mount": mount,
+            "lens_type": lens_type,
+            "focal_group": focal_group,
+            "brand": brand,
+            "query": query,
+        },
+        "facets": {
+            "mounts": _facet_values(mount_items, "mount"),
+            "lens_types": _facet_values(type_items, "lens_type"),
+            "focal_groups": _facet_values(group_items, "focal_group"),
+            "brands": _facet_values(brand_items, "brand"),
+        },
+        "models": models[:limit],
     }
 
 

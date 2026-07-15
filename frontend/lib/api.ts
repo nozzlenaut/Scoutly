@@ -181,8 +181,61 @@ export type KehOverview = {
   matched_count: number;
   unmatched_count: number;
   ambiguous_count: number;
+  lens_inventory_count?: number;
   matched_product_count: number;
   items: KehInventoryItem[];
+};
+
+export type KehLensFacet = { value: string; label: string; count: number };
+
+export type KehLensListing = {
+  aw_product_id: string;
+  title: string;
+  price: number | null;
+  currency: string;
+  condition_grade_code?: string | null;
+  condition_grade_label?: string | null;
+  affiliate_url: string;
+  image_url?: string | null;
+  mpn?: string | null;
+};
+
+export type KehLensModel = {
+  model_key: string;
+  model_name: string;
+  mount: string;
+  lens_type: string;
+  focal_group: string;
+  focal_min?: number | null;
+  focal_max?: number | null;
+  brand: string;
+  listing_count: number;
+  lowest_price?: number | null;
+  currency: string;
+  listings: KehLensListing[];
+};
+
+export type KehLensBuilderResponse = {
+  summary: {
+    listing_count: number;
+    model_count: number;
+    filtered_listing_count: number;
+    filtered_model_count: number;
+  };
+  selected: {
+    mount?: string | null;
+    lens_type?: string | null;
+    focal_group?: string | null;
+    brand?: string | null;
+    query?: string | null;
+  };
+  facets: {
+    mounts: KehLensFacet[];
+    lens_types: KehLensFacet[];
+    focal_groups: KehLensFacet[];
+    brands: KehLensFacet[];
+  };
+  models: KehLensModel[];
 };
 
 export type StorageStatus = {
@@ -712,6 +765,24 @@ export async function syncKehFeed(token: string): Promise<KehSyncRun> {
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
     throw new Error(detail || `KEH sync failed (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function getKehLensBuilder(
+  token: string,
+  filters: { mount?: string; lensType?: string; focalGroup?: string; brand?: string; query?: string; limit?: number } = {},
+): Promise<KehLensBuilderResponse> {
+  const params = new URLSearchParams({ token, limit: String(filters.limit ?? 100) });
+  if (filters.mount) params.set("mount", filters.mount);
+  if (filters.lensType) params.set("lens_type", filters.lensType);
+  if (filters.focalGroup) params.set("focal_group", filters.focalGroup);
+  if (filters.brand) params.set("brand", filters.brand);
+  if (filters.query) params.set("q", filters.query);
+  const response = await fetch(`${baseUrl}/api/keh/lenses/builder?${params.toString()}`, { cache: "no-store" });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(detail || `KEH lens builder failed (${response.status})`);
   }
   return response.json();
 }

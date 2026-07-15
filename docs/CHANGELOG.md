@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.19
+
+- Adds a private `/admin/keh/lenses` builder lab backed by the live KEH/Awin feed.
+- Retains all active KEH interchangeable-lens rows during sync while leaving lenses completely out of public search.
+- Adds cascading Mount/System, Prime/Zoom, focal-length group, and optional brand filters.
+- Normalizes duplicate KEH copies into unique model groups and exposes the lowest three actual listings for each model.
+- Adds exact-model text search across the narrowed current inventory.
+- Keeps the existing three-camera KEH public pilot unchanged.
+- Closes autocomplete suggestions after navigation and prevents the result-page query from reopening the dropdown until the user actively focuses or types.
+- Adds three KEH lens regressions, bringing the backend suite to 193 passing tests.
+
 ## v0.6.18
 
 - Publishes KEH/Awin fixed-price listings for a three-product Sony camera pilot: A7 III, A7 IV, and a6700.

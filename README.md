@@ -1,3 +1,3 @@
-# PriceSift v0.6.18
+# PriceSift v0.6.19
 
-See `README-v0618.md` for the controlled KEH public-pilot setup and testing steps.
+See `README-v0619.md` for the private KEH lens-builder lab and deployment steps.
