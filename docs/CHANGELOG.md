@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.29
+
+- Converts Recent clicks, Recently filtered listings, Feedback inbox, and Active bad-result reports into collapsed admin dropdown sections.
+- Shows a live entry count in each dropdown header while leaving summary analytics and live filter controls visible.
+- Replaces the accidental R-shaped PriceSift icon with an unmistakable P-shaped mark while preserving the existing dark-blue and teal styling.
+- Requires no database migration or new environment variables.
+
 ## v0.6.28
 
 - Standardizes recent admin activity timestamps in Eastern Time and labels the displayed timezone.

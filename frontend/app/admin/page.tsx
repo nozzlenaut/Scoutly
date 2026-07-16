@@ -3,6 +3,7 @@ import { AdminFilterRules } from "@/components/AdminFilterRules";
 import { AdminReports } from "@/components/AdminReports";
 import { AdminBetaFeedback } from "@/components/AdminBetaFeedback";
 import { AdminAnalyticsDigest } from "@/components/AdminAnalyticsDigest";
+import { AdminCollapsibleSection } from "@/components/AdminCollapsibleSection";
 import { SiteFooter } from "@/components/SiteFooter";
 import { getActiveReports, getAnalyticsDigest, getAnalyticsSummary, getBetaFeedback, getManualFilterRules, getRecentClicks, getRecentFilteredListings } from "@/lib/api";
 import { formatAdminDate } from "@/lib/formatAdminDate";
@@ -175,14 +176,12 @@ export default async function AdminPage({
 
         <AdminFilterRules initialRules={manualRules} token={token} />
 
-        <section className="mt-10 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">Recent clicks</h2>
-              <p className="mt-1 text-sm text-slate-500">What users actually clicked before PriceSift redirected to eBay.</p>
-            </div>
-          </div>
-          <div className="mt-5 overflow-x-auto">
+        <AdminCollapsibleSection
+          count={clicks.length}
+          description="What users actually clicked before PriceSift redirected to a provider."
+          title="Recent clicks"
+        >
+          <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] text-left text-sm">
               <thead className="text-slate-500">
                 <tr>
@@ -211,16 +210,14 @@ export default async function AdminPage({
               </tbody>
             </table>
           </div>
-        </section>
+        </AdminCollapsibleSection>
 
-        <section className="mt-10 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">Recently filtered listings</h2>
-              <p className="mt-1 text-sm text-slate-500">Useful for debugging false positives. These were seen from eBay but rejected before ranking.</p>
-            </div>
-          </div>
-          <div className="mt-5 overflow-x-auto">
+        <AdminCollapsibleSection
+          count={filtered.length}
+          description="Useful for debugging false positives. These were seen from eBay but rejected before ranking."
+          title="Recently filtered listings"
+        >
+          <div className="overflow-x-auto">
             <table className="w-full min-w-[1000px] text-left text-sm">
               <thead className="text-slate-500">
                 <tr>
@@ -251,7 +248,7 @@ export default async function AdminPage({
               </tbody>
             </table>
           </div>
-        </section>
+        </AdminCollapsibleSection>
 
         <AdminBetaFeedback feedback={betaFeedback} />
 

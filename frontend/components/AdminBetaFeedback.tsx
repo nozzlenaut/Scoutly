@@ -1,16 +1,16 @@
 import type { BetaFeedbackRecord } from "@/lib/api";
 import { formatAdminDate } from "@/lib/formatAdminDate";
+import { AdminCollapsibleSection } from "@/components/AdminCollapsibleSection";
 
 export function AdminBetaFeedback({ feedback }: { feedback: BetaFeedbackRecord[] }) {
   return (
-    <section id="feedback" className="mt-10 scroll-mt-6 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-      <div>
-        <h2 className="text-2xl font-bold">Feedback inbox</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Public beta submissions are stored in PostgreSQL when connected, with local JSON used only as a development fallback.
-        </p>
-      </div>
-      <div className="mt-5 overflow-x-auto">
+    <AdminCollapsibleSection
+      count={feedback.length}
+      description="Public beta submissions stored in PostgreSQL when connected, with local JSON used only as a development fallback."
+      id="feedback"
+      title="Feedback inbox"
+    >
+      <div className="overflow-x-auto">
         <table className="w-full min-w-[1100px] text-left text-sm">
           <thead className="text-slate-500">
             <tr>
@@ -45,6 +45,6 @@ export function AdminBetaFeedback({ feedback }: { feedback: BetaFeedbackRecord[]
           </tbody>
         </table>
       </div>
-    </section>
+    </AdminCollapsibleSection>
   );
 }

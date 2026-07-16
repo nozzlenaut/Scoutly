@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { deleteBadResultReport, type BadResultReport } from "@/lib/api";
 import { formatAdminDate } from "@/lib/formatAdminDate";
+import { AdminCollapsibleSection } from "@/components/AdminCollapsibleSection";
 
 type Props = {
   initialReports: BadResultReport[];
@@ -29,16 +30,16 @@ export function AdminReports({ initialReports, token }: Props) {
   }
 
   return (
-    <section className="mt-10 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Active bad-result reports</h2>
-          <p className="mt-1 text-sm text-slate-500">Reported items are hidden for 72 hours. Restore one here if it was flagged by mistake.</p>
-        </div>
+    <AdminCollapsibleSection
+      count={reports.length}
+      description="Reported items are hidden for 72 hours. Restore one here if it was flagged by mistake."
+      title="Active bad-result reports"
+    >
+      <div>
         {status === "saved" ? <p className="text-sm text-emerald-300">Report restored.</p> : null}
         {status === "error" ? <p className="text-sm text-amber-300">Could not restore report.</p> : null}
       </div>
-      <div className="mt-5 overflow-x-auto">
+      <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[1000px] text-left text-sm">
           <thead className="text-slate-500">
             <tr>
@@ -78,6 +79,6 @@ export function AdminReports({ initialReports, token }: Props) {
           </tbody>
         </table>
       </div>
-    </section>
+    </AdminCollapsibleSection>
   );
 }
