@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { LensQaWorkbench, type LensQaCase } from "@/components/LensQaWorkbench";
 import { QaWorkbench } from "@/components/QaWorkbench";
 import { SiteFooter } from "@/components/SiteFooter";
-import { getQaCases } from "@/lib/api";
+import { getQaCases, type QaCase, type QaOutcome, type QaSummary } from "@/lib/api";
 
 function QaGate({ invalid = false }: { invalid?: boolean }) {
   return (
@@ -34,6 +35,57 @@ function QaGate({ invalid = false }: { invalid?: boolean }) {
   );
 }
 
+function summarizeCases(cases: QaCase[]): QaSummary {
+  const counts: QaSummary["counts"] = {
+    pass: 0,
+    top3_only: 0,
+    fail: 0,
+    no_inventory: 0,
+    untested: 0,
+  };
+  const categoryCounts: QaSummary["category_counts"] = {};
+
+  for (const testCase of cases) {
+    categoryCounts[testCase.category] ??= {
+      pass: 0,
+      top3_only: 0,
+      fail: 0,
+      no_inventory: 0,
+      untested: 0,
+    };
+    const outcome: QaOutcome | "untested" = testCase.latest_evaluation?.outcome ?? "untested";
+    counts[outcome] += 1;
+    categoryCounts[testCase.category][outcome] += 1;
+  }
+
+  const tested = cases.length - counts.untested;
+  const availableInventoryCases = counts.pass + counts.top3_only + counts.fail;
+  const quality = counts.pass + counts.top3_only;
+
+  return {
+    total_cases: cases.length,
+    tested_cases: tested,
+    available_inventory_cases: availableInventoryCases,
+    counts,
+    category_counts: categoryCounts,
+    quality_rate: availableInventoryCases
+      ? Math.round((quality / availableInventoryCases) * 1000) / 10
+      : null,
+    overall_rate: tested ? Math.round((quality / tested) * 1000) / 10 : null,
+  };
+}
+
+function isLensCase(testCase: QaCase): testCase is LensQaCase {
+  const candidate = testCase as Partial<LensQaCase>;
+  return (
+    candidate.category === "lenses" &&
+    candidate.runner === "keh_lens" &&
+    Boolean(candidate.lens_filters?.mount) &&
+    Boolean(candidate.lens_filters?.lens_type) &&
+    Boolean(candidate.lens_filters?.focal_group)
+  );
+}
+
 export default async function QaPage({
   searchParams,
 }: {
@@ -50,6 +102,9 @@ export default async function QaPage({
     return <QaGate invalid />;
   }
 
+  const lensCases = data.cases.filter(isLensCase);
+  const searchCases = data.cases.filter((testCase) => !isLensCase(testCase));
+
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
       <div className="mx-auto max-w-[1500px]">
@@ -57,7 +112,8 @@ export default async function QaPage({
           <Link href={`/admin?token=${encodeURIComponent(token)}`} className="text-sm text-cyan-200 hover:text-cyan-100">
             ← Testing dashboard
           </Link>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
+            <Link href={`/admin/keh/lenses?token=${encodeURIComponent(token)}`} className="text-sm text-emerald-200 hover:text-emerald-100">Lens Lab</Link>
             <Link href={`/admin/prices?token=${encodeURIComponent(token)}`} className="text-sm text-slate-400 hover:text-slate-200">Price history</Link>
             <Link href="/" className="text-sm text-slate-500 hover:text-slate-300">PriceSift home</Link>
           </div>
@@ -67,11 +123,18 @@ export default async function QaPage({
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">PriceSift admin</p>
           <h1 className="mt-2 text-4xl font-black">Search QA workbench</h1>
           <p className="mt-3 max-w-4xl text-slate-400">
-            Run repeatable searches for every active category against the live marketplace, inspect the top three results, and save exactly what worked or failed. Each new evaluation becomes the latest status while preserving the attempt count.
+            Run repeatable eBay searches for catalog products, then use the dedicated KEH Lens Lab suite below to test mount, prime/zoom, and focal-group behavior. Saved attempts remain attached to their original case IDs.
           </p>
         </div>
 
-        <QaWorkbench initialCases={data.cases} initialSummary={data.summary} token={token} />
+        <QaWorkbench
+          initialCases={searchCases}
+          initialSummary={summarizeCases(searchCases)}
+          token={token}
+        />
+
+        {lensCases.length ? <LensQaWorkbench initialCases={lensCases} token={token} /> : null}
+
         <SiteFooter />
       </div>
     </main>

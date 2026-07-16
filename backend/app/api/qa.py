@@ -4,7 +4,8 @@ import secrets
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
-from app.services.qa_store import list_qa_evaluations, qa_cases_with_latest, qa_summary, save_qa_evaluation
+from app.services.qa_registry import qa_cases_with_latest, qa_summary
+from app.services.qa_store import list_qa_evaluations, save_qa_evaluation
 
 router = APIRouter(tags=["QA"])
 
