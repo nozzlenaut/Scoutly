@@ -62,7 +62,7 @@ def test_qa_endpoints_require_token_and_save(monkeypatch, tmp_path):
     assert cases.json()["summary"]["category_counts"]["cpus"]["untested"] == 16
     assert cases.json()["summary"]["category_counts"]["ram"]["untested"] == 12
     assert cases.json()["summary"]["category_counts"]["gpus"]["untested"] == 12
-    assert cases.json()["summary"]["category_counts"]["cameras"]["untested"] == 12
+    assert cases.json()["summary"]["category_counts"]["cameras"]["untested"] == 30
 
     saved = client.post(
         "/api/qa/evaluations",

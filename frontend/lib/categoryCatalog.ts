@@ -23,10 +23,10 @@ export const allCategories: SearchCategory[] = [
     id: "lenses",
     label: "Lenses",
     group: "Photography",
-    status: "coming-soon",
+    status: "beta",
     description:
-      "Temporarily paused while we validate cleaner eBay lens-category results.",
-    placeholder: "Coming soon",
+      "Current used KEH lens inventory filtered by mount, prime or zoom type, focal range, and optional brand.",
+    placeholder: "Browse current KEH lenses",
     defaultQuery: "",
   },
   {

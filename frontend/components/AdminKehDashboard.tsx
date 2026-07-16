@@ -45,7 +45,7 @@ export function AdminKehDashboard({ initialOverview, token }: { initialOverview:
     setMessage(null);
     try {
       const run = await syncKehFeed(token);
-      setMessage(`Sync complete: ${run.matched_items} matched camera listings. Lens inventory is now available in the Lens Builder Lab.`);
+      setMessage(`Sync complete: ${run.matched_items} matched camera listings. Camera results and the public KEH Lens Finder now use the refreshed inventory.`);
       setOverview(await getKehOverview(token, 1000));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "KEH sync failed.");
@@ -62,8 +62,8 @@ export function AdminKehDashboard({ initialOverview, token }: { initialOverview:
         <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Scoped inventory</p><p className="mt-2 text-3xl font-black">{overview.active_item_count}</p></div>
         <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Matched listings</p><p className="mt-2 text-3xl font-black">{overview.matched_count}</p></div>
         <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Lens inventory</p><p className="mt-2 text-3xl font-black">{overview.lens_inventory_count ?? 0}</p></div>
-        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Pilot products found</p><p className="mt-2 text-3xl font-black">{overview.matched_product_count}/{overview.pilot_product_ids.length}</p></div>
-        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Public results</p><p className="mt-2 text-xl font-black text-cyan-200">{overview.public_results_enabled ? `${overview.public_product_ids?.length ?? 0}-product pilot` : "Shadow only"}</p></div>
+        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Catalog products found</p><p className="mt-2 text-3xl font-black">{overview.matched_product_count}/{overview.pilot_product_ids.length}</p></div>
+        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5"><p className="text-sm text-slate-400">Public results</p><p className="mt-2 text-xl font-black text-cyan-200">{overview.public_results_enabled ? "All matched cameras + KEH lenses" : "Shadow only"}</p></div>
       </section>
 
       <section className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
@@ -85,7 +85,7 @@ export function AdminKehDashboard({ initialOverview, token }: { initialOverview:
 
       <section className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div><h2 className="text-2xl font-bold">KEH inventory</h2><p className="mt-1 text-sm text-slate-500">All matched rows remain reviewable here. Public results are limited to the configured Sony pilot models.</p></div>
+          <div><h2 className="text-2xl font-bold">KEH inventory</h2><p className="mt-1 text-sm text-slate-500">Matched, active camera rows are public across the full catalog. Lens inventory powers the public KEH-only finder; ambiguous camera rows remain hidden.</p></div>
           <select value={filter} onChange={(event) => setFilter(event.target.value as typeof filter)} className="rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white">
             <option value="all">All matches</option><option value="matched">Matched</option><option value="ambiguous">Ambiguous</option><option value="unmatched">Unmatched</option>
           </select>

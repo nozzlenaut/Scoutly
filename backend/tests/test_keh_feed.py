@@ -7,6 +7,7 @@ from app.services.keh_feed import (
     normalize_feed_row,
     parse_keh_grade,
     public_keh_listings,
+    public_product_ids,
     sync_keh_feed,
 )
 from app.catalog.catalog import match_product
@@ -85,11 +86,11 @@ def test_shadow_sync_uses_file_fallback_and_admin_endpoint(monkeypatch, tmp_path
     assert response.json()["public_results_enabled"] is False
 
 
-def test_public_keh_pilot_exposes_only_whitelisted_product(monkeypatch, tmp_path):
+def test_public_keh_results_use_the_full_camera_catalog(monkeypatch, tmp_path):
     monkeypatch.delenv("DATABASE_URL", raising=False)
     monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("KEH_PUBLIC_RESULTS", "true")
-    monkeypatch.delenv("KEH_PUBLIC_PRODUCT_IDS", raising=False)
+    monkeypatch.setenv("KEH_PUBLIC_PRODUCT_IDS", "camera-sony-a7-iii-body")
 
     sync_keh_feed(feed_rows=[_row()])
     product_match = match_product("Sony A7 III Body", "cameras")
@@ -101,9 +102,11 @@ def test_public_keh_pilot_exposes_only_whitelisted_product(monkeypatch, tmp_path
     assert listings[0].condition == "Used · EX+ · Excellent Plus"
     assert listings[0].affiliate_url_used is True
 
-    non_public_match = match_product("Nikon Z5 Body", "cameras")
-    assert non_public_match is not None
-    assert public_keh_listings(non_public_match.product) == []
+    nikon_match = match_product("Nikon Z5 Body", "cameras")
+    assert nikon_match is not None
+    assert nikon_match.product.id in public_product_ids()
+    # This test only synced Sony inventory, so Nikon is public-eligible but empty.
+    assert public_keh_listings(nikon_match.product) == []
 
 
 def test_public_search_can_merge_keh_pilot_result(monkeypatch):

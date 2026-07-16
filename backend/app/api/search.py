@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query, status
 
 from app.catalog.catalog import suggest_products
 from app.models.search import SearchResponse
@@ -6,6 +6,14 @@ from app.services.search_service import search_auction_deals, search_best_deals_
 from app.services.analytics_store import SearchEvent, log_search_event
 
 router = APIRouter()
+
+
+def _reject_public_lens_marketplace_search(category: str | None) -> None:
+    if (category or "").strip().lower() in {"lens", "lenses"}:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Public lens results are KEH-only. Use the PriceSift Lens Finder.",
+        )
 
 
 @router.get("/search", response_model=SearchResponse)
@@ -18,6 +26,7 @@ async def search(
     us_only: bool = Query(False),
     analytics: bool = Query(False),
 ) -> SearchResponse:
+    _reject_public_lens_marketplace_search(category)
     provider_keys = [provider.strip() for provider in providers.split(",") if provider.strip()]
     resolved_product, results, auction_results, diagnostics, price_context = await search_best_deals_with_auctions(
         q,
@@ -66,6 +75,7 @@ async def search_auctions(
     auction_hours: int = Query(24, ge=1, le=168),
     us_only: bool = Query(False),
 ) -> SearchResponse:
+    _reject_public_lens_marketplace_search(category)
     provider_keys = [provider.strip() for provider in providers.split(",") if provider.strip()]
     resolved_product, auction_results, diagnostics = await search_auction_deals(
         q,

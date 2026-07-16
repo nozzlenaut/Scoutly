@@ -2,76 +2,64 @@
 
 **Find the best price for what you already want.**
 
-PriceSift is an exact-item price finder for used and secondhand products. Instead of making shoppers dig through broad marketplace searches, it resolves the item they mean, removes obvious mismatches and risky listings, and surfaces a small set of useful current prices.
+PriceSift is an exact-item results site for used and secondhand products. It is for the point where someone already knows what they want and needs a short list of useful current listings - not a wall of marketplace noise.
+
+Live site: https://www.pricesift.app/
 
 `Scoutly` remains the internal repository and infrastructure name.
 
 ## What PriceSift does
 
-- Resolves searches to an exact catalog product, specification, or ISBN.
-- Searches current marketplace inventory from eBay and supported specialty retailers.
-- Filters parts-only, broken, incomplete, accessory-only, wrong-model, and misleading variation listings when detectable.
-- Separates fixed-price results from optional ending-soon auctions.
-- Ranks a small set of useful listings instead of returning a wall of marketplace noise.
-- Tracks price snapshots and provides typical-price context after enough inventory history is available.
-- Supports an optional **US listings only** filter for eBay results.
-- Collects lightweight product-usage analytics without storing accounts, cookies, IP addresses, or personal identifiers.
+- Resolves a search to an exact catalog product, specification, or ISBN.
+- Filters obvious wrong-model, accessory-only, broken, incomplete, parts-only, and misleading listings when detectable.
+- Ranks a small set of useful fixed-price results.
+- Keeps optional ending-soon auctions separate.
+- Shows total price with shipping when available.
+- Requires no account for normal searching.
+- Uses clearly disclosed affiliate links without changing displayed prices or ranking rules.
 
-## Search styles
+## Current category coverage
 
-PriceSift uses different search flows depending on how a product is identified:
+| Category | Status | Public providers | Search style |
+|---|---|---|---|
+| Cameras | Active | eBay + KEH | Exact camera body |
+| Lenses | Beta | KEH only | Mount, prime/zoom, focal group, optional brand |
+| Consoles | Active | eBay | Exact model with grouped variants |
+| CPUs | Active | eBay | Specification builder |
+| GPUs | Active | eBay | Exact desktop GPU |
+| RAM | Active | eBay | Specification builder |
+| Books | Beta | eBay | ISBN-10 or ISBN-13 |
+| LEGO | Beta | eBay | Exact set name or number |
 
-1. **Direct exact-item search** â€” cameras, GPUs, consoles, and LEGO sets.
-2. **Specification builders** â€” RAM and desktop CPUs.
-3. **Identifier search** â€” Books by ISBN-10 or ISBN-13.
+Public eBay lens results remain disabled while lens titles, mounts, bundles, and accessory listings are tested privately.
 
-This keeps each category focused on the details that actually define the product instead of forcing every category into the same generic form.
+## Product principles
 
-## Marketplace coverage
-
-- **eBay** â€” used Buy It Now listings and optional ending-soon auctions.
-- **KEH** â€” selected camera inventory through the current public pilot, with additional lens tooling kept private for testing.
-
-Outbound merchant links may be affiliate links. This does not change the displayed price or ranking rules.
+- PriceSift is a **results site**, not a broad search or browsing site.
+- Result quality matters more than result count.
+- Search flows should be category-specific.
+- New categories need evidence of demand, strategic value, or a clear audience.
+- Trust is the product: exact identity, clear condition, honest totals, and transparent affiliate disclosure.
 
 ## Project structure
 
 ```text
 backend/   FastAPI API, marketplace providers, filtering, ranking, analytics, and tests
-frontend/  Next.js web application and admin tools
-docs/      Architecture notes, status, roadmap, API notes, and changelog
+frontend/  Next.js application and admin tools
+docs/      Current status, decisions, process, architecture, and history
 ```
 
-## Run locally
+## Local development
 
 ### Backend
 
 ```bash
 cd backend
 py -3.12 -m venv .venv
+./.venv/Scripts/python.exe -m pip install -r requirements.txt
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=. ./.venv/Scripts/python.exe -m pytest -q
+./.venv/Scripts/python.exe -m uvicorn app.main:app --reload --port 8000
 ```
-
-Activate the environment:
-
-```powershell
-# Windows PowerShell
-.\.venv\Scripts\Activate.ps1
-```
-
-```bash
-# macOS or Linux
-source .venv/bin/activate
-```
-
-Install dependencies and start the API:
-
-```bash
-pip install -r requirements.txt
-PYTHONPATH=. pytest -q
-python -m uvicorn app.main:app --reload --port 8000
-```
-
-On Windows PowerShell, use `$env:PYTHONPATH="."` before running tests when needed.
 
 ### Frontend
 
@@ -81,32 +69,22 @@ npm install
 npm run dev
 ```
 
-The frontend runs at `http://localhost:3000` and the backend at `http://localhost:8000` by default.
-
-## Environment setup
-
-Copy the included examples before adding local credentials:
-
-```text
-backend/.env.example
-frontend/.env.example
-```
-
-The backend supports eBay credentials, optional affiliate tracking, PostgreSQL, admin authentication, and marketplace-notification configuration. Never commit real secrets.
+The frontend runs at `http://localhost:3000`; the backend runs at `http://localhost:8000`.
 
 ## Deployment
 
-The current production setup uses:
+- Vercel deploys the frontend from `main`.
+- Railway deploys the backend and scheduled jobs from `main`.
+- PostgreSQL stores production analytics, reports, QA evaluations, and price history.
+- KEH matching changes require a fresh sync from `/admin/keh` after deployment.
 
-- **Vercel** for the Next.js frontend.
-- **Railway** for the FastAPI backend and scheduled jobs.
-- **PostgreSQL** for persistent analytics, reports, QA evaluations, and price history.
+## Project references
 
-## Documentation
-
-- [Changelog](docs/CHANGELOG.md)
 - [Current status](docs/STATUS.md)
+- [Product decisions](docs/DECISIONS.md)
+- [Working agreement](docs/WORKING_AGREEMENT.md)
 - [Roadmap](docs/ROADMAP.md)
+- [Changelog](docs/CHANGELOG.md)
 - [Product catalog notes](docs/PRODUCT_CATALOG.md)
 - [API notes](docs/API.md)
 - [Database notes](docs/DATABASE.md)

@@ -845,6 +845,32 @@ export async function getKehLensBuilder(
   return response.json();
 }
 
+export async function getPublicKehLensBuilder(
+  filters: {
+    mount?: string;
+    lensType?: string;
+    focalGroup?: string;
+    brand?: string;
+    query?: string;
+    limit?: number;
+    trackAnalytics?: boolean;
+  } = {},
+): Promise<KehLensBuilderResponse> {
+  const params = new URLSearchParams({ limit: String(filters.limit ?? 100) });
+  if (filters.mount) params.set("mount", filters.mount);
+  if (filters.lensType) params.set("lens_type", filters.lensType);
+  if (filters.focalGroup) params.set("focal_group", filters.focalGroup);
+  if (filters.brand) params.set("brand", filters.brand);
+  if (filters.query) params.set("q", filters.query);
+  if (filters.trackAnalytics) params.set("analytics", "true");
+  const response = await fetch(`${baseUrl}/api/keh/lenses/public?${params.toString()}`, { cache: "no-store" });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(detail || `Public KEH lens search failed (${response.status})`);
+  }
+  return response.json();
+}
+
 export type BookLabStatus = {
   configured: boolean;
   public: boolean;

@@ -154,6 +154,11 @@ export function SearchForm({
   function handleCategoryChange(nextCategoryId: string) {
     if (nextCategoryId === categoryId) return;
 
+    if (nextCategoryId === "lenses") {
+      navigate("/lenses");
+      return;
+    }
+
     if (compact) {
       // A results page must never show cards from one category while another
       // category is selected. Start a clean category page immediately.

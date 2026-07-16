@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AuctionResults } from "@/components/AuctionResults";
 import { ResultCard } from "@/components/ResultCard";
 import { PriceContextPanel } from "@/components/PriceContextPanel";
@@ -92,6 +93,10 @@ export default async function SearchPage({
   const usOnly = params.us_only === "1" || params.us_only === "true";
   const knownCategory = getCategoryById(rawCategory);
   const category = getSearchCategoryById(rawCategory);
+
+  if (category?.id === "lenses") {
+    redirect("/lenses");
+  }
 
   if (!category) {
     return (

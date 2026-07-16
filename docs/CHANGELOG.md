@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.31
+
+- Completes the KEH camera and public KEH-only lens release after the prior commit added only the new lens page, component, and tests.
+- Publishes confidently matched KEH inventory across the active camera-body catalog and keeps public eBay lens search disabled.
+- Wires the public lens endpoint, frontend API helper, category routing, admin wording, and release tests together.
+- Adds deterministic pytest isolation so local production credentials cannot turn unit tests into live eBay or database tests.
+- Stops pytest and Python cache files from repeatedly dirtying the repository.
+- Replaces stale status text with a concise living project status, decisions log, and working agreement.
+- Keeps delivery manual: review, test, commit, and push from a clean Git working tree.
+
 ## v0.6.29
 
 - Converts Recent clicks, Recently filtered listings, Feedback inbox, and Active bad-result reports into collapsed admin dropdown sections.

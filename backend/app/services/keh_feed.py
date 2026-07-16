@@ -15,21 +15,17 @@ from uuid import uuid4
 
 import httpx
 
-from app.catalog.catalog import listing_matches_product, suggest_products
+from app.catalog.catalog import list_products, listing_matches_product, suggest_products
 from app.models.listing import Listing
 from app.models.product import Product
 from app.ranking.scorer import score_listing
 from app.services.database import database_configured, database_connection
-from app.services.qa_store import load_qa_cases
 
 logger = logging.getLogger(__name__)
 MAX_FILE_ITEMS = 10000
 MAX_LENS_MODELS = 500
-DEFAULT_PUBLIC_PRODUCT_IDS = {
-    "camera-sony-a7-iii-body",
-    "camera-sony-a7-iv-body",
-    "camera-sony-a6700-body",
-}
+# KEH camera publication now follows the complete active camera-body catalog.
+# The former three-model pilot whitelist is intentionally retired.
 GRADE_PATTERNS: list[tuple[str, str, re.Pattern[str]]] = [
     ("LN", "Like New", re.compile(r"(?:^|\s)-?\s*LN\s*-?\s*-\s*Like New(?:\s|$)", re.I)),
     ("LN-", "Like New Minus", re.compile(r"(?:^|\s)-?\s*LN-\s*-\s*Like New Minus(?:\s|$)", re.I)),
@@ -81,12 +77,11 @@ def keh_public_results_enabled() -> bool:
 
 
 def public_product_ids() -> set[str]:
-    configured = {
-        value.strip()
-        for value in os.getenv("KEH_PUBLIC_PRODUCT_IDS", "").split(",")
-        if value.strip()
+    return {
+        product.id
+        for product in list_products("cameras")
+        if product.product_type == "camera_body"
     }
-    return configured or set(DEFAULT_PUBLIC_PRODUCT_IDS)
 
 
 def product_is_public(product_id: str | None) -> bool:
@@ -189,22 +184,8 @@ def classify_keh_product(row: dict[str, str]) -> str | None:
 
 
 def pilot_product_ids() -> set[str]:
-    configured = {
-        value.strip()
-        for value in os.getenv("KEH_SHADOW_PRODUCT_IDS", "").split(",")
-        if value.strip()
-    }
-    if configured:
-        return configured
-    qa_products = {
-        str(case.get("expected_product_id"))
-        for case in load_qa_cases()
-        if case.get("category") == "cameras" and case.get("expected_product_id")
-    }
-    # Include the two real body models present in the user's Awin sample so the
-    # parser can be validated immediately before the first full-feed sync.
-    qa_products.update({"camera-fujifilm-x-t2-body", "camera-canon-eos-m200-body"})
-    return qa_products
+    """Backward-compatible admin label for the full active camera-body catalog."""
+    return public_product_ids()
 
 
 def _lens_model_name(title: str) -> str:
@@ -809,7 +790,11 @@ def public_keh_listings(product: Product, limit: int = 50) -> list[Listing]:
     PriceSift fixed-price listings.
     """
 
-    if product.category != "cameras" or not product_is_public(product.id):
+    if (
+        product.category != "cameras"
+        or product.product_type != "camera_body"
+        or not product_is_public(product.id)
+    ):
         return []
 
     items = list_keh_inventory(
