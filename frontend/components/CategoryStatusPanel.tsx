@@ -10,8 +10,9 @@ export function CategoryStatusPanel() {
             Category status
           </p>
           <p className="mt-1 text-sm text-slate-300">
-            Cameras, Consoles, CPUs, GPUs, and RAM are active. Books and LEGO are in Beta,
-            and Lenses remain in private KEH testing.
+            Cameras, Consoles, CPUs, GPUs, and RAM are active. Books, LEGO, and
+            Lenses are in Beta. Public lens results are KEH-only while eBay lens
+            matching remains disabled.
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs text-slate-400">

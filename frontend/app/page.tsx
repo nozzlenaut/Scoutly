@@ -17,19 +17,25 @@ export default function HomePage() {
           PriceSift
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-          Find the best price for what you already want. Pick a category, choose
-          the exact item or build a specification search, and PriceSift checks
-          supported marketplaces for cleaner used listings — complete items first, not broken
-          listings, boxes-only, parts-only junk, or sketchy matches when we can
-          catch them.
+          Find the best price for what you already want. PriceSift checks
+          supported marketplaces, filters out broken items, empty boxes,
+          accessories, parts-only listings, and misleading variations, then
+          shows up to three strong options for the exact item you chose. Fewer
+          results on purpose. Less digging, more confidence.
         </p>
 
         <div className="mt-6 max-w-3xl rounded-3xl border border-white/10 bg-white/[0.06] p-5 text-left text-sm leading-6 text-slate-300">
           <p>
-            PriceSift is supported by affiliate links. If you do not want to use
-            those, that is totally fine: use PriceSift to find the right item,
-            then open the marketplace separately or in a private/incognito
-            window and search normally.
+            PriceSift is free to use and supported by affiliate links at no
+            extra cost to you. Prefer not to use them? You can still use
+            PriceSift to identify the right item, then search for it directly
+            on the marketplace. {" "}
+            <a
+              href="/disclosure"
+              className="font-semibold text-cyan-200 underline decoration-cyan-200/40 underline-offset-4 transition hover:text-cyan-100"
+            >
+              Learn how affiliate links work.
+            </a>
           </p>
         </div>
 
@@ -41,7 +47,7 @@ export default function HomePage() {
           {[
             "Exact-item autocomplete",
             "Built for used prices",
-            "Multiple safe options while testing",
+            "Up to three strong matches",
           ].map((item) => (
             <div
               key={item}

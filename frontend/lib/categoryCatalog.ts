@@ -15,7 +15,7 @@ export const allCategories: SearchCategory[] = [
     group: "Photography",
     status: "active",
     description:
-      "Used camera bodies with eBay Digital Cameras category filtering.",
+      "Used camera bodies from eBay and KEH with exact-model and category-specific filtering.",
     placeholder: "Search by camera model",
     defaultQuery: "",
   },
