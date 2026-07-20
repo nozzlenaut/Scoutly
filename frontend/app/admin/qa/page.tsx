@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LensQaWorkbench, type LensQaCase } from "@/components/LensQaWorkbench";
 import { QaWorkbench } from "@/components/QaWorkbench";
+import { ShippingQaLab } from "@/components/ShippingQaLab";
 import { SiteFooter } from "@/components/SiteFooter";
 import { getQaCases, type QaCase, type QaOutcome, type QaSummary } from "@/lib/api";
 
@@ -123,9 +124,11 @@ export default async function QaPage({
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">PriceSift admin</p>
           <h1 className="mt-2 text-4xl font-black">Search QA workbench</h1>
           <p className="mt-3 max-w-4xl text-slate-400">
-            Run repeatable eBay searches for catalog products, then use the dedicated KEH Lens Lab suite below to test mount, prime/zoom, and focal-group behavior. Saved attempts remain attached to their original case IDs.
+            Test exact-item matching, the KEH Lens Lab, and ZIP-specific eBay shipping coverage before any behavior reaches the public search. Saved search attempts remain attached to their original case IDs.
           </p>
         </div>
+
+        <ShippingQaLab token={token} />
 
         <QaWorkbench
           initialCases={searchCases}

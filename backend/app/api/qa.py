@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 from app.services.qa_registry import qa_cases_with_latest, qa_summary
 from app.services.qa_store import list_qa_evaluations, save_qa_evaluation
+from app.services.shipping_qa import run_shipping_probe
 
 router = APIRouter(tags=["QA"])
 
@@ -53,6 +54,29 @@ def get_qa_evaluations(
 ) -> dict:
     _require_admin_token(token)
     return {"evaluations": list_qa_evaluations(limit)}
+
+
+@router.get("/qa/shipping")
+async def get_shipping_qa(
+    q: str = Query(..., min_length=2, max_length=240),
+    category: str | None = Query("cameras", min_length=2, max_length=80),
+    postal_code: str = Query(..., min_length=3, max_length=12),
+    country: str = Query("US", min_length=2, max_length=2),
+    limit: int = Query(5, ge=1, le=10),
+    token: str | None = Query(None),
+) -> dict:
+    _require_admin_token(token)
+    try:
+        return await run_shipping_probe(q, category, postal_code, country, limit)
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+    except RuntimeError as error:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"eBay shipping probe failed: {type(error).__name__}",
+        ) from error
 
 
 @router.post("/qa/evaluations")
