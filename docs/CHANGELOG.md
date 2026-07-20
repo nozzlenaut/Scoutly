@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.6.34
+
+- Expands the fixed-price eBay candidate pool from 65 to 100 for PlayStation 5-family, PlayStation 4 Slim, Xbox Series S, and Xbox Series X searches that were still exhausting every candidate.
+- Keeps other console searches at 65 candidates, all other fixed-price categories at 35, auctions at 25, and the public result maximum at three.
+- Preserves every existing identity and quality filter; this change searches deeper instead of admitting lower-quality listings.
+
 ## v0.6.33
 
 - Rejects listings labeled `defective` even when eBay reports their condition as Used.

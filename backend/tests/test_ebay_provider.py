@@ -176,10 +176,28 @@ def test_ebay_search_adds_lego_category_id():
     assert provider.last_params["category_ids"] == "19006"
 
 
-def test_ebay_search_adds_console_category_id():
+def test_ebay_search_uses_deeper_pool_for_exhausted_console_models():
     provider = _CaptureEbayProvider()
 
-    asyncio.run(provider.search("Xbox Series X", category="consoles"))
+    queries = [
+        "PlayStation 5 console",
+        "PlayStation 5 Slim console",
+        "PlayStation 4 Slim console",
+        "Xbox Series S console",
+        "Xbox Series X console",
+    ]
+
+    for query in queries:
+        asyncio.run(provider.search(query, category="consoles"))
+
+        assert provider.last_params["category_ids"] == "139971"
+        assert provider.last_params["limit"] == "100"
+
+
+def test_ebay_search_keeps_other_console_pool_at_65():
+    provider = _CaptureEbayProvider()
+
+    asyncio.run(provider.search("Nintendo Switch OLED console", category="consoles"))
 
     assert provider.last_params["category_ids"] == "139971"
     assert provider.last_params["limit"] == "65"

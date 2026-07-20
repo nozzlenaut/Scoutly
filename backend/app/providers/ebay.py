@@ -36,6 +36,26 @@ EBAY_US_CATEGORY_IDS = {
     "books": "261186",
 }
 
+DEEP_CONSOLE_QUERY_TERMS = (
+    "playstation 5",
+    "ps5",
+    "playstation 4 slim",
+    "ps4 slim",
+    "xbox series x",
+    "xbox series s",
+)
+
+
+def _fixed_price_candidate_limit(query: str, category: str | None) -> str:
+    normalized_category = (category or "").strip().lower()
+    if normalized_category != "consoles":
+        return "35"
+
+    normalized_query = " ".join(query.strip().lower().split())
+    if any(term in normalized_query for term in DEEP_CONSOLE_QUERY_TERMS):
+        return "100"
+    return "65"
+
 
 @dataclass
 class EbayConfig:
@@ -341,14 +361,12 @@ class EbayProvider(MarketplaceProvider):
             filters = ["conditions:{USED}", "buyingOptions:{FIXED_PRICE}"]
             if item_location_country:
                 filters.append(f"itemLocationCountry:{item_location_country.upper()}")
-            fixed_price_limit = (
-                "65" if (category or "").strip().lower() == "consoles" else "35"
-            )
+            fixed_price_limit = _fixed_price_candidate_limit(query, category)
             params = {
                 "q": query,
-                # Console searches are unusually noisy even inside eBay's console
-                # category. Give their exact-model filters a slightly deeper pool
-                # while keeping the faster 35-candidate limit everywhere else.
+                # The affected PlayStation and Xbox searches need extra room to
+                # get past broken, accessory, incomplete, and wrong-model items.
+                # Other consoles stay at 65 and every other category stays at 35.
                 "limit": fixed_price_limit,
                 "sort": "price",
                 # Keep this conservative for now. Removing the condition filter caused
