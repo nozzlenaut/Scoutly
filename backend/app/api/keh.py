@@ -8,6 +8,8 @@ from pydantic import BaseModel
 
 from app.services.analytics_store import SearchEvent, log_search_event
 from app.services.keh_feed import (
+    keh_camera_catalog,
+    keh_camera_model,
     keh_lens_builder,
     keh_overview,
     keh_public_results_enabled,
@@ -28,6 +30,32 @@ def _require_admin_token(token: str | None) -> None:
 
 class KehSyncRequest(BaseModel):
     force: bool = False
+
+
+@router.get("/keh/cameras/public")
+def get_public_keh_camera_catalog(
+    q: str | None = Query(default=None, max_length=120),
+    limit: int = Query(default=500, ge=1, le=1000),
+) -> dict:
+    if not keh_public_results_enabled():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Public KEH results are not enabled.",
+        )
+    return keh_camera_catalog(query=q, limit=limit)
+
+
+@router.get("/keh/cameras/public/{slug}")
+def get_public_keh_camera_model(slug: str) -> dict:
+    if not keh_public_results_enabled():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Public KEH results are not enabled.",
+        )
+    model = keh_camera_model(slug)
+    if model is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KEH camera model not found.")
+    return model
 
 
 @router.get("/keh/overview")

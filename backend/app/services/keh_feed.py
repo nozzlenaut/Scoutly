@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import gzip
+import hashlib
 import io
 import json
 import logging
@@ -16,14 +17,16 @@ from uuid import uuid4
 import httpx
 
 from app.catalog.catalog import list_products, listing_matches_product, suggest_products
+from app.catalog.normalizer import compact_text, normalize_text
 from app.models.listing import Listing
-from app.models.product import Product
+from app.models.product import Product, ProductMatch
 from app.ranking.scorer import score_listing
 from app.services.database import database_configured, database_connection
 
 logger = logging.getLogger(__name__)
 MAX_FILE_ITEMS = 10000
 MAX_LENS_MODELS = 500
+MAX_CAMERA_MODELS = 1000
 # KEH camera publication now follows the complete active camera-body catalog.
 # The former three-model pilot whitelist is intentionally retired.
 GRADE_PATTERNS: list[tuple[str, str, re.Pattern[str]]] = [
@@ -55,6 +58,10 @@ LENS_MOUNT_RULES: list[tuple[str, re.Pattern[str]]] = [
 
 LENS_RANGE_PATTERN = re.compile(r"(?<!\d)(\d{1,3}(?:\.\d+)?)\s*[-–]\s*(\d{1,3}(?:\.\d+)?)\s*mm\b", re.I)
 LENS_PRIME_PATTERN = re.compile(r"(?<!\d)(\d{1,3}(?:\.\d+)?)\s*mm\b", re.I)
+KEH_GRADE_SUFFIX_PATTERN = re.compile(
+    r"\s+-\s+(?:LN-|LN|EX\+|EX|BGN|UG)\s+-.*$",
+    re.I,
+)
 
 
 def _now() -> datetime:
@@ -188,15 +195,14 @@ def pilot_product_ids() -> set[str]:
     return public_product_ids()
 
 
-def _lens_model_name(title: str) -> str:
+def _base_model_name(title: str) -> str:
     first_segment = title.split("|", 1)[0].strip()
-    first_segment = re.sub(
-        r"\s+-\s+(?:LN-|LN|EX\+|EX|BGN|UG)\s+-.*$",
-        "",
-        first_segment,
-        flags=re.I,
-    ).strip()
+    first_segment = KEH_GRADE_SUFFIX_PATTERN.sub("", first_segment).strip()
     return first_segment or title.strip()
+
+
+def _lens_model_name(title: str) -> str:
+    return _base_model_name(title)
 
 
 def _lens_mount(title: str, category_path: str = "") -> str:
@@ -281,7 +287,7 @@ def _match_row(row: dict[str, str], product_type: str) -> dict[str, Any]:
     best = eligible[0] if eligible else None
 
     status = "unmatched"
-    reason = "No pilot catalog match"
+    reason = "No confident PriceSift catalog match; KEH only"
     if best is not None and best.confidence >= 0.7:
         close_second = eligible[1] if len(eligible) > 1 else None
         if close_second is not None and close_second.confidence >= best.confidence - 0.03:
@@ -295,7 +301,7 @@ def _match_row(row: dict[str, str], product_type: str) -> dict[str, Any]:
             reason = "Title failed exact-product listing rules"
         else:
             status = "matched"
-            reason = "Pilot product matched"
+            reason = "PriceSift catalog product matched"
 
     return {
         "pilot_candidate": best is not None,
@@ -329,8 +335,10 @@ def normalize_feed_row(row: dict[str, str], synced_at: datetime) -> dict[str, An
         }
     else:
         match = _match_row(row, product_type)
-        if not match.pop("pilot_candidate", False):
-            return None
+        # Keep every valid KEH camera-body row. Confident matches may join the
+        # tuned PriceSift catalog and use eBay + KEH; rows without that mapping
+        # remain searchable as KEH-only models.
+        match.pop("pilot_candidate", None)
     return {
         "aw_product_id": aw_product_id,
         "merchant_product_id": str(row.get("merchant_product_id") or "").strip() or None,
@@ -634,6 +642,279 @@ def keh_overview(limit: int = 200) -> dict[str, Any]:
     }
 
 
+def _slugify(value: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+    return slug[:140] or "keh-camera"
+
+
+def _all_active_camera_inventory() -> list[dict[str, Any]]:
+    if database_configured():
+        try:
+            with database_connection() as connection:
+                rows = connection.execute(
+                    """
+                    SELECT * FROM scoutly_keh_inventory
+                    WHERE active = TRUE AND product_type = 'camera_body'
+                      AND in_stock = TRUE AND is_for_sale = TRUE
+                    ORDER BY price ASC, title
+                    LIMIT %s
+                    """,
+                    (MAX_FILE_ITEMS,),
+                ).fetchall()
+            return [_serialize(dict(row)) for row in rows]
+        except Exception:
+            logger.exception("PostgreSQL KEH camera inventory read failed; using file fallback.")
+    return [
+        item for item in _read_json_list(_inventory_path())
+        if item.get("active", True)
+        and item.get("product_type") == "camera_body"
+        and item.get("in_stock")
+        and item.get("is_for_sale")
+    ][:MAX_FILE_ITEMS]
+
+
+def _camera_model_groups() -> list[dict[str, Any]]:
+    products_by_id = {product.id: product for product in list_products("cameras")}
+    grouped: dict[str, dict[str, Any]] = {}
+
+    for item in _all_active_camera_inventory():
+        catalog_product_id = (
+            str(item.get("matched_product_id") or "").strip()
+            if item.get("match_status") == "matched"
+            else ""
+        )
+        catalog_product = products_by_id.get(catalog_product_id)
+        model_name = (
+            catalog_product.display_name
+            if catalog_product is not None
+            else _base_model_name(str(item.get("title") or ""))
+        )
+        normalized_name = normalize_text(model_name, strip_filler=False)
+        model_key = (
+            f"catalog:{catalog_product.id}"
+            if catalog_product is not None
+            else f"keh:{normalized_name or item.get('aw_product_id')}"
+        )
+        group = grouped.setdefault(
+            model_key,
+            {
+                "model_key": model_key,
+                "model_name": model_name,
+                "brand": catalog_product.brand if catalog_product is not None else str(item.get("brand") or "KEH").strip() or "KEH",
+                "catalog_product_id": catalog_product.id if catalog_product is not None else None,
+                "catalog_product_label": catalog_product.display_name if catalog_product is not None else None,
+                "provider_scope": "ebay_keh" if catalog_product is not None else "keh",
+                "listing_count": 0,
+                "lowest_price": None,
+                "highest_price": None,
+                "currency": item.get("currency") or "USD",
+                "condition_grades": [],
+                "image_url": item.get("image_url"),
+                "listings": [],
+            },
+        )
+        group["listing_count"] += 1
+        price = _float(item.get("price"))
+        if price is not None and (group["lowest_price"] is None or price < group["lowest_price"]):
+            group["lowest_price"] = price
+        if price is not None and (group["highest_price"] is None or price > group["highest_price"]):
+            group["highest_price"] = price
+        grade_code = str(item.get("condition_grade_code") or "").strip()
+        if grade_code and grade_code not in group["condition_grades"]:
+            group["condition_grades"].append(grade_code)
+        if not group.get("image_url") and item.get("image_url"):
+            group["image_url"] = item.get("image_url")
+        group["listings"].append(item)
+
+    models = list(grouped.values())
+    for model in models:
+        base_slug = _slugify(str(model["model_name"]))
+        if model["provider_scope"] == "keh":
+            # A deterministic suffix keeps KEH-native URLs stable even if a
+            # similarly named model appears in a later feed.
+            suffix = hashlib.sha1(str(model["model_key"]).encode("utf-8")).hexdigest()[:8]
+            model["slug"] = f"{base_slug}-{suffix}"
+        else:
+            model["slug"] = base_slug
+
+    grade_order = {"LN": 0, "LN-": 1, "EX+": 2, "EX": 3, "BGN": 4, "UG": 5}
+    for model in models:
+        model["condition_grades"] = sorted(
+            model["condition_grades"],
+            key=lambda grade: (grade_order.get(grade, 99), grade),
+        )
+        model["listings"] = sorted(
+            model["listings"],
+            key=lambda item: (float(item.get("price") or 10**12), str(item.get("title") or "")),
+        )
+    models.sort(
+        key=lambda model: (
+            model["provider_scope"] == "keh",
+            str(model["brand"]).lower(),
+            str(model["model_name"]).lower(),
+        )
+    )
+    return models
+
+
+def _camera_listing_payload(item: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "aw_product_id": item.get("aw_product_id"),
+        "title": item.get("title"),
+        "price": _float(item.get("price")),
+        "currency": item.get("currency") or "USD",
+        "condition_grade_code": item.get("condition_grade_code"),
+        "condition_grade_label": item.get("condition_grade_label"),
+        "affiliate_url": item.get("affiliate_url"),
+        "image_url": item.get("image_url"),
+        "mpn": item.get("mpn"),
+    }
+
+
+def _public_camera_model(model: dict[str, Any], *, include_listings: bool = True) -> dict[str, Any]:
+    return {
+        key: value
+        for key, value in model.items()
+        if key != "listings"
+    } | {
+        "listings": (
+            [_camera_listing_payload(item) for item in model["listings"][:3]]
+            if include_listings
+            else []
+        ),
+    }
+
+
+def keh_camera_catalog(*, query: str | None = None, limit: int = 500) -> dict[str, Any]:
+    all_models = _camera_model_groups()
+    models = all_models
+    cleaned_query = normalize_text((query or "").strip(), strip_filler=False)
+    if cleaned_query:
+        models = [
+            model for model in models
+            if cleaned_query in normalize_text(str(model["model_name"]), strip_filler=False)
+            or cleaned_query in normalize_text(str(model["brand"]), strip_filler=False)
+        ]
+    limit = max(1, min(limit, MAX_CAMERA_MODELS))
+    return {
+        "summary": {
+            "model_count": len(all_models),
+            "listing_count": sum(model["listing_count"] for model in all_models),
+            "filtered_model_count": len(models),
+            "catalog_model_count": sum(model["provider_scope"] == "ebay_keh" for model in models),
+            "keh_only_model_count": sum(model["provider_scope"] == "keh" for model in models),
+        },
+        "query": query,
+        # Directory and sitemap callers need model summaries, not thousands of
+        # repeated listing URLs. The single-model endpoint includes listings.
+        "models": [_public_camera_model(model, include_listings=False) for model in models[:limit]],
+    }
+
+
+def keh_camera_model(slug: str) -> dict[str, Any] | None:
+    cleaned_slug = _slugify(slug)
+    for model in _camera_model_groups():
+        if model.get("slug") == cleaned_slug:
+            return _public_camera_model(model)
+    return None
+
+
+def _keh_camera_model_group(slug: str) -> dict[str, Any] | None:
+    cleaned_slug = _slugify(slug)
+    return next(
+        (model for model in _camera_model_groups() if model.get("slug") == cleaned_slug),
+        None,
+    )
+
+
+def _camera_match_score(query: str, model_name: str) -> float:
+    normalized_query = normalize_text(query)
+    normalized_model = normalize_text(model_name)
+    if not normalized_query or not normalized_model:
+        return 0.0
+    if normalized_query == normalized_model:
+        return 1.0
+    if compact_text(query) == compact_text(model_name):
+        return 0.99
+    query_tokens = set(normalized_query.split())
+    model_tokens = set(normalized_model.split())
+    overlap = query_tokens & model_tokens
+    coverage = len(overlap) / max(1, len(query_tokens))
+    precision = len(overlap) / max(1, len(model_tokens))
+    substring_bonus = 0.12 if normalized_query in normalized_model else 0.0
+    return min(0.98, round((coverage * 0.68) + (precision * 0.32) + substring_bonus, 4))
+
+
+def _dynamic_keh_camera_product(model: dict[str, Any]) -> Product:
+    brand = str(model.get("brand") or "KEH").strip() or "KEH"
+    model_name = str(model.get("model_name") or "Used camera").strip()
+    short_model = model_name
+    if model_name.lower().startswith(f"{brand.lower()} "):
+        short_model = model_name[len(brand):].strip()
+    return Product(
+        id=f"keh-camera-{model['slug']}",
+        category="cameras",
+        category_label="Cameras",
+        product_type="camera_body",
+        brand=brand,
+        model=short_model,
+        aliases=[model_name],
+        metadata={
+            "provider_scope": "keh",
+            "keh_model_slug": model["slug"],
+            "source": "keh_feed",
+        },
+    )
+
+
+def _product_match_for_camera_model(model: dict[str, Any], confidence: float) -> ProductMatch:
+    catalog_product_id = model.get("catalog_product_id")
+    product = next(
+        (item for item in list_products("cameras") if item.id == catalog_product_id),
+        None,
+    )
+    if product is None:
+        product = _dynamic_keh_camera_product(model)
+    else:
+        product = product.model_copy(
+            update={
+                "metadata": {
+                    **product.metadata,
+                    "provider_scope": "ebay_keh",
+                    "keh_model_slug": model["slug"],
+                    "source": "pricesift_catalog",
+                }
+            }
+        )
+    return ProductMatch(product=product, confidence=max(0.0, min(confidence, 1.0)), matched_alias=model["model_name"])
+
+
+def suggest_keh_camera_products(query: str, limit: int = 8) -> list[ProductMatch]:
+    if not keh_public_results_enabled() or len(query.strip()) < 2:
+        return []
+    ranked = sorted(
+        (
+            (_camera_match_score(query, str(model["model_name"])), model)
+            for model in _camera_model_groups()
+        ),
+        key=lambda pair: (-pair[0], str(pair[1]["model_name"]).lower()),
+    )
+    return [
+        _product_match_for_camera_model(model, score)
+        for score, model in ranked[: max(1, min(limit, 20))]
+        if score >= 0.45
+    ]
+
+
+def match_keh_camera_product(query: str) -> ProductMatch | None:
+    matches = suggest_keh_camera_products(query, limit=3)
+    if not matches or matches[0].confidence < 0.72:
+        return None
+    if len(matches) > 1 and matches[1].confidence >= matches[0].confidence - 0.04:
+        return None
+    return matches[0]
+
+
 def _all_active_lens_inventory() -> list[dict[str, Any]]:
     if database_configured():
         try:
@@ -781,82 +1062,80 @@ def keh_lens_builder(
     }
 
 
-def public_keh_listings(product: Product, limit: int = 50) -> list[Listing]:
-    """Return public-pilot KEH listings for one exact camera product.
+def _keh_item_to_listing(item: dict[str, Any], product: Product) -> Listing | None:
+    grade_bonus = {"LN": 12, "LN-": 10, "EX+": 8, "EX": 6, "BGN": 2, "UG": -5}
+    if not item.get("active", True) or not item.get("in_stock") or not item.get("is_for_sale"):
+        return None
+    price = _float(item.get("price"))
+    affiliate_url = str(item.get("affiliate_url") or "").strip()
+    title = str(item.get("title") or "").strip()
+    if price is None or not affiliate_url or not title:
+        return None
 
-    The feed remains shadow-only for every product except the explicit public
-    whitelist. KEH inventory is already exact-product matched during sync, so
-    this adapter only exposes active, in-stock, for-sale rows as normal
-    PriceSift fixed-price listings.
-    """
+    grade_code = str(item.get("condition_grade_code") or "").strip()
+    grade_label = str(item.get("condition_grade_label") or "").strip()
+    condition_parts = ["Used"]
+    if grade_code:
+        condition_parts.append(grade_code)
+    if grade_label:
+        condition_parts.append(grade_label)
+
+    warning_labels: list[str] = []
+    shipping = 0.0
+    if price < 75:
+        warning_labels.append("Shipping confirmed at checkout")
+
+    listing = Listing(
+        provider="KEH",
+        title=title,
+        price=price,
+        shipping=shipping,
+        total_price=round(price + shipping, 2),
+        condition=" · ".join(condition_parts),
+        seller_rating=None,
+        seller_feedback_score=None,
+        url=affiliate_url,
+        image_url=item.get("image_url") or None,
+        affiliate_url_used=True,
+        affiliate_url_has_campaign_id=True,
+        listing_type="fixed_price",
+        buying_options=["FIXED_PRICE"],
+        warning_labels=warning_labels,
+    )
+    listing.score = round(
+        score_listing(listing, product) + 12 + grade_bonus.get(grade_code, 0),
+        2,
+    )
+    return listing
+
+
+def public_keh_listings(product: Product, limit: int = 50) -> list[Listing]:
+    """Return KEH listings for an exact catalog or KEH-native camera model."""
 
     if (
         product.category != "cameras"
         or product.product_type != "camera_body"
-        or not product_is_public(product.id)
+        or not keh_public_results_enabled()
     ):
         return []
 
-    items = list_keh_inventory(
-        limit=max(1, min(limit, 200)),
-        status="matched",
-        product_id=product.id,
-    )
-    listings: list[Listing] = []
-    grade_bonus = {"LN": 12, "LN-": 10, "EX+": 8, "EX": 6, "BGN": 2, "UG": -5}
-
-    for item in items:
-        if not item.get("active", True):
-            continue
-        if not item.get("in_stock") or not item.get("is_for_sale"):
-            continue
-
-        price = _float(item.get("price"))
-        affiliate_url = str(item.get("affiliate_url") or "").strip()
-        title = str(item.get("title") or "").strip()
-        if price is None or not affiliate_url or not title:
-            continue
-
-        grade_code = str(item.get("condition_grade_code") or "").strip()
-        grade_label = str(item.get("condition_grade_label") or "").strip()
-        condition_parts = ["Used"]
-        if grade_code:
-            condition_parts.append(grade_code)
-        if grade_label:
-            condition_parts.append(grade_label)
-
-        warning_labels: list[str] = []
-        # KEH currently offers free standard ground shipping on qualifying US
-        # orders over $75. Every public pilot camera body should clear that
-        # threshold; lower-price rows stay visible but do not claim free
-        # shipping without a feed-provided delivery cost.
-        shipping = 0.0
-        if price < 75:
-            warning_labels.append("Shipping confirmed at checkout")
-
-        listing = Listing(
-            provider="KEH",
-            title=title,
-            price=price,
-            shipping=shipping,
-            total_price=round(price + shipping, 2),
-            condition=" · ".join(condition_parts),
-            seller_rating=None,
-            seller_feedback_score=None,
-            url=affiliate_url,
-            image_url=item.get("image_url") or None,
-            affiliate_url_used=True,
-            affiliate_url_has_campaign_id=True,
-            listing_type="fixed_price",
-            buying_options=["FIXED_PRICE"],
-            warning_labels=warning_labels,
+    keh_slug = str(product.metadata.get("keh_model_slug") or "").strip()
+    if product.metadata.get("provider_scope") == "keh" and keh_slug:
+        model = _keh_camera_model_group(keh_slug)
+        items = list(model.get("listings") or []) if model else []
+    elif product_is_public(product.id):
+        items = list_keh_inventory(
+            limit=max(1, min(limit, 200)),
+            status="matched",
+            product_id=product.id,
         )
-        # Neutralize the generic missing-marketplace-feedback penalty for a
-        # specialist retailer, then give a small structured-grade adjustment.
-        listing.score = round(
-            score_listing(listing, product) + 12 + grade_bonus.get(grade_code, 0),
-            2,
-        )
-        listings.append(listing)
+    else:
+        return []
+
+    listings = [
+        listing
+        for item in items[: max(1, min(limit, 200))]
+        if (listing := _keh_item_to_listing(item, product)) is not None
+    ]
 
     return sorted(listings, key=lambda item: item.score, reverse=True)

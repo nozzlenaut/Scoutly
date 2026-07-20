@@ -72,7 +72,7 @@ export function ShippingQaLab({ token }: { token: string }) {
           <p className="text-sm uppercase tracking-[0.22em] text-sky-200/60">Private experiment</p>
           <h2 className="mt-2 text-2xl font-black text-sky-100">Shipping ZIP lab</h2>
           <p className="mt-2 max-w-4xl text-sm text-slate-400">
-            Sends a buyer ZIP to eBay, filters to listings eBay says can ship there, then opens each item detail to measure how often cost, method, and delivery dates are actually returned. Nothing here changes public search yet.
+            Sends a buyer ZIP to eBay, filters to listings eBay says can ship there, then opens each item detail to measure how often cost, method, and delivery dates are returned. This diagnostic reruns the query; the public lookup checks only the already-visible listings and does not change ranking.
           </p>
         </div>
       </div>

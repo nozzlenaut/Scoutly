@@ -9,6 +9,7 @@ import { PublicBookResults } from "@/components/PublicBookResults";
 import { SearchForm } from "@/components/SearchForm";
 import { SearchTransitionGuard } from "@/components/SearchTransitionGuard";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
+import { DeliveryEstimateLookup } from "@/components/DeliveryEstimateLookup";
 import { SiteFooter } from "@/components/SiteFooter";
 import { buildEbaySearchUrl, buildOutboundUrl, searchDeals, searchPublicBooksByIsbn } from "@/lib/api";
 import { getCategoryById, getSearchCategoryById } from "@/lib/categoryCatalog";
@@ -161,6 +162,7 @@ export default async function SearchPage({
             initialUsOnly={usOnly}
             compact
           />
+          {usOnly ? <DeliveryEstimateLookup results={bookData.top_results} /> : null}
         </section>
         <SearchTransitionGuard>
           <PublicBookResults data={bookData} query={rawQuery} />
@@ -177,6 +179,12 @@ export default async function SearchPage({
   });
   const resolved = data.resolved_product;
   const hasKehResults = data.results.some((result) => result.provider.toLowerCase() === "keh");
+  const isKehOnly = resolved?.product.metadata?.provider_scope === "keh";
+  const providerLabel = isKehOnly
+    ? "Live KEH results"
+    : hasKehResults
+      ? "Live eBay + KEH results"
+      : "Live eBay results";
   const likelyAlternatives = (data.suggested_products || [])
     .filter((match) => match.confidence >= 0.8)
     .slice(0, 4);
@@ -246,8 +254,10 @@ export default async function SearchPage({
           key={`${category.id}:${rawQuery}`}
           initialCategoryId={category.id}
           initialQuery={rawQuery}
+          initialUsOnly={usOnly}
           compact
         />
+        {usOnly ? <DeliveryEstimateLookup results={data.results} /> : null}
       </section>
 
       <SearchTransitionGuard>
@@ -261,8 +271,13 @@ export default async function SearchPage({
             </h1>
             <div className="mt-3 space-y-2 text-sm text-slate-300">
               <p>
-                Catalog item: {resolved.product.display_name} · Product match confidence {Math.round(resolved.confidence * 100)}%
+                {isKehOnly ? "KEH camera model" : "Catalog item"}: {resolved.product.display_name} · Product match confidence {Math.round(resolved.confidence * 100)}%
               </p>
+              {isKehOnly ? (
+                <p className="text-slate-400">
+                  This model comes from KEH’s standardized current inventory and is not mapped to PriceSift’s tuned eBay catalog, so no eBay search was sent.
+                </p>
+              ) : null}
               {category.id === "consoles" ? (
                 <p className="text-slate-400">
                   {resolved.product.variant?.includes("Edition")
@@ -274,7 +289,7 @@ export default async function SearchPage({
           </div>
           <div className="flex flex-col items-start gap-3 sm:items-end">
             <p className="text-sm text-slate-300">
-              {hasKehResults ? "Live eBay + KEH results" : "Live eBay results"} · Up to 3 Buy It Now options
+              {providerLabel} · Up to 3 Buy It Now options
               {usOnly ? " · eBay limited to US-located items" : ""}
             </p>
             <ShareSearchButton
@@ -313,33 +328,39 @@ export default async function SearchPage({
               empty boxes or packaging, accessory-only listings, broken items,
               and unclear variation listings when those signals are detected.
             </p>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <a
-                href={broaderEbayUrl}
-                target="_blank"
-                rel="sponsored noreferrer"
-                className="w-fit rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
-              >
-                View broader Buy It Now results on eBay
-              </a>
-              <span className="text-xs leading-5 text-amber-100/75">
-                PriceSift’s listing-quality filters do not apply after you open
-                the broader eBay search.
-              </span>
-            </div>
-            <p className="mt-4 text-sm text-amber-100/90">
-              PriceSift is also checking ending-soon auctions below.
-            </p>
+            {!isKehOnly ? (
+              <>
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <a
+                    href={broaderEbayUrl}
+                    target="_blank"
+                    rel="sponsored noreferrer"
+                    className="w-fit rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
+                  >
+                    View broader Buy It Now results on eBay
+                  </a>
+                  <span className="text-xs leading-5 text-amber-100/75">
+                    PriceSift’s listing-quality filters do not apply after you open
+                    the broader eBay search.
+                  </span>
+                </div>
+                <p className="mt-4 text-sm text-amber-100/90">
+                  PriceSift is also checking ending-soon auctions below.
+                </p>
+              </>
+            ) : null}
           </div>
         )}
 
-        <AuctionResults
-          query={data.query}
-          category={category.id}
-          productId={resolved?.product.id}
-          resolved={Boolean(resolved)}
-          usOnly={usOnly}
-        />
+        {!isKehOnly ? (
+          <AuctionResults
+            query={data.query}
+            category={category.id}
+            productId={resolved?.product.id}
+            resolved={Boolean(resolved)}
+            usOnly={usOnly}
+          />
+        ) : null}
       </SearchTransitionGuard>
     </PageShell>
   );

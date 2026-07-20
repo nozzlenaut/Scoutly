@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.35
+
+- Groups every current KEH camera-body title into a searchable model and publishes those models through a public `/cameras` directory.
+- Gives catalog-matched cameras eBay + KEH coverage while hard-blocking eBay and auctions for additional KEH-native models.
+- Adds stable, indexable `/cameras/[slug]` model pages with current KEH inventory, canonical metadata, and dynamic sitemap entries; arbitrary `/search` pages remain `noindex`.
+- Keeps directory payloads compact while model pages expose the three lowest-priced current KEH copies.
+- Adds an optional delivery-ZIP lookup for the visible eBay listings when “US listings only” is active.
+- Sends the ZIP only in a POST body, strips eBay’s echoed destination from the response, and does not save it in analytics, URLs, logs, or browser storage.
+- Adds exact eBay marketplace item IDs to result payloads so delivery checks never broaden or rerun the product search.
+- Adds KEH provider-boundary, camera grouping, stable discovery, and public delivery privacy regressions; 235 backend tests and the Next.js production build pass.
+
 ## v0.6.34
 
 - Expands the fixed-price eBay candidate pool from 65 to 100 for PlayStation 5-family, PlayStation 4 Slim, Xbox Series S, and Xbox Series X searches that were still exhausting every candidate.

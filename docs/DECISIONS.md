@@ -21,10 +21,11 @@ These are settled product and process decisions. Revisit them only when real evi
 
 ## Provider coverage
 
-1. Cameras may use eBay and KEH.
+1. Catalog-matched cameras may use eBay and KEH.
 2. Public lenses use KEH only for now.
 3. Public eBay lens search stays disabled until matching is trustworthy.
-4. KEH camera publication follows the confidently matched active camera-body catalog, not a small hard-coded pilot.
+4. KEH’s standardized camera titles are grouped into searchable models automatically.
+5. A camera without a confident PriceSift catalog match is KEH-only and must never be sent to eBay.
 
 ## User experience and trust
 
@@ -33,6 +34,7 @@ These are settled product and process decisions. Revisit them only when real evi
 3. Affiliate status does not change displayed prices or ranking rules.
 4. Users should be able to report inaccurate, incomplete, broken, or unrelated results.
 5. PriceSift should prefer an honest no-result over a convincing wrong result.
+6. A delivery ZIP is optional, used only for the current exact-listing eBay estimate, and is never persisted in URLs, analytics, logs, or browser storage.
 
 ## Growth and scope
 

@@ -283,6 +283,7 @@ def ebay_item_to_listing(
         warning_labels=_listing_warning_labels(title),
         item_location=_item_location_label(item),
         item_group_type=item.get("itemGroupType"),
+        marketplace_item_id=str(item.get("itemId") or "").strip() or None,
     )
 
 

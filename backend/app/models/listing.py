@@ -23,3 +23,4 @@ class Listing(BaseModel):
     warning_labels: list[str] = Field(default_factory=list)
     item_location: str | None = None
     item_group_type: str | None = None
+    marketplace_item_id: str | None = None

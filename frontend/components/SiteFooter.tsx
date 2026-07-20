@@ -6,6 +6,8 @@ export function SiteFooter() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p>PriceSift may earn from qualifying purchases through affiliate links.</p>
         <div className="flex gap-4">
+          <Link href="/cameras" className="text-cyan-200 hover:text-cyan-100">Cameras</Link>
+          <Link href="/lenses" className="text-cyan-200 hover:text-cyan-100">Lenses</Link>
           <Link href="/feedback" className="text-cyan-200 hover:text-cyan-100">Beta feedback</Link>
           <Link href="/disclosure" className="text-cyan-200 hover:text-cyan-100">Affiliate disclosure</Link>
         </div>

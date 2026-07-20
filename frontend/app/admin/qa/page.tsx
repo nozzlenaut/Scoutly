@@ -124,7 +124,7 @@ export default async function QaPage({
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">PriceSift admin</p>
           <h1 className="mt-2 text-4xl font-black">Search QA workbench</h1>
           <p className="mt-3 max-w-4xl text-slate-400">
-            Test exact-item matching, the KEH Lens Lab, and ZIP-specific eBay shipping coverage before any behavior reaches the public search. Saved search attempts remain attached to their original case IDs.
+            Test exact-item matching, the KEH Lens Lab, and deeper ZIP-specific eBay shipping coverage. The public ZIP lookup checks only the visible listings and never changes ranking. Saved search attempts remain attached to their original case IDs.
           </p>
         </div>
 

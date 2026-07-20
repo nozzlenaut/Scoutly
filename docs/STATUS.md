@@ -1,6 +1,6 @@
 # PriceSift current status
 
-_Last updated: July 19, 2026_
+_Last updated: July 20, 2026_
 
 This is the living project snapshot. Update this file when production behavior, provider coverage, known issues, or the immediate plan changes. Use the changelog only for history.
 
@@ -14,7 +14,7 @@ Production: https://www.pricesift.app/
 
 ## Current release
 
-- Release: v0.6.31 stabilization and observation, plus a private shipping QA experiment
+- Release: v0.6.35 KEH-native camera discovery, stable camera pages, and optional public delivery estimates
 - Internal repository name: Scoutly
 - Deployment: Vercel frontend + Railway backend from `main`
 - Storage: PostgreSQL in production, local JSON fallback for development
@@ -25,7 +25,7 @@ Production: https://www.pricesift.app/
 
 | Category | Status | Providers | Notes |
 |---|---|---|---|
-| Cameras | Active | eBay + KEH | Exact camera bodies; KEH uses confidently matched active catalog models |
+| Cameras | Active | eBay + KEH | Catalog matches use both providers; additional KEH-standardized models stay KEH-only |
 | Lenses | Beta | KEH only | Public eBay lens search intentionally blocked |
 | Consoles | Active | eBay | Core models with storage, drive, color, and revision variants |
 | CPUs | Active | eBay | Consumer desktop specification builder with suffix-safe matching |
@@ -36,13 +36,15 @@ Production: https://www.pricesift.app/
 
 ## Validation snapshot
 
+- Automated tests: 235 passing
 - QA cases reviewed: 106
 - Pass: 85
 - Top-3 only: 3
 - Safe no-inventory: 18
 - Clear failures: 0
 - Camera/lens expansion: 49 latest cases, 45 pass, 2 top-3, 2 no-inventory, 0 fail
-- Private Shipping ZIP Lab added to `/admin/qa` to test buyer-specific deliverability, shipping cost, method/speed, delivery windows, and import-charge coverage before exposing any of it publicly
+- Optional public delivery lookup is available when “US listings only” is active. It checks the three visible eBay listings and never saves the buyer ZIP.
+- `/cameras` and stable `/cameras/[slug]` pages expose current KEH model inventory and are added to the dynamic sitemap; arbitrary `/search` URLs remain `noindex`.
 
 Tests are treated as data. A failure must be classified as related/blocking, related/non-blocking, unrelated existing, or environment-related before deciding whether to ship.
 
@@ -59,7 +61,7 @@ The questions are useful even if the commenter did not fully test the site becau
 Current response and likely approach:
 
 - **Condition:** PriceSift remains used-focused. Explore category-aware condition thresholds rather than one universal scale, then store the buyer's choice locally so it persists across searches.
-- **Shipping:** eBay's Browse API supports `deliveryCountry`, `deliveryPostalCode`, and buyer contextual location. Test actual field coverage privately first; only promote ZIP entry publicly if shipping totals and delivery estimates are consistently useful.
+- **Shipping:** The public lookup is optional, limited to US-only searches and the visible eBay results, and does not persist the ZIP. Missing eBay delivery fields remain an honest “not provided.”
 - **Unavailable listings:** Keep live search and manual reporting, then investigate a lightweight pre-click availability recheck. If a listing has ended, remove it and promote the next ranked eligible option instead of leaving the user at a dead end.
 
 ## Current observation period
@@ -75,7 +77,7 @@ Watch for:
 - Missing products
 - Bad matches or useful listings filtered out
 - Search flows people start but do not finish
-- Shipping field coverage by category and ZIP in the private lab
+- Public delivery-estimate coverage by category and listing
 
 Outreach currently in motion:
 
@@ -87,20 +89,19 @@ Outreach currently in motion:
 
 - Public eBay lens results remain disabled because listing identity and bundle quality are not trustworthy enough yet.
 - `/admin/prices` has previously looped or shown `cannot load` after token entry; it is deferred unless price-history administration becomes immediately necessary.
-- Delivery dates and shipping methods may be missing for some listings even when cost and ZIP deliverability are returned.
-- The Shipping ZIP Lab is private and diagnostic; it does not yet save a buyer ZIP or alter public ranking.
+- Delivery dates and shipping methods may be missing for some listings. The public lookup reports that honestly and does not alter ranking.
+- KEH-native camera identity depends on KEH’s standardized title. Unmatched models never receive an eBay search until they confidently join the tuned PriceSift catalog.
 - Traffic is still too small to justify optimizing percentages or adding features based on tiny samples.
 - Do not add another category merely because the site is quiet.
 
 ## Next three likely moves
 
-1. Run Shipping ZIP Lab tests across cameras, GPUs, consoles, books, and a few domestic/international listings; record how often cost, method, dates, and import charges are returned.
-2. Review the first real searches, no-results, clicks, and feedback as a group before deciding whether ZIP-based shipping or saved condition thresholds deserve the next public release.
+1. Observe the new camera directory, KEH-native queries, and provider-scope counts after a production feed refresh.
+2. Record how often the optional public ZIP lookup returns cost, method, and delivery dates across supported eBay categories.
 3. Prototype the smallest stale-listing recovery flow: recheck availability before outbound redirect and automatically offer the next ranked option when practical.
 
 ## Deliberately deferred
 
-- Public ZIP collection until the private shipping tests show reliable value
 - Public eBay lenses
 - More categories without evidence
 - Major homepage redesigns

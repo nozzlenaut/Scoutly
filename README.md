@@ -22,7 +22,7 @@ Live site: https://www.pricesift.app/
 
 | Category | Status | Public providers | Search style |
 |---|---|---|---|
-| Cameras | Active | eBay + KEH | Exact camera body |
+| Cameras | Active | eBay + KEH | Catalog bodies plus KEH-standardized camera models |
 | Lenses | Beta | KEH only | Mount, prime/zoom, focal group, optional brand |
 | Consoles | Active | eBay | Exact model with grouped variants |
 | CPUs | Active | eBay | Specification builder |
@@ -32,6 +32,10 @@ Live site: https://www.pricesift.app/
 | LEGO | Beta | eBay | Exact set name or number |
 
 Public eBay lens results remain disabled while lens titles, mounts, bundles, and accessory listings are tested privately.
+
+Current KEH camera titles are automatically grouped into searchable models. A confident PriceSift catalog match can compare eBay and KEH; every additional model stays KEH-only. Stable `/cameras/[slug]` pages expose current inventory without making arbitrary search-result URLs indexable.
+
+When “US listings only” is active, a buyer can optionally request delivery estimates for the visible eBay listings. The ZIP is sent in a POST body for that one lookup and is not stored, logged in analytics, added to a URL, or saved in browser storage.
 
 ## Product principles
 
@@ -76,7 +80,7 @@ The frontend runs at `http://localhost:3000`; the backend runs at `http://localh
 - Vercel deploys the frontend from `main`.
 - Railway deploys the backend and scheduled jobs from `main`.
 - PostgreSQL stores production analytics, reports, QA evaluations, and price history.
-- KEH matching changes require a fresh sync from `/admin/keh` after deployment.
+- Railway refreshes the KEH feed every six hours; `/admin/keh` can request a fresh sync after matching changes are deployed.
 
 ## Project references
 

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Query, status
 
-from app.catalog.catalog import suggest_products
 from app.models.search import SearchResponse
 from app.services.search_service import search_auction_deals, search_best_deals_with_auctions
 from app.services.analytics_store import SearchEvent, log_search_event
+from app.services.product_discovery import suggest_discoverable_products
 
 router = APIRouter()
 
@@ -59,7 +59,7 @@ async def search(
         query=q,
         category=category,
         resolved_product=resolved_product,
-        suggested_products=suggest_products(q, category, limit=5),
+        suggested_products=suggest_discoverable_products(q, category, limit=5),
         results=results,
         auction_results=auction_results,
         diagnostics=diagnostics,
@@ -88,7 +88,7 @@ async def search_auctions(
         query=q,
         category=category,
         resolved_product=resolved_product,
-        suggested_products=suggest_products(q, category, limit=5),
+        suggested_products=suggest_discoverable_products(q, category, limit=5),
         results=[],
         auction_results=auction_results,
         diagnostics=diagnostics,

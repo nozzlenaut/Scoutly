@@ -15,6 +15,7 @@ from app.ranking.scorer import best_listing, is_bad_listing, rejection_reasons, 
 from app.services.feedback_store import filter_reported_listings, log_filtered_listings
 from app.services.keh_feed import public_keh_listings
 from app.services.price_store import build_price_context, record_price_snapshot
+from app.services.product_discovery import resolve_discoverable_product
 
 
 def _build_providers():
@@ -202,6 +203,12 @@ def _catalog_product_required_but_missing(category: str | None, product_match: P
     return normalize_category(category) in SUPPORTED_CATALOG_CATEGORIES and product_match is None
 
 
+def _provider_keys_for_product(provider_keys: list[str], product: Product | None) -> list[str]:
+    if product is not None and product.metadata.get("provider_scope") == "keh":
+        return []
+    return provider_keys
+
+
 def _parse_ebay_dt(value: str | None) -> datetime | None:
     if not value:
         return None
@@ -311,7 +318,7 @@ async def search_best_deals(
     category: str | None = None,
     item_location_country: str | None = None,
 ) -> tuple[ProductMatch | None, list[Listing]]:
-    product_match = match_product(query, category)
+    product_match = resolve_discoverable_product(query, category)
     if _catalog_product_required_but_missing(category, product_match):
         return None, []
     product = product_match.product if product_match else None
@@ -319,7 +326,7 @@ async def search_best_deals(
     search_products = _search_product_scopes(product)
     results: list[Listing] = []
 
-    for provider_key in provider_keys:
+    for provider_key in _provider_keys_for_product(provider_keys, product):
         provider_candidates: list[Listing] = []
         for scoped_product in search_products:
             for provider_query in _provider_queries_for_product(query, scoped_product):
@@ -353,7 +360,7 @@ async def search_best_deals_with_auctions(
     snapshot_source: str = "search",
     item_location_country: str | None = None,
 ) -> tuple[ProductMatch | None, list[Listing], list[Listing], SearchDiagnostics, PriceContext]:
-    product_match = match_product(query, category)
+    product_match = resolve_discoverable_product(query, category)
     if _catalog_product_required_but_missing(category, product_match):
         return None, [], [], SearchDiagnostics(), PriceContext()
     product = product_match.product if product_match else None
@@ -366,7 +373,7 @@ async def search_best_deals_with_auctions(
     provider_candidate_counts: dict[str, int] = {}
     provider_filtered_counts: dict[str, int] = {}
 
-    for provider_key in provider_keys:
+    for provider_key in _provider_keys_for_product(provider_keys, product):
         provider_fixed_candidates: list[Listing] = []
         provider_auction_candidates: list[Listing] = []
         provider_price_candidates.setdefault(provider_key.lower(), [])
@@ -491,7 +498,7 @@ async def search_auction_deals(
     auction_hours: int = 24,
     item_location_country: str | None = None,
 ) -> tuple[ProductMatch | None, list[Listing], SearchDiagnostics]:
-    product_match = match_product(query, category)
+    product_match = resolve_discoverable_product(query, category)
     if _catalog_product_required_but_missing(category, product_match):
         return None, [], SearchDiagnostics()
     product = product_match.product if product_match else None
@@ -500,7 +507,7 @@ async def search_auction_deals(
     auction_results: list[Listing] = []
     diagnostics = SearchDiagnostics()
 
-    for provider_key in provider_keys:
+    for provider_key in _provider_keys_for_product(provider_keys, product):
         if provider_key.lower() != "ebay":
             continue
         provider_auction_candidates: list[Listing] = []

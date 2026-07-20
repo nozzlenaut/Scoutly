@@ -42,6 +42,7 @@ export type SearchResult = {
   warning_labels: string[];
   item_location: string | null;
   item_group_type: string | null;
+  marketplace_item_id: string | null;
 };
 
 export type PriceContext = {
@@ -187,6 +188,47 @@ export type KehOverview = {
 };
 
 export type KehLensFacet = { value: string; label: string; count: number };
+
+export type KehCameraListing = {
+  aw_product_id: string;
+  title: string;
+  price: number | null;
+  currency: string;
+  condition_grade_code?: string | null;
+  condition_grade_label?: string | null;
+  affiliate_url: string;
+  image_url?: string | null;
+  mpn?: string | null;
+};
+
+export type KehCameraModel = {
+  model_key: string;
+  slug: string;
+  model_name: string;
+  brand: string;
+  catalog_product_id?: string | null;
+  catalog_product_label?: string | null;
+  provider_scope: "ebay_keh" | "keh";
+  listing_count: number;
+  lowest_price?: number | null;
+  highest_price?: number | null;
+  currency: string;
+  condition_grades: string[];
+  image_url?: string | null;
+  listings: KehCameraListing[];
+};
+
+export type KehCameraCatalogResponse = {
+  summary: {
+    model_count: number;
+    listing_count: number;
+    filtered_model_count: number;
+    catalog_model_count: number;
+    keh_only_model_count: number;
+  };
+  query?: string | null;
+  models: KehCameraModel[];
+};
 
 export type KehLensListing = {
   aw_product_id: string;
@@ -477,6 +519,49 @@ export async function searchAuctions(
     throw new Error("Auction search failed");
   }
 
+  return response.json();
+}
+
+export type DeliveryEstimateOption = {
+  cost?: number | null;
+  currency?: string | null;
+  carrier?: string | null;
+  service?: string | null;
+  speed?: string | null;
+  min_delivery?: string | null;
+  max_delivery?: string | null;
+};
+
+export type DeliveryEstimateItem = {
+  item_id: string;
+  title: string;
+  shipping_cost?: number | null;
+  total_price?: number | null;
+  detail_loaded: boolean;
+  detail_error?: string | null;
+  best_shipping_option?: DeliveryEstimateOption | null;
+};
+
+export type DeliveryEstimateResponse = {
+  country: string;
+  returned: number;
+  items: DeliveryEstimateItem[];
+};
+
+export async function getDeliveryEstimates(
+  postalCode: string,
+  itemIds: string[],
+): Promise<DeliveryEstimateResponse> {
+  const response = await fetch(`${baseUrl}/api/shipping/estimates`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ postal_code: postalCode, country: "US", item_ids: itemIds }),
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    const detail = await response.json().catch(() => null);
+    throw new Error(detail?.detail || `Delivery estimate failed (${response.status})`);
+  }
   return response.json();
 }
 
@@ -823,6 +908,28 @@ export async function syncKehFeed(token: string): Promise<KehSyncRun> {
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
     throw new Error(detail || `KEH sync failed (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function getPublicKehCameraCatalog(
+  options: { query?: string; limit?: number } = {},
+): Promise<KehCameraCatalogResponse> {
+  const params = new URLSearchParams({ limit: String(options.limit ?? 500) });
+  if (options.query) params.set("q", options.query);
+  const response = await fetch(`${baseUrl}/api/keh/cameras/public?${params.toString()}`, { cache: "no-store" });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(detail || `Public KEH camera catalog failed (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function getPublicKehCameraModel(slug: string): Promise<KehCameraModel> {
+  const response = await fetch(`${baseUrl}/api/keh/cameras/public/${encodeURIComponent(slug)}`, { cache: "no-store" });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(detail || `Public KEH camera model failed (${response.status})`);
   }
   return response.json();
 }

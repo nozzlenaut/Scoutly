@@ -53,6 +53,31 @@ Example:
 /api/search?q=sony%20a7iii&category=cameras&providers=ebay,amazon
 ```
 
+For cameras, a catalog match may search eBay and add exact KEH inventory. A model discovered only through KEH resolves with `metadata.provider_scope="keh"`; the API returns KEH listings without sending any eBay or auction request.
+
+## Public KEH camera models
+
+```text
+GET /api/keh/cameras/public?q=nikon&limit=500
+GET /api/keh/cameras/public/nikon-z5-body
+```
+
+The directory response groups current, in-stock KEH camera titles into models and marks each model as `ebay_keh` or `keh`. The single-model endpoint includes up to three current KEH listings.
+
+## POST /api/shipping/estimates
+
+Requests buyer-specific delivery data for up to three exact eBay item IDs:
+
+```json
+{
+  "postal_code": "48035",
+  "country": "US",
+  "item_ids": ["v1|123456789012|0"]
+}
+```
+
+The endpoint accepts US ZIP codes only. The ZIP is used for the outbound eBay request but is not returned or persisted.
+
 ## Feedback and outbound tracking
 
 ### `GET /api/out`

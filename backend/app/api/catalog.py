@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Query
 
-from app.catalog.catalog import list_products, match_product, suggest_products
+from app.catalog.catalog import list_products
 from app.models.product import Product, ProductMatch
+from app.services.product_discovery import resolve_discoverable_product, suggest_discoverable_products
 
 router = APIRouter()
 
@@ -16,7 +17,7 @@ def resolve_product(
     q: str = Query(..., min_length=2),
     category: str | None = Query(None),
 ) -> ProductMatch | None:
-    return match_product(q, category)
+    return resolve_discoverable_product(q, category)
 
 
 @router.get("/products/suggest", response_model=list[ProductMatch])
@@ -25,4 +26,4 @@ def product_suggestions(
     category: str | None = Query(None),
     limit: int = Query(8, ge=1, le=20),
 ) -> list[ProductMatch]:
-    return suggest_products(q, category, limit)
+    return suggest_discoverable_products(q, category, limit)

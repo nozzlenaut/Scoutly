@@ -10,6 +10,7 @@ from app.providers.ebay import EbayProvider
 
 
 POSTAL_CODE_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 -]{1,10}[A-Za-z0-9]$")
+US_POSTAL_CODE_PATTERN = re.compile(r"^\d{5}(?:-\d{4})?$")
 
 
 def _money(value: Any) -> tuple[float | None, str | None]:
@@ -233,5 +234,82 @@ async def run_shipping_probe(
         "search_total": payload.get("total"),
         "returned": len(items),
         "coverage": coverage,
+        "items": items,
+    }
+
+
+async def get_delivery_estimates(
+    item_ids: list[str],
+    postal_code: str,
+    country: str = "US",
+) -> dict[str, Any]:
+    """Load buyer-specific delivery data for exact eBay listings.
+
+    The postal code is used only for these outbound eBay requests. Callers send
+    it in a POST body; this function does not persist or log it.
+    """
+
+    clean_postal = postal_code.strip()
+    clean_country = country.strip().upper()
+    clean_ids = list(dict.fromkeys(item_id.strip() for item_id in item_ids if item_id.strip()))
+    if clean_country != "US":
+        raise ValueError("Delivery ZIP lookup currently supports US destinations only.")
+    if not US_POSTAL_CODE_PATTERN.fullmatch(clean_postal):
+        raise ValueError("ZIP code format is not valid.")
+    if not clean_ids:
+        raise ValueError("At least one eBay listing is required.")
+    if len(clean_ids) > 3:
+        raise ValueError("Delivery estimates are limited to the three visible eBay listings.")
+
+    provider = EbayProvider()
+    headers = await provider._request_headers()
+    headers["X-EBAY-C-ENDUSERCTX"] = _context_header(provider, clean_country, clean_postal)
+
+    items: list[dict[str, Any]] = []
+    async with httpx.AsyncClient(timeout=20) as client:
+        for item_id in clean_ids:
+            item_url = f"{provider.config.api_base}/buy/browse/v1/item/{quote(item_id, safe='')}"
+            detail, detail_error = await _fetch_item_detail(client, item_url, headers)
+            if detail:
+                item = _item_result({"itemId": item_id}, detail, detail_error)
+                best_option = item.get("best_shipping_option") or {}
+                # eBay can echo the destination in its shipping option. Return
+                # only the fields the public UI needs so the ZIP never comes
+                # back in the API response or reaches browser state twice.
+                public_option = {
+                    key: best_option.get(key)
+                    for key in (
+                        "cost",
+                        "currency",
+                        "carrier",
+                        "service",
+                        "speed",
+                        "min_delivery",
+                        "max_delivery",
+                    )
+                }
+                items.append({
+                    "item_id": item.get("item_id") or item_id,
+                    "title": item.get("title") or "eBay listing",
+                    "shipping_cost": item.get("shipping_cost"),
+                    "total_price": item.get("total_price"),
+                    "detail_loaded": True,
+                    "detail_error": detail_error,
+                    "best_shipping_option": public_option,
+                })
+            else:
+                items.append({
+                    "item_id": item_id,
+                    "title": "eBay listing",
+                    "detail_loaded": False,
+                    "detail_error": detail_error,
+                    "shipping_cost": None,
+                    "total_price": None,
+                    "best_shipping_option": None,
+                })
+
+    return {
+        "country": clean_country,
+        "returned": len(items),
         "items": items,
     }

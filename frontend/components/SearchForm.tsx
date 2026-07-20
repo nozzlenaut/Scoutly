@@ -331,7 +331,7 @@ export function SearchForm({
                   className="absolute left-0 right-0 top-16 z-[100] max-h-80 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/95 text-left shadow-2xl shadow-black/50 backdrop-blur"
                 >
                   <div className="border-b border-white/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-400">
-                    Catalog matches for {selectedCategory.label.toLowerCase()}
+                    Searchable models for {selectedCategory.label.toLowerCase()}
                   </div>
                   {suggestions.map((match, index) => {
                     const selected = index === activeSuggestionIndex;
@@ -354,8 +354,11 @@ export function SearchForm({
                             {match.product.display_name}
                           </span>
                           <span className="text-xs text-slate-300">
-                            Exact catalog item ·{" "}
-                            {match.product.product_type.replace("_", " ")}
+                            {match.product.metadata?.provider_scope === "keh"
+                              ? "Current KEH model · KEH only"
+                              : match.product.metadata?.provider_scope === "ebay_keh"
+                                ? "PriceSift catalog item · eBay + KEH"
+                                : `Exact catalog item · ${match.product.product_type.replace("_", " ")}`}
                           </span>
                         </span>
                         <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-1 text-xs font-medium text-cyan-100">
@@ -393,11 +396,20 @@ export function SearchForm({
           >
             {selectedCategory.id === "books"
               ? "Enter an ISBN-10 or ISBN-13. PriceSift searches that exact used-book edition; title-only searches are not sent to eBay."
-              : "Type or pick a supported catalog item. Unsupported text will not be sent to the marketplace."}
+              : selectedCategory.id === "cameras"
+                ? "Pick a PriceSift catalog camera for eBay + KEH, or a current KEH model for KEH-only results. Unsupported text is never sent to eBay."
+                : "Type or pick a supported catalog item. Unsupported text will not be sent to the marketplace."}
             {isLoading ? " Checking catalog…" : ""}
             {usOnly ? " Filtering eBay to US-located items; KEH results are unchanged." : ""}
             {isNavigating ? " Loading fresh results…" : ""}
           </p>
+          {selectedCategory.id === "cameras" ? (
+            <p className="mt-2 text-xs text-slate-400">
+              <a href="/cameras" className="font-semibold text-cyan-200 hover:text-cyan-100">
+                Browse every camera model currently available at KEH
+              </a>
+            </p>
+          ) : null}
         </>
       )}
 
