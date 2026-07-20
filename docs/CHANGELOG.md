@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.6.32
+
+- Expands fixed-price eBay console searches from 35 to 50 candidates so exact-model filters can search past the unusually dense accessory, wrong-model, incomplete, and broken console listings.
+- Keeps the 35-candidate limit for every other category and leaves all existing quality filters unchanged.
+
 ## v0.6.31
 
 - Completes the KEH camera and public KEH-only lens release after the prior commit added only the new lens page, component, and tests.

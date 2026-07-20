@@ -341,12 +341,15 @@ class EbayProvider(MarketplaceProvider):
             filters = ["conditions:{USED}", "buyingOptions:{FIXED_PRICE}"]
             if item_location_country:
                 filters.append(f"itemLocationCountry:{item_location_country.upper()}")
+            fixed_price_limit = (
+                "50" if (category or "").strip().lower() == "consoles" else "35"
+            )
             params = {
                 "q": query,
-                # Fetch fewer candidates now that we have stronger category and
-                # title filters. This keeps normal searches faster while still
-                # leaving enough inventory to return three good Buy It Now cards.
-                "limit": "35",
+                # Console searches are unusually noisy even inside eBay's console
+                # category. Give their exact-model filters a slightly deeper pool
+                # while keeping the faster 35-candidate limit everywhere else.
+                "limit": fixed_price_limit,
                 "sort": "price",
                 # Keep this conservative for now. Removing the condition filter caused
                 # eBay to return too many parts/accessory listings. Additional safe
