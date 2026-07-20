@@ -342,7 +342,7 @@ class EbayProvider(MarketplaceProvider):
             if item_location_country:
                 filters.append(f"itemLocationCountry:{item_location_country.upper()}")
             fixed_price_limit = (
-                "50" if (category or "").strip().lower() == "consoles" else "35"
+                "65" if (category or "").strip().lower() == "consoles" else "35"
             )
             params = {
                 "q": query,

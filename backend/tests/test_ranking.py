@@ -195,6 +195,26 @@ def test_rejects_faulty_cpu_and_partial_function_gpu_titles():
     assert is_bad_listing(clean_cpu, cpu) is False
 
 
+def test_rejects_defective_console_even_when_ebay_calls_it_used():
+    from app.catalog.catalog import match_product
+
+    product = match_product("Xbox Series X", category="consoles")
+    assert product is not None
+    listing = Listing(
+        provider="eBay",
+        title="Microsoft Xbox Series X Black Defective READ DESCRIPTION",
+        price=399.99,
+        shipping=0,
+        total_price=399.99,
+        condition="Used",
+        seller_rating=99.8,
+        seller_feedback_score=500,
+        url="https://www.ebay.com/itm/123456789012",
+    )
+
+    assert is_bad_listing(listing, product.product) is True
+
+
 def test_gpu_cooling_defects_are_rejected_but_negated_noise_is_allowed():
     from app.catalog.catalog import match_product
 

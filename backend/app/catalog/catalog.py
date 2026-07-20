@@ -22,6 +22,7 @@ GLOBAL_BAD_LISTING_TERMS = [
     "broken",
     "camera error",
     "damaged",
+    "defective",
     "does not work",
     "error please read",
     "faulty",

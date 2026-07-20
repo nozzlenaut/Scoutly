@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.6.33
+
+- Rejects listings labeled `defective` even when eBay reports their condition as Used.
+- Preserves the existing warning and ranking penalty for otherwise-clean `read description` listings.
+- Expands the console-only fixed-price candidate pool from 50 to 65 so filtering the defective result does not end the search at the same depth.
+
 ## v0.6.32
 
 - Expands fixed-price eBay console searches from 35 to 50 candidates so exact-model filters can search past the unusually dense accessory, wrong-model, incomplete, and broken console listings.

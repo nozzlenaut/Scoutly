@@ -10,6 +10,7 @@ BAD_TITLE_WORDS = [
 ]
 
 BAD_CONDITION_WORDS = [
+    "defective",
     "for parts",
     "not working",
     "parts only",
