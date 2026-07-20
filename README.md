@@ -35,7 +35,7 @@ Public eBay lens results remain disabled while lens titles, mounts, bundles, and
 
 Current KEH camera titles are automatically grouped into searchable models. A confident PriceSift catalog match can compare eBay and KEH; every additional model stays KEH-only. Stable `/cameras/[slug]` pages expose current inventory without making arbitrary search-result URLs indexable.
 
-When “US listings only” is active, a buyer can optionally request delivery estimates for the visible eBay listings. The ZIP is sent in a POST body for that one lookup and is not stored, logged in analytics, added to a URL, or saved in browser storage.
+When “US listings only” is active, an optional ZIP field appears directly in the search form. Results load first, then shipping totals and delivery windows fill into the matching eBay cards. The ZIP is sent in a POST body for that one lookup and is not stored, logged in analytics, added to a URL, or saved in browser storage.
 
 ## Product principles
 

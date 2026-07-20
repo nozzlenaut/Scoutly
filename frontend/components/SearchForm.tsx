@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { suggestProducts, type ProductMatch } from "@/lib/api";
 import { getCategory, searchCategories } from "@/lib/categoryCatalog";
+import { commitDeliveryZip, currentDeliveryZip } from "@/lib/ephemeralDelivery";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SpecSearchBuilder } from "@/components/SpecSearchBuilder";
 import { CpuSearchBuilder } from "@/components/CpuSearchBuilder";
@@ -24,6 +26,7 @@ export function SearchForm({
   initialUsOnly,
   compact = false,
 }: SearchFormProps) {
+  const router = useRouter();
   const initialCategory = getCategory(initialCategoryId);
   const [categoryId, setCategoryId] = useState(initialCategory.id);
   const selectedCategory = getCategory(categoryId);
@@ -34,6 +37,8 @@ export function SearchForm({
   );
   const [suggestions, setSuggestions] = useState<ProductMatch[]>([]);
   const [usOnly, setUsOnly] = useState(Boolean(initialUsOnly));
+  const [deliveryPostalCode, setDeliveryPostalCode] = useState("");
+  const [deliveryPostalError, setDeliveryPostalError] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionsEnabled, setSuggestionsEnabled] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
@@ -47,6 +52,12 @@ export function SearchForm({
   const listboxId = useId();
   const inputId = useId();
   const statusId = useId();
+  const deliveryPostalId = useId();
+
+  useEffect(() => {
+    const current = currentDeliveryZip();
+    if (current) setDeliveryPostalCode(current);
+  }, []);
 
   useEffect(() => {
     if (initialUsOnly !== undefined && initialUsOnly !== null) {
@@ -62,6 +73,11 @@ export function SearchForm({
 
   function changeUsOnly(next: boolean) {
     setUsOnly(next);
+    setDeliveryPostalError(null);
+    if (!next) {
+      setDeliveryPostalCode("");
+      commitDeliveryZip("");
+    }
     try {
       window.localStorage.setItem("pricesift:us-only", String(next));
     } catch {
@@ -137,14 +153,24 @@ export function SearchForm({
     setShowSuggestions(false);
     setActiveSuggestionIndex(-1);
     inputRef.current?.blur();
+    const currentDestination = `${window.location.pathname}${window.location.search}`;
+    if (currentDestination === destination) return;
     setIsNavigating(true);
     announceSearchStart();
-    window.location.assign(destination);
+    router.push(destination);
   }
 
   function submitSearch(value = query) {
     const cleaned = value.trim();
     if (!cleaned) return;
+
+    const cleanedPostalCode = usOnly ? deliveryPostalCode.trim() : "";
+    if (cleanedPostalCode && !/^\d{5}(?:-\d{4})?$/.test(cleanedPostalCode)) {
+      setDeliveryPostalError("Enter a five-digit US ZIP code.");
+      return;
+    }
+    setDeliveryPostalError(null);
+    commitDeliveryZip(cleanedPostalCode);
 
     const params = new URLSearchParams({ category: categoryId, q: cleaned });
     if (usOnly) params.set("us_only", "1");
@@ -280,9 +306,10 @@ export function SearchForm({
         <>
           <form
             onSubmit={handleSubmit}
-            className="relative flex w-full flex-col gap-3 sm:flex-row"
+            className="relative w-full"
           >
-            <div className="relative flex-1">
+            <div className="flex w-full flex-col gap-3 sm:flex-row">
+              <div className="relative flex-1">
               <label htmlFor={inputId} className="sr-only">
                 {selectedCategory.id === "books"
                   ? "Search by ISBN-10 or ISBN-13"
@@ -369,24 +396,37 @@ export function SearchForm({
                   })}
                 </div>
               ) : null}
+              </div>
+
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <button
+                  disabled={isNavigating}
+                  className="flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-cyan-300 px-7 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-wait disabled:opacity-80"
+                >
+                  {isNavigating ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950" />
+                      Searching…
+                    </>
+                  ) : (
+                    "Search"
+                  )}
+                </button>
+                <UsOnlyToggle checked={usOnly} onChange={changeUsOnly} />
+              </div>
             </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <button
-                disabled={isNavigating}
-                className="flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-cyan-300 px-7 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-wait disabled:opacity-80"
-              >
-                {isNavigating ? (
-                  <>
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950" />
-                    Searching…
-                  </>
-                ) : (
-                  "Search"
-                )}
-              </button>
-              <UsOnlyToggle checked={usOnly} onChange={changeUsOnly} />
-            </div>
+            {usOnly ? (
+              <DeliveryPostalField
+                inputId={deliveryPostalId}
+                value={deliveryPostalCode}
+                error={deliveryPostalError}
+                onChange={(value) => {
+                  setDeliveryPostalCode(value);
+                  setDeliveryPostalError(null);
+                }}
+              />
+            ) : null}
           </form>
 
           <p
@@ -414,10 +454,59 @@ export function SearchForm({
       )}
 
       {selectedCategory.id === "ram" || selectedCategory.id === "cpus" ? (
-        <div className="mt-4 flex justify-end">
-          <UsOnlyToggle checked={usOnly} onChange={changeUsOnly} />
+        <div className="mt-4">
+          <div className="flex justify-end">
+            <UsOnlyToggle checked={usOnly} onChange={changeUsOnly} />
+          </div>
+          {usOnly ? (
+            <DeliveryPostalField
+              inputId={deliveryPostalId}
+              value={deliveryPostalCode}
+              error={deliveryPostalError}
+              onChange={(value) => {
+                setDeliveryPostalCode(value);
+                setDeliveryPostalError(null);
+              }}
+            />
+          ) : null}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function DeliveryPostalField({
+  inputId,
+  value,
+  error,
+  onChange,
+}: {
+  inputId: string;
+  value: string;
+  error: string | null;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3 sm:flex-row sm:items-end sm:gap-4">
+      <label htmlFor={inputId} className="block w-full sm:w-48">
+        <span className="mb-1 block text-xs font-bold uppercase tracking-[0.16em] text-cyan-100">
+          Delivery ZIP (optional)
+        </span>
+        <input
+          id={inputId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          inputMode="numeric"
+          autoComplete="off"
+          maxLength={10}
+          placeholder="48035"
+          aria-invalid={Boolean(error)}
+          className="min-h-11 w-full rounded-xl border border-white/10 bg-white/10 px-4 text-white outline-none placeholder:text-slate-500 focus:border-cyan-300"
+        />
+      </label>
+      <p className={`flex-1 text-xs leading-5 ${error ? "text-amber-200" : "text-slate-400"}`} role={error ? "alert" : undefined}>
+        {error || "Delivery details will appear inside each eBay result. PriceSift does not save your ZIP."}
+      </p>
     </div>
   );
 }

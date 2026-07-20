@@ -1,4 +1,4 @@
-import type { SearchResult } from "@/lib/api";
+import type { DeliveryEstimateItem, SearchResult } from "@/lib/api";
 import { buildOutboundUrl } from "@/lib/api";
 import { ReportBadResultButton } from "@/components/ReportBadResultButton";
 
@@ -8,7 +8,23 @@ type Props = {
   category: string;
   productId?: string;
   variant?: "buy_now" | "auction";
+  deliveryStatus?: "idle" | "loading" | "done" | "error";
+  deliveryEstimate?: DeliveryEstimateItem | null;
 };
+
+function deliveryDate(value?: string | null): string | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function deliveryWindow(estimate: DeliveryEstimateItem): string {
+  const first = deliveryDate(estimate.best_shipping_option?.min_delivery);
+  const last = deliveryDate(estimate.best_shipping_option?.max_delivery);
+  if (first && last && first !== last) return `${first}–${last}`;
+  return first || last || "Delivery date not provided";
+}
 
 function formatEndDate(value: string | null): string | null {
   if (!value) return null;
@@ -45,13 +61,32 @@ function sellerTrustLabel(result: SearchResult): string | null {
   return null;
 }
 
-export function ResultCard({ result, query, category, productId, variant = "buy_now" }: Props) {
+export function ResultCard({
+  result,
+  query,
+  category,
+  productId,
+  variant = "buy_now",
+  deliveryStatus = "idle",
+  deliveryEstimate = null,
+}: Props) {
   const isAuction = variant === "auction" || result.listing_type === "auction";
   const endLabel = formatEndDate(result.item_end_date);
   const priceLabel = isAuction ? "Current bid" : "Item price";
   const combinedLabel = isAuction ? "Bid + shipping" : "Item + shipping";
   const trustLabel = sellerTrustLabel(result);
   const hasCaution = Boolean(trustLabel) || result.warning_labels.length > 0;
+  const hasEstimatedShipping = Boolean(
+    deliveryEstimate?.detail_loaded
+    && deliveryEstimate.shipping_cost !== null
+    && deliveryEstimate.shipping_cost !== undefined,
+  );
+  const displayedShipping = hasEstimatedShipping
+    ? Number(deliveryEstimate?.shipping_cost)
+    : result.shipping;
+  const displayedTotal = hasEstimatedShipping && deliveryEstimate?.total_price !== null && deliveryEstimate?.total_price !== undefined
+    ? deliveryEstimate.total_price
+    : result.total_price;
   const outboundUrl = buildOutboundUrl(result.url, {
     query,
     category,
@@ -139,19 +174,47 @@ export function ResultCard({ result, query, category, productId, variant = "buy_
             <span className="mt-1 block text-lg font-bold text-white">${result.price.toFixed(2)}</span>
           </div>
           <div className="rounded-2xl bg-slate-950/35 p-3">
-            <span className="block text-xs uppercase tracking-[0.16em] text-slate-400">Shipping</span>
+            <span className="block text-xs uppercase tracking-[0.16em] text-slate-400">
+              {hasEstimatedShipping ? "Shipping to ZIP" : "Shipping"}
+            </span>
             <span className="mt-1 block text-lg font-bold text-white">
-              {result.shipping === 0 ? "Free" : `$${result.shipping.toFixed(2)}`}
+              {displayedShipping === 0 ? "Free" : `$${displayedShipping.toFixed(2)}`}
             </span>
           </div>
           <div className="rounded-2xl bg-slate-950/35 p-3">
             <span className="block text-xs uppercase tracking-[0.16em] text-slate-400">{combinedLabel}</span>
-            <span className="mt-1 block text-lg font-bold text-emerald-200">${result.total_price.toFixed(2)}</span>
+            <span className="mt-1 block text-lg font-bold text-emerald-200">${displayedTotal.toFixed(2)}</span>
           </div>
         </div>
         <p className="mt-2 text-xs leading-5 text-slate-400">
           Taxes and import charges, if any, are not included in this displayed amount.
         </p>
+
+        {result.provider.toLowerCase() === "ebay" && !isAuction && deliveryStatus !== "idle" ? (
+          <div className="mt-4 rounded-2xl border border-cyan-200/15 bg-cyan-200/[0.07] px-4 py-3 text-sm" aria-live="polite">
+            {deliveryStatus === "loading" ? (
+              <p className="flex items-center gap-2 font-semibold text-cyan-100">
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-cyan-100/30 border-t-cyan-100" />
+                Checking delivery for this listing…
+              </p>
+            ) : deliveryStatus === "error" ? (
+              <p className="text-slate-300">Delivery estimate unavailable. The listing is still usable.</p>
+            ) : deliveryEstimate?.detail_loaded ? (
+              <>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-cyan-100">eBay delivery estimate</p>
+                <p className="mt-1 font-bold text-emerald-200">{deliveryWindow(deliveryEstimate)}</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {deliveryEstimate.best_shipping_option?.service
+                    || deliveryEstimate.best_shipping_option?.carrier
+                    || deliveryEstimate.best_shipping_option?.speed
+                    || "Shipping method not provided"}
+                </p>
+              </>
+            ) : (
+              <p className="text-slate-300">eBay did not provide a delivery estimate for this listing.</p>
+            )}
+          </div>
+        ) : null}
 
         <div className="mt-4 grid gap-2 text-sm text-slate-300">
           <div className="flex justify-between gap-4"><span>Condition</span><span className="text-right text-slate-100">{result.condition}</span></div>

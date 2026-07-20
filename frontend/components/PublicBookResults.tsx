@@ -1,8 +1,17 @@
+import { DeliveryResultsGrid } from "@/components/DeliveryResultsGrid";
 import { ResultCard } from "@/components/ResultCard";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
 import type { BookLabResponse } from "@/lib/api";
 
-export function PublicBookResults({ data, query }: { data: BookLabResponse; query: string }) {
+export function PublicBookResults({
+  data,
+  query,
+  deliveryEnabled = false,
+}: {
+  data: BookLabResponse;
+  query: string;
+  deliveryEnabled?: boolean;
+}) {
   const identity = data.isbn;
   const bestPrice = data.top_results[0]?.total_price ?? null;
 
@@ -59,18 +68,14 @@ export function PublicBookResults({ data, query }: { data: BookLabResponse; quer
       </section>
 
       {data.top_results.length ? (
-        <section className="mt-8 grid gap-5 xl:grid-cols-3" aria-label="Used book results">
-          {data.top_results.map((result, index) => (
-            <ResultCard
-              key={`book-${result.url}-${index}`}
-              result={result}
-              query={identity.normalized}
-              category="books"
-              productId={`isbn-${identity.normalized}`}
-              variant="buy_now"
-            />
-          ))}
-        </section>
+        <DeliveryResultsGrid
+          results={data.top_results}
+          query={identity.normalized}
+          category="books"
+          productId={`isbn-${identity.normalized}`}
+          ariaLabel="Used book results"
+          deliveryEnabled={deliveryEnabled}
+        />
       ) : (
         <div className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-6 text-amber-50" role="status">
           <h2 className="text-xl font-bold">

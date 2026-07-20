@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import re
 from typing import Any
 from urllib.parse import quote
@@ -265,48 +266,48 @@ async def get_delivery_estimates(
     headers = await provider._request_headers()
     headers["X-EBAY-C-ENDUSERCTX"] = _context_header(provider, clean_country, clean_postal)
 
-    items: list[dict[str, Any]] = []
+    async def load_item(client: httpx.AsyncClient, item_id: str) -> dict[str, Any]:
+        item_url = f"{provider.config.api_base}/buy/browse/v1/item/{quote(item_id, safe='')}"
+        detail, detail_error = await _fetch_item_detail(client, item_url, headers)
+        if detail:
+            item = _item_result({"itemId": item_id}, detail, detail_error)
+            best_option = item.get("best_shipping_option") or {}
+            # eBay can echo the destination in its shipping option. Return
+            # only the fields the public UI needs so the ZIP never comes
+            # back in the API response or reaches browser state twice.
+            public_option = {
+                key: best_option.get(key)
+                for key in (
+                    "cost",
+                    "currency",
+                    "carrier",
+                    "service",
+                    "speed",
+                    "min_delivery",
+                    "max_delivery",
+                )
+            }
+            return {
+                "item_id": item.get("item_id") or item_id,
+                "title": item.get("title") or "eBay listing",
+                "shipping_cost": item.get("shipping_cost"),
+                "total_price": item.get("total_price"),
+                "detail_loaded": True,
+                "detail_error": detail_error,
+                "best_shipping_option": public_option,
+            }
+        return {
+            "item_id": item_id,
+            "title": "eBay listing",
+            "detail_loaded": False,
+            "detail_error": detail_error,
+            "shipping_cost": None,
+            "total_price": None,
+            "best_shipping_option": None,
+        }
+
     async with httpx.AsyncClient(timeout=20) as client:
-        for item_id in clean_ids:
-            item_url = f"{provider.config.api_base}/buy/browse/v1/item/{quote(item_id, safe='')}"
-            detail, detail_error = await _fetch_item_detail(client, item_url, headers)
-            if detail:
-                item = _item_result({"itemId": item_id}, detail, detail_error)
-                best_option = item.get("best_shipping_option") or {}
-                # eBay can echo the destination in its shipping option. Return
-                # only the fields the public UI needs so the ZIP never comes
-                # back in the API response or reaches browser state twice.
-                public_option = {
-                    key: best_option.get(key)
-                    for key in (
-                        "cost",
-                        "currency",
-                        "carrier",
-                        "service",
-                        "speed",
-                        "min_delivery",
-                        "max_delivery",
-                    )
-                }
-                items.append({
-                    "item_id": item.get("item_id") or item_id,
-                    "title": item.get("title") or "eBay listing",
-                    "shipping_cost": item.get("shipping_cost"),
-                    "total_price": item.get("total_price"),
-                    "detail_loaded": True,
-                    "detail_error": detail_error,
-                    "best_shipping_option": public_option,
-                })
-            else:
-                items.append({
-                    "item_id": item_id,
-                    "title": "eBay listing",
-                    "detail_loaded": False,
-                    "detail_error": detail_error,
-                    "shipping_cost": None,
-                    "total_price": None,
-                    "best_shipping_option": None,
-                })
+        items = list(await asyncio.gather(*(load_item(client, item_id) for item_id in clean_ids)))
 
     return {
         "country": clean_country,

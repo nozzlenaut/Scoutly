@@ -14,7 +14,7 @@ Production: https://www.pricesift.app/
 
 ## Current release
 
-- Release: v0.6.35 KEH-native camera discovery, stable camera pages, and optional public delivery estimates
+- Release: v0.6.36 inline delivery estimates, following the KEH-native camera and SEO release
 - Internal repository name: Scoutly
 - Deployment: Vercel frontend + Railway backend from `main`
 - Storage: PostgreSQL in production, local JSON fallback for development
@@ -43,7 +43,7 @@ Production: https://www.pricesift.app/
 - Safe no-inventory: 18
 - Clear failures: 0
 - Camera/lens expansion: 49 latest cases, 45 pass, 2 top-3, 2 no-inventory, 0 fail
-- Optional public delivery lookup is available when “US listings only” is active. It checks the three visible eBay listings and never saves the buyer ZIP.
+- When “US listings only” is active, the optional ZIP travels with the search in temporary memory and each visible eBay card fills in its own delivery estimate. The ZIP is never saved.
 - `/cameras` and stable `/cameras/[slug]` pages expose current KEH model inventory and are added to the dynamic sitemap; arbitrary `/search` URLs remain `noindex`.
 
 Tests are treated as data. A failure must be classified as related/blocking, related/non-blocking, unrelated existing, or environment-related before deciding whether to ship.

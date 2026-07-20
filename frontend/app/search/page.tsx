@@ -3,13 +3,12 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AuctionResults } from "@/components/AuctionResults";
-import { ResultCard } from "@/components/ResultCard";
 import { PriceContextPanel } from "@/components/PriceContextPanel";
 import { PublicBookResults } from "@/components/PublicBookResults";
 import { SearchForm } from "@/components/SearchForm";
 import { SearchTransitionGuard } from "@/components/SearchTransitionGuard";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
-import { DeliveryEstimateLookup } from "@/components/DeliveryEstimateLookup";
+import { DeliveryResultsGrid } from "@/components/DeliveryResultsGrid";
 import { SiteFooter } from "@/components/SiteFooter";
 import { buildEbaySearchUrl, buildOutboundUrl, searchDeals, searchPublicBooksByIsbn } from "@/lib/api";
 import { getCategoryById, getSearchCategoryById } from "@/lib/categoryCatalog";
@@ -162,10 +161,9 @@ export default async function SearchPage({
             initialUsOnly={usOnly}
             compact
           />
-          {usOnly ? <DeliveryEstimateLookup results={bookData.top_results} /> : null}
         </section>
         <SearchTransitionGuard>
-          <PublicBookResults data={bookData} query={rawQuery} />
+          <PublicBookResults data={bookData} query={rawQuery} deliveryEnabled={usOnly} />
         </SearchTransitionGuard>
       </PageShell>
     );
@@ -257,7 +255,6 @@ export default async function SearchPage({
           initialUsOnly={usOnly}
           compact
         />
-        {usOnly ? <DeliveryEstimateLookup results={data.results} /> : null}
       </section>
 
       <SearchTransitionGuard>
@@ -302,21 +299,14 @@ export default async function SearchPage({
         <PriceContextPanel context={data.price_context} />
 
         {data.results.length > 0 ? (
-          <section
-            className="mt-8 grid gap-5 xl:grid-cols-3"
-            aria-label="Buy It Now results"
-          >
-            {data.results.map((result) => (
-              <ResultCard
-                key={`buy-now-${result.provider}-${result.title}`}
-                result={result}
-                query={data.query}
-                category={category.id}
-                productId={resolved?.product.id}
-                variant="buy_now"
-              />
-            ))}
-          </section>
+          <DeliveryResultsGrid
+            results={data.results}
+            query={data.query}
+            category={category.id}
+            productId={resolved?.product.id}
+            ariaLabel="Buy It Now results"
+            deliveryEnabled={usOnly}
+          />
         ) : (
           <div
             className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-6 text-amber-50"

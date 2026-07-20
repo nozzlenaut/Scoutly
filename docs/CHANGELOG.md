@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.36
+
+- Moves the optional delivery ZIP from a separate results panel into the existing search form when “US listings only” is active.
+- Carries the ZIP across the client-side search transition in temporary memory only; refresh clears it, and it never enters the URL, analytics, cookies, or browser storage.
+- Renders eBay’s shipping total, method, and delivery window directly inside the matching listing card after the exact-listing lookup returns.
+- Checks the three visible eBay listings concurrently so inline delivery details finish faster.
+- Keeps the base search fast by rendering listings before the delivery lookups finish, and leaves KEH cards and ranking unchanged.
+- Reuses the same inline behavior for standard ISBN results while keeping collectible and bundle alternatives separate.
+- Removes the former standalone delivery-results panel.
+- Passes 235 backend tests and the Next.js production build.
+
 ## v0.6.35
 
 - Groups every current KEH camera-body title into a searchable model and publishes those models through a public `/cameras` directory.
