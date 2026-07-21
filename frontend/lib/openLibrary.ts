@@ -82,6 +82,10 @@ export async function lookupOpenLibraryAvailability(
     const itemRecord = item?.fromRecord ? records[item.fromRecord] : undefined;
     const firstRecord = itemRecord || Object.values(records)[0];
     const recordUrl = secureUrl(firstRecord?.recordURL);
+    const itemRecordUrl =
+      item?.fromRecord?.startsWith("/books/")
+        ? secureUrl(`https://openlibrary.org${item.fromRecord}`)
+        : null;
 
     if (item) {
       const match = item.match === "exact" || item.match === "similar" ? item.match : null;
@@ -90,8 +94,8 @@ export async function lookupOpenLibraryAvailability(
         lookup_state: "item",
         match,
         status: item.status || null,
-        item_url: secureUrl(item.itemURL) || recordUrl,
-        record_url: recordUrl,
+        item_url: secureUrl(item.itemURL),
+        record_url: itemRecordUrl || recordUrl,
         cover_url: secureUrl(item.cover?.medium || item.cover?.small || item.cover?.large),
         publish_date: item.publishDate || null,
       };

@@ -10,7 +10,7 @@ function actionCopy(availability: OpenLibraryAvailability): {
 
   if (availability.status === "full access") {
     return {
-      button: similar ? "Read a similar edition free" : "Read free now",
+      button: "Open readable edition",
       headline: `${edition} is readable free online.`,
       detail: similar
         ? "Open Library found a readable edition of the same work, but not necessarily this exact ISBN."
@@ -20,7 +20,7 @@ function actionCopy(availability: OpenLibraryAvailability): {
 
   if (availability.status === "lendable") {
     return {
-      button: similar ? "Borrow a similar edition" : "Borrow free",
+      button: "Open borrowable edition",
       headline: `${edition} can be borrowed through Open Library.`,
       detail: similar
         ? "The borrowable copy is another edition of the same work. An Open Library account may be required."
@@ -30,7 +30,7 @@ function actionCopy(availability: OpenLibraryAvailability): {
 
   if (availability.status === "checked out") {
     return {
-      button: "View borrowing options",
+      button: "Open edition page",
       headline: `${edition} is currently checked out.`,
       detail: "Open Library may offer a waitlist or show when the digital copy becomes available again.",
     };
@@ -66,7 +66,6 @@ export function OpenLibraryAvailabilityCard({
 }) {
   const copy = actionCopy(availability);
   const url =
-    availability.item_url ||
     availability.record_url ||
     `https://openlibrary.org/isbn/${encodeURIComponent(availability.isbn)}`;
   const editionLabel =
@@ -93,7 +92,7 @@ export function OpenLibraryAvailabilityCard({
           </div>
           <h2 className="mt-2 text-xl font-black">{copy.headline}</h2>
           <p className="mt-2 text-sm leading-6 text-slate-300">
-            {copy.detail} See whether this book is available to read or borrow free.
+            {copy.detail} The button opens the specific Open Library edition page, where any read or borrow action is shown.
           </p>
           {availability.publish_date ? (
             <p className="mt-1 text-xs text-slate-500">Digital edition date: {availability.publish_date}</p>
