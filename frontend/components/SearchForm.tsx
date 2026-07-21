@@ -6,6 +6,7 @@ import { suggestProducts, type ProductMatch } from "@/lib/api";
 import { getCategory, searchCategories } from "@/lib/categoryCatalog";
 import { commitDeliveryZip, currentDeliveryZip } from "@/lib/ephemeralDelivery";
 import { StatusBadge } from "@/components/StatusBadge";
+import { BookIsbnScanner } from "@/components/BookIsbnScanner";
 import { SpecSearchBuilder } from "@/components/SpecSearchBuilder";
 import { CpuSearchBuilder } from "@/components/CpuSearchBuilder";
 
@@ -428,6 +429,8 @@ export function SearchForm({
               />
             ) : null}
           </form>
+
+          {selectedCategory.id === "books" ? <BookIsbnScanner usOnly={usOnly} /> : null}
 
           <p
             id={statusId}

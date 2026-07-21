@@ -4,7 +4,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AmazonFallbackCard } from "@/components/AmazonFallbackCard";
 import { AuctionResults } from "@/components/AuctionResults";
-import { BookIsbnScanner } from "@/components/BookIsbnScanner";
 import { PriceContextPanel } from "@/components/PriceContextPanel";
 import { PublicBookResults } from "@/components/PublicBookResults";
 import { SearchForm } from "@/components/SearchForm";
@@ -130,7 +129,6 @@ export default async function SearchPage({
       <PageShell>
         <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
           <SearchForm initialCategoryId={category.id} initialQuery="" initialUsOnly={usOnly} compact />
-          {category.id === "books" ? <BookIsbnScanner usOnly={usOnly} /> : null}
         </section>
         <div
           className="mt-8 rounded-3xl border border-white/10 bg-white/[0.05] p-6 text-slate-200"
@@ -168,7 +166,6 @@ export default async function SearchPage({
             initialUsOnly={usOnly}
             compact
           />
-          <BookIsbnScanner usOnly={usOnly} />
         </section>
         <SearchTransitionGuard key={`books:${rawQuery}:${usOnly ? "us" : "all"}`}>
           <PublicBookResults data={bookData} query={rawQuery} deliveryEnabled={usOnly} openLibrary={openLibrary} />
