@@ -166,7 +166,7 @@ export default async function SearchPage({
           />
           <BookIsbnScanner usOnly={usOnly} />
         </section>
-        <SearchTransitionGuard>
+        <SearchTransitionGuard key={`books:${rawQuery}:${usOnly ? "us" : "all"}`}>
           <PublicBookResults data={bookData} query={rawQuery} deliveryEnabled={usOnly} />
         </SearchTransitionGuard>
       </PageShell>
@@ -261,7 +261,7 @@ export default async function SearchPage({
         />
       </section>
 
-      <SearchTransitionGuard>
+      <SearchTransitionGuard key={`${category.id}:${rawQuery}:${usOnly ? "us" : "all"}`}>
         <div className="mt-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <p className="text-sm uppercase tracking-[0.25em] text-slate-400">
