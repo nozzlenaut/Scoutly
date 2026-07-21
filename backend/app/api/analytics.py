@@ -1,9 +1,8 @@
-import os
-import secrets
 
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from app.services.admin_auth import require_admin_token as _require_admin_token
 from app.services.feedback_store import (
     active_bad_result_reports,
     analytics_summary,
@@ -39,20 +38,6 @@ class ManualFilterRuleResponse(BaseModel):
     source_item_id: str | None = None
     enabled: bool = True
     created_at: str
-
-
-def _require_admin_token(token: str | None) -> None:
-    configured_token = os.getenv("SCOUTLY_ADMIN_TOKEN", "").strip()
-    if not configured_token:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Admin access is not configured.",
-        )
-    if not token or not secrets.compare_digest(token, configured_token):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing or invalid admin token.",
-        )
 
 
 @router.get("/analytics/summary")

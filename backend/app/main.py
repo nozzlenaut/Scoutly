@@ -19,6 +19,7 @@ from app.api.keh import router as keh_router
 from app.api.books import router as books_router
 from app.api.shipping import router as shipping_router
 from app.services.database import database_health, initialize_database
+from app.services.admin_auth import AdminAuthorizationMiddleware
 
 
 @asynccontextmanager
@@ -27,7 +28,8 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="PriceSift API", version="0.6.37", lifespan=lifespan)
+app = FastAPI(title="PriceSift API", version="0.6.39", lifespan=lifespan)
+app.add_middleware(AdminAuthorizationMiddleware)
 
 # Scoutly does not use cookies or browser credentials yet, so a public API CORS
 # policy is the simplest way to support localhost, Vercel production domains,

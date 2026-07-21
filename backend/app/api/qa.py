@@ -1,9 +1,8 @@
-import os
-import secrets
 
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from app.services.admin_auth import require_admin_token as _require_admin_token
 from app.services.qa_registry import qa_cases_with_latest, qa_summary
 from app.services.qa_store import list_qa_evaluations, save_qa_evaluation
 from app.services.shipping_qa import run_shipping_probe
@@ -25,20 +24,6 @@ class QaEvaluationRequest(BaseModel):
     notes: str | None = Field(default=None, max_length=1200)
     result_titles: list[str] = Field(default_factory=list, max_length=3)
     diagnostics: dict = Field(default_factory=dict)
-
-
-def _require_admin_token(token: str | None) -> None:
-    configured_token = os.getenv("SCOUTLY_ADMIN_TOKEN", "").strip()
-    if not configured_token:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Admin access is not configured.",
-        )
-    if not token or not secrets.compare_digest(token, configured_token):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing or invalid admin token.",
-        )
 
 
 @router.get("/qa/cases")

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { AdminLoginForm } from "@/components/AdminLoginForm";
+import { ADMIN_BROWSER_SESSION, getAdminToken } from "@/lib/adminSession";
 import { LensQaWorkbench, type LensQaCase } from "@/components/LensQaWorkbench";
 import { QaWorkbench } from "@/components/QaWorkbench";
 import { ShippingQaLab } from "@/components/ShippingQaLab";
@@ -16,20 +18,7 @@ function QaGate({ invalid = false }: { invalid?: boolean }) {
           <p className="mt-3 text-sm text-slate-400">
             {invalid ? "That token was not accepted." : "Use the same private admin token as the testing dashboard."}
           </p>
-          <form method="get" action="/admin/qa" className="mt-5 flex flex-col gap-3 sm:flex-row">
-            <label className="flex-1">
-              <span className="sr-only">Admin token</span>
-              <input
-                name="token"
-                type="password"
-                required
-                autoComplete="current-password"
-                placeholder="Admin token"
-                className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/60"
-              />
-            </label>
-            <button className="rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950 transition hover:bg-slate-200">Open QA</button>
-          </form>
+          <AdminLoginForm next="/admin/qa" />
         </section>
       </div>
     </main>
@@ -90,11 +79,11 @@ function isLensCase(testCase: QaCase): testCase is LensQaCase {
 export default async function QaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string }>;
+  searchParams: Promise<{ invalid?: string }>;
 }) {
   const params = await searchParams;
-  const token = params.token?.trim();
-  if (!token) return <QaGate />;
+  const token = await getAdminToken();
+  if (!token) return <QaGate invalid={params.invalid === "1"} />;
 
   let data;
   try {
@@ -110,12 +99,12 @@ export default async function QaPage({
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
       <div className="mx-auto max-w-[1500px]">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <Link href={`/admin?token=${encodeURIComponent(token)}`} className="text-sm text-cyan-200 hover:text-cyan-100">
+          <Link href={`/admin`} className="text-sm text-cyan-200 hover:text-cyan-100">
             ← Testing dashboard
           </Link>
           <div className="flex flex-wrap gap-4">
-            <Link href={`/admin/keh/lenses?token=${encodeURIComponent(token)}`} className="text-sm text-emerald-200 hover:text-emerald-100">Lens Lab</Link>
-            <Link href={`/admin/prices?token=${encodeURIComponent(token)}`} className="text-sm text-slate-400 hover:text-slate-200">Price history</Link>
+            <Link href={`/admin/keh/lenses`} className="text-sm text-emerald-200 hover:text-emerald-100">Lens Lab</Link>
+            <Link href={`/admin/prices`} className="text-sm text-slate-400 hover:text-slate-200">Price history</Link>
             <Link href="/" className="text-sm text-slate-500 hover:text-slate-300">PriceSift home</Link>
           </div>
         </div>
@@ -128,15 +117,15 @@ export default async function QaPage({
           </p>
         </div>
 
-        <ShippingQaLab token={token} />
+        <ShippingQaLab token={ADMIN_BROWSER_SESSION} />
 
         <QaWorkbench
           initialCases={searchCases}
           initialSummary={summarizeCases(searchCases)}
-          token={token}
+          token={ADMIN_BROWSER_SESSION}
         />
 
-        {lensCases.length ? <LensQaWorkbench initialCases={lensCases} token={token} /> : null}
+        {lensCases.length ? <LensQaWorkbench initialCases={lensCases} token={ADMIN_BROWSER_SESSION} /> : null}
 
         <SiteFooter />
       </div>

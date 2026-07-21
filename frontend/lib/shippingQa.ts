@@ -1,3 +1,5 @@
+import { adminFetch } from "@/lib/api";
+
 export type ShippingQaOption = {
   cost: number | null;
   currency: string | null;
@@ -64,7 +66,7 @@ export async function runShippingQa(
     country: options.country || "US",
     limit: String(options.limit ?? 5),
   });
-  const response = await fetch(`${baseUrl}/api/qa/shipping?${params.toString()}`, { cache: "no-store" });
+  const response = await adminFetch(`${baseUrl}/api/qa/shipping?${params.toString()}`, { cache: "no-store" });
   if (!response.ok) {
     const detail = await response.json().catch(() => null);
     throw new Error(detail?.detail || `Shipping QA failed (${response.status})`);

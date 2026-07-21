@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { AdminLoginForm } from "@/components/AdminLoginForm";
+import { ADMIN_BROWSER_SESSION, getAdminToken } from "@/lib/adminSession";
 import { AdminBookIsbnLab } from "@/components/AdminBookIsbnLab";
 import { SiteFooter } from "@/components/SiteFooter";
 import { getBooksLabStatus } from "@/lib/api";
@@ -12,19 +14,17 @@ function Gate({ invalid = false }: { invalid?: boolean }) {
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">PriceSift Books lab</p>
           <h1 className="mt-2 text-3xl font-black">Admin token required</h1>
           <p className="mt-3 text-sm text-slate-400">{invalid ? "That token was not accepted." : "Use the same private token as the other testing pages."}</p>
-          <form method="get" action="/admin/books" className="mt-5 flex flex-col gap-3 sm:flex-row">
-            <input name="token" type="password" required placeholder="Admin token" className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-white" />
-            <button className="rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950">Open Books lab</button>
-          </form>
+          <AdminLoginForm next="/admin/books" />
         </section>
       </div>
     </main>
   );
 }
 
-export default async function BooksAdminPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
-  const token = (await searchParams).token?.trim();
-  if (!token) return <Gate />;
+export default async function BooksAdminPage({ searchParams }: { searchParams: Promise<{ invalid?: string }> }) {
+  const params = await searchParams;
+  const token = await getAdminToken();
+  if (!token) return <Gate invalid={params.invalid === "1"} />;
   try {
     await getBooksLabStatus(token);
   } catch {
@@ -35,8 +35,8 @@ export default async function BooksAdminPage({ searchParams }: { searchParams: P
     <main className="min-h-screen bg-slate-950 px-4 py-8 text-white sm:px-6 sm:py-10">
       <div className="mx-auto max-w-[1500px]">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <Link href={`/admin?token=${encodeURIComponent(token)}`} className="text-sm text-cyan-200">← Testing dashboard</Link>
-          <Link href={`/admin/qa?token=${encodeURIComponent(token)}`} className="text-sm text-slate-400">Search QA</Link>
+          <Link href={`/admin`} className="text-sm text-cyan-200">← Testing dashboard</Link>
+          <Link href={`/admin/qa`} className="text-sm text-slate-400">Search QA</Link>
         </div>
         <div className="mt-8">
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">PriceSift public-beta diagnostics</p>
@@ -45,7 +45,7 @@ export default async function BooksAdminPage({ searchParams }: { searchParams: P
             Inspect the ISBN lookup path, rejections, and collectible separation behind the public Books beta.
           </p>
         </div>
-        <AdminBookIsbnLab token={token} />
+        <AdminBookIsbnLab token={ADMIN_BROWSER_SESSION} />
         <SiteFooter />
       </div>
     </main>

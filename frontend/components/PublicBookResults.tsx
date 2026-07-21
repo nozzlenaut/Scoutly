@@ -2,16 +2,20 @@ import { AmazonFallbackCard } from "@/components/AmazonFallbackCard";
 import { DeliveryResultsGrid } from "@/components/DeliveryResultsGrid";
 import { ResultCard } from "@/components/ResultCard";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
+import { OpenLibraryAvailabilityCard } from "@/components/OpenLibraryAvailabilityCard";
+import type { OpenLibraryAvailability } from "@/lib/openLibraryTypes";
 import type { BookLabResponse } from "@/lib/api";
 
 export function PublicBookResults({
   data,
   query,
   deliveryEnabled = false,
+  openLibrary,
 }: {
   data: BookLabResponse;
   query: string;
   deliveryEnabled?: boolean;
+  openLibrary: OpenLibraryAvailability;
 }) {
   const identity = data.isbn;
   const bestPrice = data.top_results[0]?.total_price ?? null;
@@ -100,6 +104,8 @@ export function PublicBookResults({
         book
         emphasized={!data.top_results.length}
       />
+
+      <OpenLibraryAvailabilityCard availability={openLibrary} />
 
       {data.collectible_results.length ? (
         <section className="mt-10 rounded-3xl border border-purple-300/20 bg-purple-300/[0.06] p-5 sm:p-6">

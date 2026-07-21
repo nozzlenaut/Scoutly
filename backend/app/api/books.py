@@ -1,22 +1,13 @@
 from __future__ import annotations
 
-import os
-import secrets
 
 from fastapi import APIRouter, HTTPException, Query, status
 
+from app.services.admin_auth import require_admin_token as _require_admin_token
 from app.services.book_isbn import books_lab_status, search_used_books_by_isbn
 from app.services.analytics_store import SearchEvent, log_search_event
 
 router = APIRouter(tags=["Books lab"])
-
-
-def _require_admin_token(token: str | None) -> None:
-    configured_token = os.getenv("SCOUTLY_ADMIN_TOKEN", "").strip()
-    if not configured_token:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Admin access is not configured.")
-    if not token or not secrets.compare_digest(token, configured_token):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing or invalid admin token.")
 
 
 @router.get("/books/search")

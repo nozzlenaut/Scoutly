@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { AdminLoginForm, AdminLogoutButton } from "@/components/AdminLoginForm";
+import { ADMIN_BROWSER_SESSION, getAdminToken } from "@/lib/adminSession";
 import { AdminFilterRules } from "@/components/AdminFilterRules";
 import { AdminReports } from "@/components/AdminReports";
 import { AdminBetaFeedback } from "@/components/AdminBetaFeedback";
@@ -23,20 +25,7 @@ function AdminGate({ invalid = false }: { invalid?: boolean }) {
           <p className="mt-3 text-sm text-slate-400">
             {invalid ? "That token was not accepted. Try the private token saved in Railway." : "Enter the private token saved in Railway to open testing analytics and live filter rules."}
           </p>
-          <form method="get" action="/admin" className="mt-5 flex flex-col gap-3 sm:flex-row">
-            <label className="flex-1">
-              <span className="sr-only">Admin token</span>
-              <input
-                name="token"
-                type="password"
-                required
-                autoComplete="current-password"
-                placeholder="Admin token"
-                className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/60"
-              />
-            </label>
-            <button className="rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950 transition hover:bg-slate-200">Open admin</button>
-          </form>
+          <AdminLoginForm next="/admin" />
         </section>
       </div>
     </main>
@@ -46,13 +35,13 @@ function AdminGate({ invalid = false }: { invalid?: boolean }) {
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string; days?: string }>
+  searchParams: Promise<{ invalid?: string; days?: string }>
 }) {
   const params = await searchParams;
-  const token = params.token?.trim();
+  const token = await getAdminToken();
   const requestedDays = Number.parseInt(params.days || "30", 10);
   const days = [7, 30, 90].includes(requestedDays) ? requestedDays : 30;
-  if (!token) return <AdminGate />;
+  if (!token) return <AdminGate invalid={params.invalid === "1"} />;
 
   let data;
   try {
@@ -84,6 +73,7 @@ export default async function AdminPage({
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
+            <AdminLogoutButton />
             <Link
               href="#feedback"
               className="w-fit rounded-2xl border border-fuchsia-200/25 bg-fuchsia-200/10 px-5 py-3 font-bold text-fuchsia-100 transition hover:bg-fuchsia-200/15"
@@ -91,31 +81,31 @@ export default async function AdminPage({
               Feedback inbox ({betaFeedback.length}) â†“
             </Link>
             <Link
-              href={`/admin/keh?token=${encodeURIComponent(token)}`}
+              href={`/admin/keh`}
               className="w-fit rounded-2xl border border-emerald-200/25 bg-emerald-200/10 px-5 py-3 font-bold text-emerald-100 transition hover:bg-emerald-200/15"
             >
               KEH shadow feed →
             </Link>
             <Link
-              href={`/admin/keh/lenses?token=${encodeURIComponent(token)}`}
+              href={`/admin/keh/lenses`}
               className="w-fit rounded-2xl border border-violet-200/25 bg-violet-200/10 px-5 py-3 font-bold text-violet-100 transition hover:bg-violet-200/15"
             >
               KEH lens lab →
             </Link>
             <Link
-              href={`/admin/books?token=${encodeURIComponent(token)}`}
+              href={`/admin/books`}
               className="w-fit rounded-2xl border border-amber-200/25 bg-amber-200/10 px-5 py-3 font-bold text-amber-100 transition hover:bg-amber-200/15"
             >
               Books ISBN lab →
             </Link>
             <Link
-              href={`/admin/prices?token=${encodeURIComponent(token)}`}
+              href={`/admin/prices`}
               className="w-fit rounded-2xl border border-cyan-200/25 bg-cyan-200/10 px-5 py-3 font-bold text-cyan-100 transition hover:bg-cyan-200/15"
             >
               Price history →
             </Link>
             <Link
-              href={`/admin/qa?token=${encodeURIComponent(token)}`}
+              href={`/admin/qa`}
               className="w-fit rounded-2xl bg-cyan-200 px-5 py-3 font-bold text-slate-950 transition hover:bg-cyan-100"
             >
               Open search QA →
@@ -160,7 +150,7 @@ export default async function AdminPage({
           {[7, 30, 90].map((period) => (
             <Link
               key={period}
-              href={`/admin?token=${encodeURIComponent(token)}&days=${period}`}
+              href={`/admin?days=${period}`}
               className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
                 days === period
                   ? "border-cyan-200 bg-cyan-200 text-slate-950"
@@ -174,7 +164,7 @@ export default async function AdminPage({
 
         <AdminAnalyticsDigest digest={digest} />
 
-        <AdminFilterRules initialRules={manualRules} token={token} />
+        <AdminFilterRules initialRules={manualRules} token={ADMIN_BROWSER_SESSION} />
 
         <AdminCollapsibleSection
           count={clicks.length}
@@ -252,7 +242,7 @@ export default async function AdminPage({
 
         <AdminBetaFeedback feedback={betaFeedback} />
 
-        <AdminReports initialReports={reports} token={token} />
+        <AdminReports initialReports={reports} token={ADMIN_BROWSER_SESSION} />
 
         <SiteFooter />
       </div>

@@ -14,6 +14,7 @@ import { DeliveryResultsGrid } from "@/components/DeliveryResultsGrid";
 import { SiteFooter } from "@/components/SiteFooter";
 import { buildEbaySearchUrl, buildOutboundUrl, searchDeals, searchPublicBooksByIsbn } from "@/lib/api";
 import { getCategoryById, getSearchCategoryById } from "@/lib/categoryCatalog";
+import { lookupOpenLibraryAvailability } from "@/lib/openLibrary";
 
 function PageShell({ children }: { children: ReactNode }) {
   return (
@@ -153,7 +154,10 @@ export default async function SearchPage({
   }
 
   if (category.id === "books") {
-    const bookData = await searchPublicBooksByIsbn(rawQuery, 35, { usOnly, trackAnalytics: true });
+    const [bookData, openLibrary] = await Promise.all([
+      searchPublicBooksByIsbn(rawQuery, 35, { usOnly, trackAnalytics: true }),
+      lookupOpenLibraryAvailability(rawQuery),
+    ]);
     return (
       <PageShell>
         <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
@@ -167,7 +171,7 @@ export default async function SearchPage({
           <BookIsbnScanner usOnly={usOnly} />
         </section>
         <SearchTransitionGuard key={`books:${rawQuery}:${usOnly ? "us" : "all"}`}>
-          <PublicBookResults data={bookData} query={rawQuery} deliveryEnabled={usOnly} />
+          <PublicBookResults data={bookData} query={rawQuery} deliveryEnabled={usOnly} openLibrary={openLibrary} />
         </SearchTransitionGuard>
       </PageShell>
     );

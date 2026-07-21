@@ -1,29 +1,17 @@
 from __future__ import annotations
 
-import os
-import secrets
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from app.services.admin_auth import require_admin_token as _require_admin_token
 from app.providers.ebay import ebay_config_from_env
 from app.services import search_service
 from app.services.price_store import build_price_context, price_overview
 from app.services.qa_store import load_qa_cases
 
 router = APIRouter(tags=["Prices"])
-
-
-def _require_admin_token(token: str | None) -> None:
-    configured_token = os.getenv("SCOUTLY_ADMIN_TOKEN", "").strip()
-    if not configured_token:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Admin access is not configured.",
-        )
-    if not token or not secrets.compare_digest(token, configured_token):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin token.")
 
 
 class PriceCollectionRequest(BaseModel):

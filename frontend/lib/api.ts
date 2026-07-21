@@ -1,3 +1,5 @@
+import { ADMIN_BROWSER_SESSION } from "@/lib/adminSessionShared";
+
 export type Product = {
   id: string;
   category: string;
@@ -474,6 +476,33 @@ export type QaEvaluationPayload = {
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+export async function adminFetch(
+  input: string,
+  init: RequestInit = {},
+): Promise<Response> {
+  const parsed = new URL(input, baseUrl);
+  const token = parsed.searchParams.get("token")?.trim() || "";
+  parsed.searchParams.delete("token");
+
+  if (token === ADMIN_BROWSER_SESSION) {
+    if (typeof window === "undefined") {
+      throw new Error("Browser admin session was used during server rendering.");
+    }
+    const target = `${parsed.pathname}${parsed.search}`;
+    const headers = new Headers(init.headers);
+    headers.set("X-PriceSift-Admin", "1");
+    return fetch(`/api/admin/proxy?target=${encodeURIComponent(target)}`, {
+      ...init,
+      headers,
+      cache: init.cache || "no-store",
+    });
+  }
+
+  const headers = new Headers(init.headers);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  return fetch(parsed.toString(), { ...init, headers });
+}
+
 export async function searchDeals(
   query: string,
   category = "cameras",
@@ -664,7 +693,7 @@ export async function getAnalyticsDigest(
 ): Promise<AnalyticsDigest> {
   const params = new URLSearchParams({ days: String(days) });
   if (token) params.set("token", token);
-  const response = await fetch(`${baseUrl}/api/analytics/digest?${params.toString()}`, { cache: "no-store" });
+  const response = await adminFetch(`${baseUrl}/api/analytics/digest?${params.toString()}`, { cache: "no-store" });
   if (!response.ok) throw new Error("Analytics digest failed");
   return response.json();
 }
@@ -672,7 +701,7 @@ export async function getAnalyticsDigest(
 export async function getAnalyticsSummary(
   token?: string,
 ): Promise<AnalyticsSummary> {
-  const response = await fetch(
+  const response = await adminFetch(
     `${baseUrl}/api/analytics/summary${adminQuery(token)}`,
     { cache: "no-store" },
   );
@@ -684,7 +713,7 @@ export async function getRecentClicks(token?: string): Promise<ClickRecord[]> {
   const separator = token
     ? `?token=${encodeURIComponent(token)}&limit=50`
     : "?limit=50";
-  const response = await fetch(`${baseUrl}/api/analytics/clicks${separator}`, {
+  const response = await adminFetch(`${baseUrl}/api/analytics/clicks${separator}`, {
     cache: "no-store",
   });
   if (!response.ok) throw new Error("Click analytics failed");
@@ -698,7 +727,7 @@ export async function getActiveReports(
   const separator = token
     ? `?token=${encodeURIComponent(token)}&limit=50`
     : "?limit=50";
-  const response = await fetch(`${baseUrl}/api/analytics/reports${separator}`, {
+  const response = await adminFetch(`${baseUrl}/api/analytics/reports${separator}`, {
     cache: "no-store",
   });
   if (!response.ok) throw new Error("Report analytics failed");
@@ -712,7 +741,7 @@ export async function getRecentFilteredListings(
   const separator = token
     ? `?token=${encodeURIComponent(token)}&limit=75`
     : "?limit=75";
-  const response = await fetch(
+  const response = await adminFetch(
     `${baseUrl}/api/analytics/filtered${separator}`,
     { cache: "no-store" },
   );
@@ -725,7 +754,7 @@ export async function getBetaFeedback(token?: string): Promise<BetaFeedbackRecor
   const separator = token
     ? `?token=${encodeURIComponent(token)}&limit=100`
     : "?limit=100";
-  const response = await fetch(`${baseUrl}/api/analytics/beta-feedback${separator}`, {
+  const response = await adminFetch(`${baseUrl}/api/analytics/beta-feedback${separator}`, {
     cache: "no-store",
   });
   if (!response.ok) throw new Error("Beta feedback failed");
@@ -736,7 +765,7 @@ export async function getBetaFeedback(token?: string): Promise<BetaFeedbackRecor
 export async function getManualFilterRules(
   token?: string,
 ): Promise<ManualFilterRule[]> {
-  const response = await fetch(
+  const response = await adminFetch(
     `${baseUrl}/api/analytics/filter-rules${adminQuery(token)}`,
     { cache: "no-store" },
   );
@@ -750,7 +779,7 @@ export async function createManualFilterRule(
   token?: string,
 ): Promise<ManualFilterRule> {
   const query = adminQuery(token);
-  const response = await fetch(
+  const response = await adminFetch(
     `${baseUrl}/api/analytics/filter-rules${query}`,
     {
       method: "POST",
@@ -771,7 +800,7 @@ export async function deleteManualFilterRule(
   token?: string,
 ): Promise<void> {
   const query = adminQuery(token);
-  const response = await fetch(
+  const response = await adminFetch(
     `${baseUrl}/api/analytics/filter-rules/${encodeURIComponent(id)}${query}`,
     {
       method: "DELETE",
@@ -793,7 +822,7 @@ export async function deleteBadResultReport(
   if (options.productId) params.set("product_id", options.productId);
   if (options.category) params.set("category", options.category);
   const query = params.toString() ? `?${params.toString()}` : "";
-  const response = await fetch(
+  const response = await adminFetch(
     `${baseUrl}/api/analytics/reports/${encodeURIComponent(linkKey)}${query}`,
     {
       method: "DELETE",
@@ -829,7 +858,7 @@ export function buildEbaySearchUrl(query: string, category?: string): string {
 
 
 export async function getQaCases(token?: string): Promise<QaCasesResponse> {
-  const response = await fetch(
+  const response = await adminFetch(
     `${baseUrl}/api/qa/cases${adminQuery(token)}`,
     { cache: "no-store" },
   );
@@ -841,7 +870,7 @@ export async function saveQaEvaluation(
   payload: QaEvaluationPayload,
   token?: string,
 ): Promise<QaEvaluation> {
-  const response = await fetch(
+  const response = await adminFetch(
     `${baseUrl}/api/qa/evaluations${adminQuery(token)}`,
     {
       method: "POST",
@@ -863,7 +892,7 @@ export async function getPriceOverview(
   // Use the same direct Railway API pattern as the working KEH admin page.
   // This works during server rendering and in the browser because the API
   // already exposes the required public-beta CORS policy.
-  const response = await fetch(`${baseUrl}/api/prices/overview?${params.toString()}`, { cache: "no-store" });
+  const response = await adminFetch(`${baseUrl}/api/prices/overview?${params.toString()}`, { cache: "no-store" });
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
     throw new Error(detail || `Price overview failed (${response.status})`);
@@ -875,7 +904,7 @@ export async function collectQaPriceBatch(
   token: string,
   options: { limit?: number; category?: string } = {},
 ): Promise<PriceCollectionResponse> {
-  const response = await fetch(`${baseUrl}/api/prices/collect/qa?token=${encodeURIComponent(token)}`, {
+  const response = await adminFetch(`${baseUrl}/api/prices/collect/qa?token=${encodeURIComponent(token)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ limit: options.limit ?? 5, category: options.category ?? null }),
@@ -891,7 +920,7 @@ export async function collectQaPriceBatch(
 
 export async function getKehOverview(token: string, limit = 500): Promise<KehOverview> {
   const params = new URLSearchParams({ token, limit: String(limit) });
-  const response = await fetch(`${baseUrl}/api/keh/overview?${params.toString()}`, { cache: "no-store" });
+  const response = await adminFetch(`${baseUrl}/api/keh/overview?${params.toString()}`, { cache: "no-store" });
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
     throw new Error(detail || `KEH overview failed (${response.status})`);
@@ -900,7 +929,7 @@ export async function getKehOverview(token: string, limit = 500): Promise<KehOve
 }
 
 export async function syncKehFeed(token: string): Promise<KehSyncRun> {
-  const response = await fetch(`${baseUrl}/api/keh/sync?token=${encodeURIComponent(token)}`, {
+  const response = await adminFetch(`${baseUrl}/api/keh/sync?token=${encodeURIComponent(token)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ force: true }),
@@ -944,7 +973,7 @@ export async function getKehLensBuilder(
   if (filters.focalGroup) params.set("focal_group", filters.focalGroup);
   if (filters.brand) params.set("brand", filters.brand);
   if (filters.query) params.set("q", filters.query);
-  const response = await fetch(`${baseUrl}/api/keh/lenses/builder?${params.toString()}`, { cache: "no-store" });
+  const response = await adminFetch(`${baseUrl}/api/keh/lenses/builder?${params.toString()}`, { cache: "no-store" });
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
     throw new Error(detail || `KEH lens builder failed (${response.status})`);
@@ -1028,7 +1057,7 @@ export type BookLabResponse = {
 
 export async function getBooksLabStatus(token: string): Promise<BookLabStatus> {
   const params = new URLSearchParams({ token });
-  const response = await fetch(`${baseUrl}/api/books/lab/status?${params.toString()}`, { cache: "no-store" });
+  const response = await adminFetch(`${baseUrl}/api/books/lab/status?${params.toString()}`, { cache: "no-store" });
   if (!response.ok) throw new Error("Books lab access failed");
   return response.json();
 }
@@ -1054,7 +1083,7 @@ export async function searchPublicBooksByIsbn(
 
 export async function searchBooksByIsbn(token: string, isbn: string, limit = 35): Promise<BookLabResponse> {
   const params = new URLSearchParams({ token, isbn, limit: String(limit) });
-  const response = await fetch(`${baseUrl}/api/books/lab/search?${params.toString()}`, { cache: "no-store" });
+  const response = await adminFetch(`${baseUrl}/api/books/lab/search?${params.toString()}`, { cache: "no-store" });
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
     throw new Error(detail || `Book search failed (${response.status})`);
