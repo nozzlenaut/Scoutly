@@ -295,7 +295,14 @@ def log_outbound_click(
     now = _now()
     tracked_parts = urlsplit(tracked_url)
     params = parse_qs(tracked_parts.query)
-    affiliate_tracked = bool(params.get("campid")) or tracked_parts.netloc.lower().endswith("awin1.com")
+    tracked_hostname = tracked_parts.netloc.lower()
+    is_amazon = tracked_hostname == "amazon.com" or tracked_hostname.endswith(".amazon.com")
+    amazon_tag = (params.get("tag") or [None])[0] if is_amazon else None
+    affiliate_tracked = (
+        bool(params.get("campid"))
+        or tracked_hostname.endswith("awin1.com")
+        or bool(amazon_tag)
+    )
     record = {
         "clicked_at": now.isoformat(),
         "provider": provider,
@@ -306,7 +313,7 @@ def log_outbound_click(
         "link_key": _normalized_link_key(tracked_url),
         "ebay_item_id": ebay_item_id_from_url(tracked_url),
         "affiliate_campaign_present": affiliate_tracked,
-        "affiliate_reference": (params.get("customid") or [None])[0],
+        "affiliate_reference": (params.get("customid") or [amazon_tag])[0],
         "url": url,
         "tracked_url": tracked_url,
     }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AmazonFallbackCard } from "@/components/AmazonFallbackCard";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
 import { SiteFooter } from "@/components/SiteFooter";
 import { buildOutboundUrl, getPublicKehCameraModel, type KehCameraModel } from "@/lib/api";
@@ -129,6 +130,12 @@ export default async function CameraModelPage({ params }: { params: Promise<{ sl
             Availability and prices come from PriceSift’s latest six-hour KEH feed sync and may change before checkout. KEH links are affiliate links.
           </p>
         </section>
+
+        <AmazonFallbackCard
+          query={model.model_name}
+          category="cameras"
+          productId={model.catalog_product_id || undefined}
+        />
 
         <SiteFooter />
       </div>

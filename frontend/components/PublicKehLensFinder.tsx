@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AmazonLensFallback } from "@/components/AmazonLensFallback";
 import {
   buildOutboundUrl,
   getPublicKehLensBuilder,
@@ -357,6 +358,7 @@ export function PublicKehLensFinder({ initialData }: { initialData: KehLensBuild
                       Prices and availability come from the latest KEH feed sync and can change before checkout.
                       Outbound KEH links are affiliate links.
                     </p>
+                    <AmazonLensFallback query={model.model_name} />
                   </div>
                 </details>
               ))}

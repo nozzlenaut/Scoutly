@@ -6,6 +6,7 @@ from fastapi.responses import RedirectResponse
 from app.providers.ebay import _ensure_affiliate_campaign_params, ebay_config_from_env
 from app.services.feedback_store import log_outbound_click
 
+
 router = APIRouter(tags=["Outbound"])
 
 
@@ -23,6 +24,8 @@ def _allowed_outbound_kind(url: str) -> str | None:
         return "ebay"
     if hostname == "awin1.com" or hostname.endswith(".awin1.com"):
         return "awin"
+    if hostname == "amazon.com" or hostname.endswith(".amazon.com"):
+        return "amazon"
     return None
 
 
@@ -52,8 +55,8 @@ def outbound_link(
             affiliate_reference_id=config.affiliate_reference_id if config else None,
         )
     else:
-        # The Awin feed already supplies a publisher-tracked deep link. Keep it
-        # byte-for-byte intact rather than trying to append eBay parameters.
+        # Awin feed links and Amazon links are already publisher-tagged before
+        # they reach this route. Preserve them byte-for-byte and only log the click.
         tracked_url = url
 
     log_outbound_click(

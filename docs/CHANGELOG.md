@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.37
+
+- Adds a separate Amazon fallback card for resolved PriceSift products, stable camera-model pages, and exact expanded KEH lens models without mixing unverified Amazon offers into the ranked top three.
+- Generates tagged Amazon used, renewed, and all-options searches with `average3d-20`; valid Books searches use the ISBN-10 as an exact Amazon product identifier when available.
+- Keeps Amazon price, availability, seller, and condition claims out of PriceSift until approved API access is available.
+- Adds clear link-level paid-link wording and the required Amazon Associate disclosure in the site footer and full affiliate disclosure page.
+- Adds optional rear-camera ISBN-13 barcode scanning on Books pages with automatic exact-edition search and a manual-entry fallback for unsupported browsers.
+- Extends the outbound redirect allowlist only to `amazon.com` and its subdomains, preserves tagged Amazon URLs, records the Amazon tracking tag as affiliate metadata, and keeps arbitrary external redirects blocked.
+- Keeps unsupported free-text product searches blocked and leaves eBay, KEH, auction ranking, and the three-result limit unchanged.
+
 ## v0.6.36
 
 - Moves the optional delivery ZIP from a separate results panel into the existing search form when “US listings only” is active.

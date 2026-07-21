@@ -1,3 +1,4 @@
+import { AmazonFallbackCard } from "@/components/AmazonFallbackCard";
 import { DeliveryResultsGrid } from "@/components/DeliveryResultsGrid";
 import { ResultCard } from "@/components/ResultCard";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
@@ -90,6 +91,15 @@ export function PublicBookResults({
           </p>
         </div>
       )}
+
+      <AmazonFallbackCard
+        query={identity.normalized}
+        category="books"
+        productId={`isbn-${identity.normalized}`}
+        isbn10={identity.isbn10}
+        book
+        emphasized={!data.top_results.length}
+      />
 
       {data.collectible_results.length ? (
         <section className="mt-10 rounded-3xl border border-purple-300/20 bg-purple-300/[0.06] p-5 sm:p-6">

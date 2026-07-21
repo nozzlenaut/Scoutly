@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AmazonFallbackCard } from "@/components/AmazonFallbackCard";
 import { AuctionResults } from "@/components/AuctionResults";
+import { BookIsbnScanner } from "@/components/BookIsbnScanner";
 import { PriceContextPanel } from "@/components/PriceContextPanel";
 import { PublicBookResults } from "@/components/PublicBookResults";
 import { SearchForm } from "@/components/SearchForm";
@@ -127,6 +129,7 @@ export default async function SearchPage({
       <PageShell>
         <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
           <SearchForm initialCategoryId={category.id} initialQuery="" initialUsOnly={usOnly} compact />
+          {category.id === "books" ? <BookIsbnScanner usOnly={usOnly} /> : null}
         </section>
         <div
           className="mt-8 rounded-3xl border border-white/10 bg-white/[0.05] p-6 text-slate-200"
@@ -141,7 +144,7 @@ export default async function SearchPage({
                 : category.id === "consoles"
                   ? "Choose a console brand, family / generation, and core model above. Storage, color, and edition variants are grouped together."
                   : category.id === "books"
-                    ? "Enter a valid ISBN-10 or ISBN-13 above. PriceSift searches that exact used-book edition rather than guessing from a title."
+                    ? "Enter a valid ISBN-10 or ISBN-13 above, or scan the barcode. PriceSift searches that exact used-book edition rather than guessing from a title."
                     : `Type an exact ${category.label.toLowerCase()} item above. PriceSift will not fall back to a default item from an empty URL.`}
           </p>
         </div>
@@ -161,6 +164,7 @@ export default async function SearchPage({
             initialUsOnly={usOnly}
             compact
           />
+          <BookIsbnScanner usOnly={usOnly} />
         </section>
         <SearchTransitionGuard>
           <PublicBookResults data={bookData} query={rawQuery} deliveryEnabled={usOnly} />
@@ -341,6 +345,13 @@ export default async function SearchPage({
             ) : null}
           </div>
         )}
+
+        <AmazonFallbackCard
+          query={resolved.product.display_name}
+          category={category.id}
+          productId={resolved.product.id}
+          emphasized={data.results.length === 0}
+        />
 
         {!isKehOnly ? (
           <AuctionResults
