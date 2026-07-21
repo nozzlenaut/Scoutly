@@ -2,13 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-
-type DetectedBarcode = { rawValue?: string };
-type BarcodeDetectorInstance = {
-  detect(source: HTMLVideoElement): Promise<DetectedBarcode[]>;
-};
-type BarcodeDetectorConstructor = new (options?: { formats?: string[] }) => BarcodeDetectorInstance;
-type ScannerWindow = Window & { BarcodeDetector?: BarcodeDetectorConstructor };
+import type { IScannerControls } from "@zxing/browser";
 
 function validIsbn13(value: string): boolean {
   if (!/^97[89]\d{10}$/.test(value)) return false;
@@ -20,11 +14,24 @@ function validIsbn13(value: string): boolean {
   return (10 - (weighted % 10)) % 10 === digits[12];
 }
 
+function cameraErrorMessage(error: unknown): string {
+  const name = error instanceof DOMException ? error.name : "";
+  if (name === "NotAllowedError" || name === "SecurityError") {
+    return "Camera permission was blocked. Allow camera access for PriceSift, then open the scanner again.";
+  }
+  if (name === "NotFoundError" || name === "OverconstrainedError") {
+    return "No usable rear camera was found. You can still type the ISBN above.";
+  }
+  if (name === "NotReadableError" || name === "AbortError") {
+    return "The camera is busy or could not start. Close other camera apps and try again.";
+  }
+  return "The camera could not start. You can still type the ISBN above.";
+}
+
 export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const controlsRef = useRef<IScannerControls | null>(null);
   const stoppedRef = useRef(false);
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState("Aim at the ISBN barcode on the back cover.");
@@ -32,11 +39,14 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
 
   function stopCamera() {
     stoppedRef.current = true;
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = null;
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-    if (videoRef.current) videoRef.current.srcObject = null;
+    controlsRef.current?.stop();
+    controlsRef.current = null;
+
+    const video = videoRef.current;
+    if (video?.srcObject instanceof MediaStream) {
+      video.srcObject.getTracks().forEach((track) => track.stop());
+    }
+    if (video) video.srcObject = null;
   }
 
   function closeScanner() {
@@ -58,12 +68,11 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
 
     stoppedRef.current = false;
     setError(null);
-    setStatus("Starting camera…");
+    setStatus("Loading barcode scanner…");
 
     async function begin() {
-      const Detector = (window as ScannerWindow).BarcodeDetector;
-      if (!Detector) {
-        setError("This browser cannot scan barcodes here yet. You can still type the ISBN above.");
+      if (!window.isSecureContext) {
+        setError("Camera scanning requires a secure HTTPS page. You can still type the ISBN above.");
         return;
       }
       if (!navigator.mediaDevices?.getUserMedia) {
@@ -72,48 +81,59 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
       }
 
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: { facingMode: { ideal: "environment" } },
-        });
-        if (stoppedRef.current) {
-          stream.getTracks().forEach((track) => track.stop());
-          return;
-        }
+        const [{ BrowserMultiFormatReader }, { BarcodeFormat, DecodeHintType }] = await Promise.all([
+          import("@zxing/browser"),
+          import("@zxing/library"),
+        ]);
+        if (stoppedRef.current) return;
 
-        streamRef.current = stream;
         const video = videoRef.current;
-        if (!video) {
-          stopCamera();
+        if (!video) return;
+
+        const hints = new Map();
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13]);
+        hints.set(DecodeHintType.TRY_HARDER, true);
+
+        const reader = new BrowserMultiFormatReader(hints, {
+          delayBetweenScanAttempts: 140,
+          delayBetweenScanSuccess: 500,
+          tryPlayVideoTimeout: 5000,
+        });
+
+        setStatus("Starting rear camera…");
+        const controls = await reader.decodeFromConstraints(
+          {
+            audio: false,
+            video: {
+              facingMode: { ideal: "environment" },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+          },
+          video,
+          (result) => {
+            if (!result || stoppedRef.current) return;
+            const digits = result.getText().replace(/\D/g, "");
+            if (!validIsbn13(digits)) {
+              setStatus("That barcode is not a valid ISBN-13. Try the barcode beginning with 978 or 979.");
+              return;
+            }
+
+            setStatus(`ISBN ${digits} found. Searching…`);
+            navigateToIsbn(digits);
+          },
+        );
+
+        if (stoppedRef.current) {
+          controls.stop();
           return;
         }
-        video.srcObject = stream;
-        await video.play();
-        const detector = new Detector({ formats: ["ean_13"] });
-        setStatus("Aim at the ISBN barcode on the back cover.");
 
-        const scan = async () => {
-          if (stoppedRef.current || !videoRef.current) return;
-          try {
-            const barcodes = await detector.detect(videoRef.current);
-            for (const barcode of barcodes) {
-              const digits = (barcode.rawValue || "").replace(/\D/g, "");
-              if (validIsbn13(digits)) {
-                setStatus(`ISBN ${digits} found. Searching…`);
-                navigateToIsbn(digits);
-                return;
-              }
-            }
-          } catch {
-            // A frame can fail while the camera is focusing. Keep scanning.
-          }
-          timerRef.current = setTimeout(scan, 180);
-        };
-
-        void scan();
-      } catch {
+        controlsRef.current = controls;
+        setStatus("Aim the 978 or 979 ISBN barcode inside the box.");
+      } catch (scanError) {
         stopCamera();
-        setError("Camera permission was blocked or the camera could not start. You can still type the ISBN above.");
+        setError(cameraErrorMessage(scanError));
       }
     }
 
@@ -138,7 +158,12 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
       </div>
 
       {open ? (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/90 p-4" role="dialog" aria-modal="true" aria-label="Scan ISBN barcode">
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/90 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Scan ISBN barcode"
+        >
           <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 p-5 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -155,10 +180,20 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
               </button>
             </div>
 
-            <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-black">
-              <video ref={videoRef} muted playsInline className="aspect-[4/3] w-full object-cover" />
+            <div className="relative mt-5 overflow-hidden rounded-2xl border border-white/10 bg-black">
+              <video ref={videoRef} muted playsInline autoPlay className="aspect-[4/3] w-full object-cover" />
+              {!error ? (
+                <div
+                  className="pointer-events-none absolute inset-x-[9%] top-1/2 h-24 -translate-y-1/2 rounded-xl border-2 border-cyan-200/90 shadow-[0_0_0_999px_rgba(2,6,23,0.35)]"
+                  aria-hidden="true"
+                />
+              ) : null}
             </div>
-            <p className={`mt-4 text-sm leading-6 ${error ? "text-amber-200" : "text-slate-300"}`} role={error ? "alert" : "status"}>
+
+            <p
+              className={`mt-4 text-sm leading-6 ${error ? "text-amber-200" : "text-slate-300"}`}
+              role={error ? "alert" : "status"}
+            >
               {error || status}
             </p>
           </div>

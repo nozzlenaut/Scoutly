@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 
 
-def test_outbound_adds_campaign_id_to_partial_ebay_url(monkeypatch, tmp_path):
+def test_outbound_adds_campaign_id_without_logging_get(monkeypatch, tmp_path):
     monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("EBAY_CLIENT_ID", "client")
     monkeypatch.setenv("EBAY_CLIENT_SECRET", "secret")
@@ -25,6 +25,7 @@ def test_outbound_adds_campaign_id_to_partial_ebay_url(monkeypatch, tmp_path):
     assert params["mkevt"] == ["1"]
     assert params["mkcid"] == ["1"]
     assert params["mkrid"] == ["711-53200-19255-0"]
+    assert not (tmp_path / "outbound_clicks.json").exists()
 
 
 def test_outbound_rejects_non_marketplace_url(monkeypatch, tmp_path):
@@ -33,12 +34,11 @@ def test_outbound_rejects_non_marketplace_url(monkeypatch, tmp_path):
     monkeypatch.setenv("EBAY_CLIENT_SECRET", "secret")
 
     client = TestClient(app, follow_redirects=False)
-    response = client.get("/api/out", params={"url": "https://example.com/itm/123"})
+    assert client.get("/api/out", params={"url": "https://example.com/itm/123"}).status_code == 400
+    assert client.post("/api/out/click", params={"url": "https://example.com/itm/123"}).status_code == 400
 
-    assert response.status_code == 400
 
-
-def test_outbound_preserves_awin_affiliate_link(monkeypatch, tmp_path):
+def test_outbound_preserves_awin_affiliate_link_without_logging_get(monkeypatch, tmp_path):
     monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
     awin_url = "https://www.awin1.com/pclick.php?p=44680921767&a=2980905&m=89435"
 
@@ -55,36 +55,36 @@ def test_outbound_preserves_awin_affiliate_link(monkeypatch, tmp_path):
 
     assert response.status_code == 302
     assert response.headers["location"] == awin_url
+    assert not (tmp_path / "outbound_clicks.json").exists()
 
 
-def test_outbound_preserves_tagged_amazon_link(monkeypatch, tmp_path):
+def test_browser_confirmed_amazon_click_is_logged(monkeypatch, tmp_path):
     monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
     amazon_url = "https://www.amazon.com/dp/0593820258?tag=average3d-20"
+    params = {
+        "url": amazon_url,
+        "provider": "Amazon",
+        "category": "books",
+        "product_id": "isbn-0593820258",
+        "q": "0593820258",
+        "title": "Amazon exact product: 0593820258",
+    }
 
     client = TestClient(app, follow_redirects=False)
-    response = client.get(
-        "/api/out",
-        params={
-            "url": amazon_url,
-            "provider": "Amazon",
-            "category": "books",
-            "product_id": "isbn-0593820258",
-            "q": "0593820258",
-            "title": "Amazon exact product: 0593820258",
-        },
-    )
+    redirect_response = client.get("/api/out", params=params)
+    assert redirect_response.status_code == 302
+    assert redirect_response.headers["location"] == amazon_url
+    assert not (tmp_path / "outbound_clicks.json").exists()
 
-    assert response.status_code == 302
-    assert response.headers["location"] == amazon_url
-    click_log = tmp_path / "outbound_clicks.json"
-    assert click_log.exists()
-    click_text = click_log.read_text(encoding="utf-8")
+    click_response = client.post("/api/out/click", params=params)
+    assert click_response.status_code == 204
+    click_text = (tmp_path / "outbound_clicks.json").read_text(encoding="utf-8")
     assert "Amazon" in click_text
     assert '"affiliate_campaign_present": true' in click_text
     assert '"affiliate_reference": "average3d-20"' in click_text
 
 
-def test_outbound_logs_click_metadata(monkeypatch, tmp_path):
+def test_browser_confirmed_ebay_click_logs_metadata(monkeypatch, tmp_path):
     monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("EBAY_CLIENT_ID", "client")
     monkeypatch.setenv("EBAY_CLIENT_SECRET", "secret")
@@ -92,8 +92,8 @@ def test_outbound_logs_click_metadata(monkeypatch, tmp_path):
     monkeypatch.setenv("EBAY_AFFILIATE_REFERENCE_ID", "scoutly")
 
     client = TestClient(app, follow_redirects=False)
-    response = client.get(
-        "/api/out",
+    response = client.post(
+        "/api/out/click",
         params={
             "url": "https://www.ebay.com/itm/377191325248?customid=scoutly",
             "provider": "eBay",
@@ -104,8 +104,8 @@ def test_outbound_logs_click_metadata(monkeypatch, tmp_path):
         },
     )
 
-    assert response.status_code == 302
-    click_log = tmp_path / "outbound_clicks.json"
-    assert click_log.exists()
-    assert "camera-sony-a7-iii-body" in click_log.read_text(encoding="utf-8")
-    assert "affiliate_campaign_present" in click_log.read_text(encoding="utf-8")
+    assert response.status_code == 204
+    click_text = (tmp_path / "outbound_clicks.json").read_text(encoding="utf-8")
+    assert "camera-sony-a7-iii-body" in click_text
+    assert "affiliate_campaign_present" in click_text
+    assert "1234567890" in click_text

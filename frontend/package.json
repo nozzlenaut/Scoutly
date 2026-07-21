@@ -13,6 +13,8 @@
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "@vercel/analytics": "^2.0.1",
+    "@zxing/browser": "0.1.5",
+    "@zxing/library": "0.21.3",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",

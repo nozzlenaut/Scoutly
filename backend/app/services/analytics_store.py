@@ -330,9 +330,9 @@ def analytics_digest(days: int = 30) -> dict[str, Any]:
         f"Resolved catalog/ISBN searches: {resolved_count} ({_pct(resolved_count, search_count) or 0}%)",
         f"Searches with results: {with_results_count} ({_pct(with_results_count, search_count) or 0}%)",
         f"No-result searches: {no_result_count} ({_pct(no_result_count, search_count) or 0}%)",
-        f"Tracked listing clicks: {click_count}",
-        f"Approximate search-to-click rate: {_pct(click_count, search_count) or 0}%",
-        f"Historical/unlinked affiliate clicks in window: {historical_click_count}",
+        f"Verified listing clicks: {click_count}",
+        f"Verified search-to-click rate: {_pct(click_count, search_count) or 0}%",
+        f"Verified clicks not linked to a recorded search: {historical_click_count}",
         f"US-only searches: {us_only_count} ({_pct(us_only_count, search_count) or 0}%)",
     ]
     if category_rows:
