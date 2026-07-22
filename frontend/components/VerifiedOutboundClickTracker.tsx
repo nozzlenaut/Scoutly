@@ -5,12 +5,37 @@ import { useEffect } from "react";
 function outboundClickEndpoint(anchor: HTMLAnchorElement): string | null {
   try {
     const redirectUrl = new URL(anchor.href, window.location.href);
-    if (!/^https?:$/.test(redirectUrl.protocol) || redirectUrl.pathname !== "/api/out") return null;
+    const normalizedPath = redirectUrl.pathname.replace(/\/+$/, "");
+
+    if (!/^https?:$/.test(redirectUrl.protocol) || normalizedPath !== "/api/out") {
+      return null;
+    }
+
     redirectUrl.pathname = "/api/out/click";
     return redirectUrl.toString();
   } catch {
     return null;
   }
+}
+
+function recordVerifiedClick(endpoint: string): void {
+  void fetch(endpoint, {
+    method: "POST",
+    mode: "cors",
+    credentials: "omit",
+    keepalive: true,
+    cache: "no-store",
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Verified click request failed with ${response.status}`);
+      }
+    })
+    .catch(() => {
+      // Some browsers or privacy extensions may interrupt a cross-origin
+      // keepalive request during navigation. Beacon is a best-effort fallback.
+      navigator.sendBeacon?.(endpoint);
+    });
 }
 
 export function VerifiedOutboundClickTracker() {
@@ -22,23 +47,19 @@ export function VerifiedOutboundClickTracker() {
 
       const target = event.target;
       if (!(target instanceof Element)) return;
+
       const anchor = target.closest<HTMLAnchorElement>("a[href]");
       if (!anchor) return;
 
       const endpoint = outboundClickEndpoint(anchor);
       if (!endpoint) return;
 
-      if (navigator.sendBeacon?.(endpoint)) return;
-      void fetch(endpoint, {
-        method: "POST",
-        mode: "cors",
-        credentials: "omit",
-        keepalive: true,
-      }).catch(() => undefined);
+      recordVerifiedClick(endpoint);
     }
 
     document.addEventListener("click", record, true);
     document.addEventListener("auxclick", record, true);
+
     return () => {
       document.removeEventListener("click", record, true);
       document.removeEventListener("auxclick", record, true);
