@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 from dataclasses import dataclass
@@ -9,6 +10,8 @@ import httpx
 
 from app.models.listing import Listing
 from app.providers.base import MarketplaceProvider
+
+logger = logging.getLogger(__name__)
 
 EBAY_OAUTH_SCOPE = "https://api.ebay.com/oauth/api_scope"
 PRODUCTION_API_BASE = "https://api.ebay.com"
@@ -383,6 +386,28 @@ class EbayProvider(MarketplaceProvider):
 
         payload = await self._search_request(headers, params)
         items = payload.get("itemSummaries") or []
+
+        # Deep console searches (limit=100) can exhaust the first page on broken,
+        # accessory, and wrong-model listings. When eBay signals more results via
+        # the "next" field, fetch a second page to give the filter pipeline more
+        # candidates. A failure on page two must not discard page-one results.
+        if (
+            requested_listing_type == "fixed_price"
+            and fixed_price_limit == "100"
+            and payload.get("next")
+        ):
+            next_offset = _query_params(payload["next"]).get("offset", "100")
+            second_params = {**params, "offset": next_offset}
+            try:
+                second_payload = await self._search_request(headers, second_params)
+                items.extend(second_payload.get("itemSummaries") or [])
+            except Exception:
+                logger.warning(
+                    "eBay second-page search failed; continuing with first page only. "
+                    "query=%r offset=%s",
+                    query,
+                    next_offset,
+                )
 
         listings: list[Listing] = []
         for item in items:

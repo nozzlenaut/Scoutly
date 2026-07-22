@@ -2,6 +2,7 @@ import asyncio
 
 from app.catalog.catalog import listing_matches_product, match_product, suggest_products
 from app.models.listing import Listing
+from app.providers.ebay import EbayConfig, EbayProvider
 from app.ranking.scorer import is_bad_listing
 from app.services import search_service
 
@@ -518,3 +519,80 @@ def test_live_search_records_price_snapshot(monkeypatch):
     assert captured[0]["prices"] == [329.99]
     assert captured[0]["source"] == "search"
     assert price_context.current_eligible_count == 1
+
+
+# ---------------------------------------------------------------------------
+# Pagination integration test: valid Series S console on page two survives filtering
+# ---------------------------------------------------------------------------
+
+
+class _FakeTokenService:
+    async def get_access_token(self) -> str:
+        return "fake-token"
+
+
+class TwoPageConsoleEbayProvider(EbayProvider):
+    """Uses the real EbayProvider.search() pagination logic with a mock
+    _search_request. Page 1 returns 100 filtered listings + a "next" URL
+    to trigger page 2. Page 2 returns one valid Xbox Series S console that
+    survives filtering."""
+
+    def __init__(self) -> None:
+        self.config = EbayConfig(client_id="client", client_secret="secret", marketplace_id="EBAY_US")
+        self.tokens = _FakeTokenService()
+        self.request_count = 0
+
+    async def _search_request(self, headers: dict[str, str], params: dict[str, str]) -> dict:
+        self.request_count += 1
+        offset = int(params.get("offset", "0"))
+        if offset == 0:
+            return {
+                "next": "https://api.ebay.com/buy/browse/v1/item_summary/search?limit=100&offset=100&q=Xbox+Series+S",
+                "itemSummaries": [
+                    {
+                        "title": "Xbox Series S Controller Only",
+                        "price": {"value": "59.99", "currency": "USD"},
+                        "condition": "Used",
+                        "itemWebUrl": f"https://www.ebay.com/itm/{100000000000 + i}",
+                        "seller": {"feedbackPercentage": "99.0", "feedbackScore": 100},
+                        "shippingOptions": [{"shippingCost": {"value": "0", "currency": "USD"}}],
+                    }
+                    for i in range(100)
+                ],
+            }
+        return {
+            "itemSummaries": [
+                {
+                    "title": "Microsoft Xbox Series S 512GB Console Tested",
+                    "price": {"value": "249.99", "currency": "USD"},
+                    "condition": "Used - Good",
+                    "itemWebUrl": "https://www.ebay.com/itm/999999999999",
+                    "seller": {"feedbackPercentage": "99.5", "feedbackScore": 500},
+                    "shippingOptions": [{"shippingCost": {"value": "0", "currency": "USD"}}],
+                }
+            ]
+        }
+
+
+def test_xbox_series_s_page_two_console_survives_filtering(monkeypatch):
+    provider = TwoPageConsoleEbayProvider()
+    monkeypatch.setitem(search_service.PROVIDERS, "ebay", provider)
+
+    resolved, results, auctions, diagnostics, price_context = asyncio.run(
+        search_service.search_best_deals_with_auctions(
+            "Xbox Series S",
+            ["ebay"],
+            "consoles",
+            include_auctions=False,
+        )
+    )
+
+    assert resolved is not None
+    assert resolved.product.id == "console-xbox-series-s"
+    assert provider.request_count == 2
+    assert len(results) == 1
+    assert results[0].title == "Microsoft Xbox Series S 512GB Console Tested"
+    assert auctions == []
+    assert diagnostics.fixed_price_candidates == 101
+    assert diagnostics.fixed_price_eligible == 1
+    assert diagnostics.fixed_price_filtered == 100

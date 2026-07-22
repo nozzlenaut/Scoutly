@@ -331,3 +331,123 @@ def test_ebay_gtin_search_can_limit_results_to_us_item_location():
     )
 
     assert provider.last_params["filter"] == "conditions:{USED},buyingOptions:{FIXED_PRICE},itemLocationCountry:US"
+
+
+# ---------------------------------------------------------------------------
+# Pagination tests
+# ---------------------------------------------------------------------------
+
+
+class _TwoPageEbayProvider(EbayProvider):
+    """Captures request count and params, returns different results per page."""
+
+    def __init__(self, marketplace_id: str = "EBAY_US", second_page_items=None, second_page_error=None):
+        self.config = EbayConfig(client_id="client", client_secret="secret", marketplace_id=marketplace_id)
+        self.tokens = _FakeTokenService()
+        self.request_count = 0
+        self.last_params: dict[str, str] = {}
+        self.second_page_items = second_page_items or []
+        self.second_page_error = second_page_error
+
+    async def _search_request(self, headers: dict[str, str], params: dict[str, str]) -> dict:
+        self.request_count += 1
+        self.last_params = params
+        offset = int(params.get("offset", "0"))
+        if offset == 0:
+            return {
+                "next": "https://api.ebay.com/buy/browse/v1/item_summary/search?limit=100&offset=100&q=Xbox+Series+S",
+                "itemSummaries": [
+                    {
+                        "title": "Xbox Series S Controller Only",
+                        "price": {"value": "59.99", "currency": "USD"},
+                        "condition": "Used",
+                        "itemWebUrl": "https://www.ebay.com/itm/111111111111",
+                        "seller": {"feedbackPercentage": "99.0", "feedbackScore": 100},
+                        "shippingOptions": [{"shippingCost": {"value": "0", "currency": "USD"}}],
+                    }
+                ],
+            }
+        if self.second_page_error is not None:
+            raise self.second_page_error
+        return {"itemSummaries": self.second_page_items}
+
+
+def _console_item(title, price="249.99"):
+    return {
+        "title": title,
+        "price": {"value": price, "currency": "USD"},
+        "condition": "Used - Good",
+        "itemWebUrl": "https://www.ebay.com/itm/999999999999",
+        "seller": {"feedbackPercentage": "99.5", "feedbackScore": 500},
+        "shippingOptions": [{"shippingCost": {"value": "0", "currency": "USD"}}],
+    }
+
+
+def test_ebay_search_next_field_triggers_second_page_request():
+    provider = _TwoPageEbayProvider(second_page_items=[_console_item("Page 2 Console")])
+
+    asyncio.run(provider.search("Xbox Series S console", category="consoles"))
+
+    assert provider.request_count == 2
+    assert provider.last_params.get("offset") == "100"
+
+
+def test_ebay_search_no_next_field_means_single_request():
+    provider = _TwoPageEbayProvider()
+
+    # Override _search_request to return no "next" field on page 1
+    async def single_page_request(headers, params):
+        provider.request_count += 1
+        provider.last_params = params
+        return {
+            "itemSummaries": [
+                {
+                    "title": "Xbox Series S Console",
+                    "price": {"value": "249.99", "currency": "USD"},
+                    "condition": "Used",
+                    "itemWebUrl": "https://www.ebay.com/itm/111111111111",
+                    "seller": {"feedbackPercentage": "99.0", "feedbackScore": 100},
+                    "shippingOptions": [{"shippingCost": {"value": "0", "currency": "USD"}}],
+                }
+            ]
+        }
+
+    provider._search_request = single_page_request
+
+    asyncio.run(provider.search("Xbox Series S console", category="consoles"))
+
+    assert provider.request_count == 1
+    assert "offset" not in provider.last_params
+
+
+def test_ebay_search_combines_first_and_second_page_results():
+    provider = _TwoPageEbayProvider(second_page_items=[_console_item("Page 2 Console")])
+
+    listings = asyncio.run(provider.search("Xbox Series S console", category="consoles"))
+
+    assert len(listings) == 2
+    titles = [listing.title for listing in listings]
+    assert "Xbox Series S Controller Only" in titles
+    assert "Page 2 Console" in titles
+
+
+def test_ebay_search_page_two_failure_returns_page_one_listings():
+    provider = _TwoPageEbayProvider(
+        second_page_items=[],
+        second_page_error=RuntimeError("simulated eBay API failure"),
+    )
+
+    listings = asyncio.run(provider.search("Xbox Series S console", category="consoles"))
+
+    assert provider.request_count == 2
+    assert len(listings) == 1
+    assert listings[0].title == "Xbox Series S Controller Only"
+
+
+def test_ebay_search_non_deep_console_does_not_fetch_second_page():
+    provider = _TwoPageEbayProvider(second_page_items=[_console_item("Page 2 Console")])
+
+    asyncio.run(provider.search("Nintendo Switch OLED console", category="consoles"))
+
+    assert provider.request_count == 1
+    assert "offset" not in provider.last_params
