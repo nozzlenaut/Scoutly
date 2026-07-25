@@ -102,8 +102,9 @@ def test_ebay_search_adds_camera_category_id():
     asyncio.run(provider.search("Sony A7 III Body", category="cameras"))
 
     assert provider.last_params["category_ids"] == "31388"
-    assert provider.last_params["limit"] == "35"
+    assert provider.last_params["limit"] == "75"
     assert provider.last_params["filter"] == "conditions:{USED},buyingOptions:{FIXED_PRICE}"
+    assert "sort" not in provider.last_params
 
 
 def test_ebay_search_adds_gpu_category_id():
@@ -194,13 +195,13 @@ def test_ebay_search_uses_deeper_pool_for_exhausted_console_models():
         assert provider.last_params["limit"] == "100"
 
 
-def test_ebay_search_keeps_other_console_pool_at_65():
+def test_ebay_search_uses_standard_pool_for_other_consoles():
     provider = _CaptureEbayProvider()
 
     asyncio.run(provider.search("Nintendo Switch OLED console", category="consoles"))
 
     assert provider.last_params["category_ids"] == "139971"
-    assert provider.last_params["limit"] == "65"
+    assert provider.last_params["limit"] == "75"
 
 
 def test_ebay_seller_sentinel_values_become_unavailable():
@@ -303,6 +304,7 @@ def test_ebay_gtin_search_uses_exact_isbn_and_books_category():
     assert "q" not in provider.last_params
     assert provider.last_params["category_ids"] == "261186"
     assert provider.last_params["filter"] == "conditions:{USED},buyingOptions:{FIXED_PRICE}"
+    assert "sort" not in provider.last_params
 
 
 def test_ebay_search_can_limit_results_to_us_item_location():

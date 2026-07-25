@@ -389,6 +389,28 @@ class RankingConsoleProvider:
             ),
             Listing(
                 provider="eBay",
+                title="Sony PlayStation 5 Pro PS5 Pro 2TB Console Complete Tested",
+                price=480,
+                shipping=0,
+                total_price=480,
+                condition="Used",
+                seller_rating=99.8,
+                seller_feedback_score=500,
+                url="https://www.ebay.com/itm/100000000023",
+            ),
+            Listing(
+                provider="eBay",
+                title="Sony PlayStation 5 Pro PS5 Pro 2TB Console Full System Tested",
+                price=495,
+                shipping=0,
+                total_price=495,
+                condition="Used",
+                seller_rating=99.8,
+                seller_feedback_score=500,
+                url="https://www.ebay.com/itm/100000000024",
+            ),
+            Listing(
+                provider="eBay",
                 title="Disc Drive for PS5 Pro Digital Edition Console",
                 price=79,
                 shipping=0,
@@ -401,7 +423,7 @@ class RankingConsoleProvider:
         ]
 
 
-def test_console_search_preserves_quality_ranking_and_exposes_filter_reasons(monkeypatch):
+def test_console_search_scores_locally_then_orders_eligible_results_by_total_price(monkeypatch):
     provider = RankingConsoleProvider()
     monkeypatch.setitem(search_service.PROVIDERS, "ebay", provider)
 
@@ -415,11 +437,14 @@ def test_console_search_preserves_quality_ranking_and_exposes_filter_reasons(mon
     )
 
     assert resolved is not None
-    assert results[0].title.endswith("Tested Working")
-    assert results[1].title.endswith("READ DESCRIPTION")
+    assert [listing.total_price for listing in results] == [420, 465, 480]
+    assert results[0].title.endswith("READ DESCRIPTION")
+    assert results[1].title.endswith("Tested Working")
+    assert results[1].score > results[0].score
+    assert all(listing.total_price != 495 for listing in results)
     assert all("Disc Drive for" not in listing.title for listing in results)
-    assert diagnostics.fixed_price_candidates == 3
-    assert diagnostics.fixed_price_eligible == 2
+    assert diagnostics.fixed_price_candidates == 5
+    assert diagnostics.fixed_price_eligible == 4
     assert diagnostics.fixed_price_filtered == 1
     assert diagnostics.fixed_price_rejection_reasons["console accessory/part/incomplete"] == 1
     assert auctions == []

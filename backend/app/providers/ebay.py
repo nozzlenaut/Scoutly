@@ -52,12 +52,12 @@ DEEP_CONSOLE_QUERY_TERMS = (
 def _fixed_price_candidate_limit(query: str, category: str | None) -> str:
     normalized_category = (category or "").strip().lower()
     if normalized_category != "consoles":
-        return "35"
+        return "75"
 
     normalized_query = " ".join(query.strip().lower().split())
     if any(term in normalized_query for term in DEEP_CONSOLE_QUERY_TERMS):
         return "100"
-    return "65"
+    return "75"
 
 
 @dataclass
@@ -370,9 +370,10 @@ class EbayProvider(MarketplaceProvider):
                 "q": query,
                 # The affected PlayStation and Xbox searches need extra room to
                 # get past broken, accessory, incomplete, and wrong-model items.
-                # Other consoles stay at 65 and every other category stays at 35.
+                # Deep console searches stay at 100; all other searches use 75.
                 "limit": fixed_price_limit,
-                "sort": "price",
+                # Omit sort so eBay returns its default Best Match ordering.
+                # PriceSift still filters and scores the candidate pool locally.
                 # Keep this conservative for now. Removing the condition filter caused
                 # eBay to return too many parts/accessory listings. Additional safe
                 # conditions can be added once we validate category-specific filters.
@@ -440,7 +441,7 @@ class EbayProvider(MarketplaceProvider):
         params = {
             "gtin": gtin,
             "limit": str(max(1, min(limit, 200))),
-            "sort": "price",
+            # Omit sort so exact-GTIN searches also use eBay Best Match.
             "filter": ",".join(filters),
         }
         category_id = self._category_id_for(category)
