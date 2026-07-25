@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, HttpUrl
 class Listing(BaseModel):
     provider: str
     title: str
+    description: str | None = None
     price: float = Field(ge=0)
     shipping: float = Field(ge=0)
     total_price: float = Field(ge=0)

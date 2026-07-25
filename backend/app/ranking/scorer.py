@@ -1,3 +1,5 @@
+import re
+
 from app.catalog.catalog import GLOBAL_BAD_LISTING_TERMS, listing_match_rejection_reasons
 from app.catalog.normalizer import has_term
 from app.models.listing import Listing
@@ -31,6 +33,80 @@ REVIEW_WORDS = [
 ]
 
 REVIEW_WARNING = "Seller asks you to review the description"
+
+HARDWARE_DEFECT_PATTERNS = [
+    ("bad fan", re.compile(r"\bbad\s+fans?\b", re.I)),
+    ("fan issue", re.compile(r"\bfan\s+issues?\b", re.I)),
+    ("overheating", re.compile(r"\boverheat(?:s|ing)?\b", re.I)),
+    ("shuts off", re.compile(r"\bshuts?\s+off\b", re.I)),
+    ("powers off", re.compile(r"\bpowers?\s+off\b", re.I)),
+    ("power issue", re.compile(r"\bpower\s+issues?\b", re.I)),
+    ("thermal issue", re.compile(r"\bthermal\s+issues?\b", re.I)),
+    ("intermittent", re.compile(r"\bintermittent(?:ly)?\b", re.I)),
+    ("repair needed", re.compile(r"\b(?:repairs?\s+(?:is\s+)?needed|needs?\s+repair)\b", re.I)),
+    ("not fully functional", re.compile(r"\bnot\s+fully\s+functional\b", re.I)),
+]
+
+NEGATED_DEFECT_PREFIX = re.compile(
+    r"(?:"
+    r"\bno\s+(?:known\s+)?(?:signs?\s+of\s+)?|"
+    r"\bwithout\s+(?:any\s+)?(?:signs?\s+of\s+)?|"
+    r"\b(?:does|do|did|is|was|will)\s+not\s+|"
+    r"\b(?:doesn|isn|wasn|won)['’]?t\s+|"
+    r"\bnever\s+|"
+    r"\b(?:tested|testing|checked|checking|inspected|inspecting|screened|screening)"
+    r"\s+(?:it\s+)?(?:for|against)\s+"
+    r")$",
+    re.I,
+)
+
+TEST_ONLY_DEFECT_SUFFIX = re.compile(
+    r"^(?:"
+    r"\s+(?:test|testing|check|inspection)\b|"
+    r"\s+(?:tested|checked|inspected)\b|"
+    r"[\s:;,—-]+(?:none|not\s+(?:present|found|detected)|no\s+(?:issue|issues|problem|problems))\b"
+    r")",
+    re.I,
+)
+
+TEST_CONTEXT_START = re.compile(
+    r"\b(?:tested|testing|checked|checking|inspected|inspecting|screened|screening)"
+    r"\s+(?:it\s+)?(?:for|against)\s+",
+    re.I,
+)
+
+TEST_CONTEXT_BREAK = re.compile(
+    r"\b(?:but|however|although|yet|now|currently|found|shows?|developed|has|have|with|it)\b",
+    re.I,
+)
+
+
+def _defect_mention_is_negated_or_test_only(text: str, match: re.Match[str]) -> bool:
+    prefix = text[max(0, match.start() - 80) : match.start()]
+    suffix = text[match.end() : match.end() + 50]
+    if NEGATED_DEFECT_PREFIX.search(prefix) or TEST_ONLY_DEFECT_SUFFIX.search(suffix):
+        return True
+
+    clause_prefix = re.split(r"[.;:!?]", prefix)[-1]
+    test_context = TEST_CONTEXT_START.search(clause_prefix)
+    if test_context and not TEST_CONTEXT_BREAK.search(clause_prefix[test_context.end() :]):
+        return True
+
+    return False
+
+
+def _hardware_defect_mentions(text: str | None) -> list[str]:
+    if not text:
+        return []
+
+    mentions: list[str] = []
+    for label, pattern in HARDWARE_DEFECT_PATTERNS:
+        for match in pattern.finditer(text):
+            if _defect_mention_is_negated_or_test_only(text, match):
+                continue
+            mentions.append(label)
+            break
+    return mentions
 
 
 def _console_title_quality_adjustment(listing: Listing, product: Product | None) -> float:
@@ -76,6 +152,14 @@ def rejection_reasons(listing: Listing, product: Product | None = None) -> list[
         if word in condition:
             reasons.append(f"bad condition: {word}")
             break
+
+    title_defects = _hardware_defect_mentions(listing.title)
+    if title_defects:
+        reasons.append(f"hardware defect in title: {title_defects[0]}")
+
+    description_defects = _hardware_defect_mentions(listing.description)
+    if description_defects:
+        reasons.append(f"hardware defect in description: {description_defects[0]}")
 
     if product is not None and product.category == "gpus":
         for word in ["laptop", "notebook", "mobile"]:
