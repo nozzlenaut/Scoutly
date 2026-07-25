@@ -224,6 +224,8 @@ def ebay_item_to_listing(
     requested_listing_type: str | None = None,
 ) -> Listing | None:
     title = item.get("title")
+    raw_description = item.get("shortDescription") or item.get("description")
+    description = str(raw_description).strip() if raw_description else None
     buying_options = [str(option).upper() for option in item.get("buyingOptions") or []]
     inferred_listing_type = requested_listing_type or ("auction" if "AUCTION" in buying_options else "fixed_price")
 
@@ -268,6 +270,7 @@ def ebay_item_to_listing(
     return Listing(
         provider="eBay",
         title=title,
+        description=description,
         price=price,
         shipping=shipping,
         total_price=round(price + shipping, 2),
@@ -354,6 +357,7 @@ class EbayProvider(MarketplaceProvider):
                 filters.append(f"itemLocationCountry:{item_location_country.upper()}")
             params = {
                 "q": query,
+                "fieldgroups": "EXTENDED",
                 # Auctions are loaded only after the user asks for them, so keep
                 # this call focused on the first page of ending-soon candidates.
                 "limit": "25",
@@ -368,6 +372,7 @@ class EbayProvider(MarketplaceProvider):
             fixed_price_limit = _fixed_price_candidate_limit(query, category)
             params = {
                 "q": query,
+                "fieldgroups": "EXTENDED",
                 # The affected PlayStation and Xbox searches need extra room to
                 # get past broken, accessory, incomplete, and wrong-model items.
                 # Deep console searches stay at 100; all other searches use 75.
@@ -440,6 +445,7 @@ class EbayProvider(MarketplaceProvider):
             filters.append(f"itemLocationCountry:{item_location_country.upper()}")
         params = {
             "gtin": gtin,
+            "fieldgroups": "EXTENDED",
             "limit": str(max(1, min(limit, 200))),
             # Omit sort so exact-GTIN searches also use eBay Best Match.
             "filter": ",".join(filters),

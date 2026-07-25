@@ -29,6 +29,23 @@ def test_ebay_item_maps_to_listing():
     assert listing.seller_feedback_score == 42
 
 
+def test_ebay_item_maps_available_short_description():
+    listing = ebay_item_to_listing(
+        {
+            "title": "Sony PlayStation 5 Console",
+            "shortDescription": "Console overheats after extended play.",
+            "price": {"value": "300", "currency": "USD"},
+            "condition": "Used",
+            "itemWebUrl": "https://www.ebay.com/itm/1234567891",
+            "seller": {},
+            "shippingOptions": [],
+        }
+    )
+
+    assert listing is not None
+    assert listing.description == "Console overheats after extended play."
+
+
 def test_ebay_item_prefers_affiliate_url():
     item = {
         "title": "Sony FE 24-70mm f/2.8 GM Lens",
@@ -102,6 +119,7 @@ def test_ebay_search_adds_camera_category_id():
     asyncio.run(provider.search("Sony A7 III Body", category="cameras"))
 
     assert provider.last_params["category_ids"] == "31388"
+    assert provider.last_params["fieldgroups"] == "EXTENDED"
     assert provider.last_params["limit"] == "75"
     assert provider.last_params["filter"] == "conditions:{USED},buyingOptions:{FIXED_PRICE}"
     assert "sort" not in provider.last_params
@@ -165,6 +183,7 @@ def test_ebay_auction_search_uses_auction_filter_and_ending_soonest():
     asyncio.run(provider.search("NVIDIA Tesla P100", category="gpus", buying_option="auction"))
 
     assert provider.last_params["category_ids"] == "27386"
+    assert provider.last_params["fieldgroups"] == "EXTENDED"
     assert provider.last_params["filter"] == "conditions:{USED},buyingOptions:{AUCTION}"
     assert provider.last_params["sort"] == "endingSoonest"
 
@@ -302,6 +321,7 @@ def test_ebay_gtin_search_uses_exact_isbn_and_books_category():
 
     assert provider.last_params["gtin"] == "9780306406157"
     assert "q" not in provider.last_params
+    assert provider.last_params["fieldgroups"] == "EXTENDED"
     assert provider.last_params["category_ids"] == "261186"
     assert provider.last_params["filter"] == "conditions:{USED},buyingOptions:{FIXED_PRICE}"
     assert "sort" not in provider.last_params
@@ -392,6 +412,7 @@ def test_ebay_search_next_field_triggers_second_page_request():
 
     assert provider.request_count == 2
     assert provider.last_params.get("offset") == "100"
+    assert provider.last_params["fieldgroups"] == "EXTENDED"
 
 
 def test_ebay_search_no_next_field_means_single_request():

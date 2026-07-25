@@ -215,6 +215,80 @@ def test_rejects_defective_console_even_when_ebay_calls_it_used():
     assert is_bad_listing(listing, product.product) is True
 
 
+def test_rejects_ps5_read_description_when_description_confirms_overheating():
+    from app.catalog.catalog import match_product
+    from app.ranking.scorer import rejection_reasons
+
+    product = match_product("PlayStation 5 Disc Edition", category="consoles")
+    assert product is not None
+    listing = Listing(
+        provider="eBay",
+        title="Sony PlayStation 5 Disc Edition CFI-1015A 825GB Console Used Read Description",
+        description="The console overheats after it has been running for a while.",
+        price=275,
+        shipping=0,
+        total_price=275,
+        condition="Used",
+        seller_rating=99.8,
+        seller_feedback_score=500,
+        url="https://www.ebay.com/itm/123456789013",
+    )
+
+    reasons = rejection_reasons(listing, product.product)
+    assert "hardware defect in description: overheating" in reasons
+    assert is_bad_listing(listing, product.product) is True
+
+
+def test_rejects_ps5_bad_fan_title():
+    from app.catalog.catalog import match_product
+    from app.ranking.scorer import rejection_reasons
+
+    product = match_product("PlayStation 5 Slim Digital Edition", category="consoles")
+    assert product is not None
+    listing = Listing(
+        provider="eBay",
+        title="Sony PlayStation 5 Slim Digital PS5 1TB White CFI-2015 w/ Bad Fan",
+        price=250,
+        shipping=0,
+        total_price=250,
+        condition="Used",
+        seller_rating=99.8,
+        seller_feedback_score=500,
+        url="https://www.ebay.com/itm/123456789014",
+    )
+
+    reasons = rejection_reasons(listing, product.product)
+    assert "hardware defect in title: bad fan" in reasons
+    assert is_bad_listing(listing, product.product) is True
+
+
+def test_negated_and_test_only_hardware_fault_mentions_remain_eligible():
+    from app.catalog.catalog import match_product
+    from app.ranking.scorer import score_listing
+
+    product = match_product("PlayStation 5 Disc Edition", category="consoles")
+    assert product is not None
+    listing = Listing(
+        provider="eBay",
+        title="Sony PlayStation 5 Disc Edition Console Used Read Description",
+        description=(
+            "Fully functional and tested for overheating and fan issues. "
+            "Does not overheat, has no fan issues, and powers off testing passed."
+        ),
+        price=350,
+        shipping=0,
+        total_price=350,
+        condition="Used",
+        seller_rating=99.8,
+        seller_feedback_score=500,
+        url="https://www.ebay.com/itm/123456789015",
+    )
+
+    assert is_bad_listing(listing, product.product) is False
+    assert score_listing(listing, product.product) > 0
+    assert "Seller asks you to review the description" in listing.warning_labels
+
+
 def test_gpu_cooling_defects_are_rejected_but_negated_noise_is_allowed():
     from app.catalog.catalog import match_product
 
