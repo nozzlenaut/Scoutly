@@ -111,6 +111,43 @@ def _top_scored_listings(listings: list[Listing], limit: int = 3) -> list[Listin
     return selected
 
 
+def _scored_eligible_listings(
+    listings: list[Listing],
+    product: Product | None,
+) -> list[Listing]:
+    eligible: list[Listing] = []
+    for listing in listings:
+        if rejection_reasons(listing, product):
+            continue
+        listing.score = score_listing(listing, product)
+        eligible.append(listing)
+    return eligible
+
+
+def _cheapest_fixed_listings_with_stats(
+    listings: list[Listing],
+    limit: int = 3,
+) -> tuple[list[Listing], int]:
+    selected: list[Listing] = []
+    seen_urls: set[str] = set()
+    seen_titles: set[str] = set()
+    duplicates_removed = 0
+
+    for listing in sorted(listings, key=lambda item: item.total_price):
+        url_key = _listing_identity(listing)
+        title_key = _listing_title_identity(listing)
+        if url_key in seen_urls or (title_key and title_key in seen_titles):
+            duplicates_removed += 1
+            continue
+        seen_urls.add(url_key)
+        if title_key:
+            seen_titles.add(title_key)
+        if len(selected) < max(1, limit):
+            selected.append(listing)
+
+    return selected, duplicates_removed
+
+
 def _unique_eligible_listings(
     listings: list[Listing],
     product: Product | None,
@@ -400,7 +437,7 @@ async def search_best_deals_with_auctions(
                 if report_filtered:
                     reason_counts["reported listing filter"] += report_filtered
                 _merge_reason_counts(diagnostics.fixed_price_rejection_reasons, reason_counts)
-                provider_fixed_candidates.extend(top_listings(fixed_listings, scoped_product, limit=3))
+                provider_fixed_candidates.extend(_scored_eligible_listings(fixed_listings, scoped_product))
                 provider_price_candidates[provider_key.lower()].extend(
                     _unique_eligible_listings(fixed_listings, scoped_product)
                 )
@@ -431,9 +468,7 @@ async def search_best_deals_with_auctions(
                         )
                     )
 
-        provider_fixed_results, fixed_duplicates = _top_scored_listings_with_stats(provider_fixed_candidates, limit=3)
-        diagnostics.fixed_price_duplicates_removed += fixed_duplicates
-        fixed_results.extend(provider_fixed_results)
+        fixed_results.extend(provider_fixed_candidates)
 
         provider_auction_results, auction_duplicates = _top_combined_auctions_with_stats(provider_auction_candidates, limit=3)
         diagnostics.auction_duplicates_removed += auction_duplicates
@@ -449,7 +484,7 @@ async def search_best_deals_with_auctions(
             provider_candidate_counts["keh"] = len(keh_candidates)
             provider_filtered_counts["keh"] = 0
 
-    final_fixed_results, fixed_duplicates = _top_scored_listings_with_stats(fixed_results, limit=3)
+    final_fixed_results, fixed_duplicates = _cheapest_fixed_listings_with_stats(fixed_results, limit=3)
     diagnostics.fixed_price_duplicates_removed += fixed_duplicates
     final_auction_results, auction_duplicates = _top_combined_auctions_with_stats(auction_results, limit=3)
     diagnostics.auction_duplicates_removed += auction_duplicates
