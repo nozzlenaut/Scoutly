@@ -18,9 +18,11 @@ from app.api.prices import router as prices_router
 from app.api.keh import router as keh_router
 from app.api.books import router as books_router
 from app.api.shipping import router as shipping_router
+from app.api.diagnostics import router as diagnostics_router
 from app.services.database import database_health, initialize_database
 from app.services.data_migrations import apply_data_migrations
 from app.services.admin_auth import AdminAuthorizationMiddleware
+from app.version import APP_VERSION
 
 
 @asynccontextmanager
@@ -30,7 +32,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="PriceSift API", version="0.6.41", lifespan=lifespan)
+app = FastAPI(title="PriceSift API", version=APP_VERSION, lifespan=lifespan)
 app.add_middleware(AdminAuthorizationMiddleware)
 
 # Scoutly does not use cookies or browser credentials yet, so a public API CORS
@@ -62,4 +64,5 @@ app.include_router(prices_router, prefix="/api")
 app.include_router(keh_router, prefix="/api")
 app.include_router(books_router, prefix="/api")
 app.include_router(shipping_router, prefix="/api")
+app.include_router(diagnostics_router, prefix="/api")
 app.include_router(ebay_notifications_router, prefix="/api")

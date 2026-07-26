@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AdminFlagBadListingButton } from "@/components/AdminFlagBadListingButton";
 import {
   saveQaEvaluation,
   searchDeals,
@@ -434,6 +435,12 @@ export function QaWorkbench({ initialCases, initialSummary, token }: Props) {
                         >
                           Inspect listing ↗
                         </a>
+                        <AdminFlagBadListingButton
+                          result={result}
+                          query={selected.query}
+                          category={selected.category}
+                          productId={resolved?.id}
+                        />
                       </article>
                     ))}
                   </div>

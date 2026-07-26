@@ -458,6 +458,48 @@ export type QaCasesResponse = {
   summary: QaSummary;
 };
 
+export type CodexDiagnostics = {
+  purpose: string;
+  generated_at: string;
+  release: { version: string; commit: string | null };
+  providers: Array<{
+    id: string;
+    role: string;
+    mode: string;
+    live: boolean;
+  }>;
+  catalog: {
+    active_products: number;
+    categories: Array<{ id: string; label: string; active_products: number }>;
+  };
+  filters: {
+    global_reject_terms: number;
+    hardware_defect_patterns: number;
+    manual_rules_exposed: boolean;
+    behavior: string[];
+  };
+  qa: {
+    summary: QaSummary;
+    recent_runs: Array<{
+      case_id: string;
+      category: string;
+      outcome: string;
+      resolution_correct: boolean;
+      created_at: string | null;
+      fixed_price_candidates: number;
+      fixed_price_eligible: number;
+      fixed_price_filtered: number;
+      fixed_price_duplicates_removed: number;
+    }>;
+  };
+  storage: {
+    configured: boolean;
+    connected: boolean;
+    backend: string;
+  };
+  safety: Record<string, boolean>;
+};
+
 export type QaEvaluationPayload = {
   case_id: string;
   category: string;
@@ -501,6 +543,14 @@ export async function adminFetch(
   const headers = new Headers(init.headers);
   if (token) headers.set("Authorization", `Bearer ${token}`);
   return fetch(parsed.toString(), { ...init, headers });
+}
+
+export async function getCodexDiagnostics(): Promise<CodexDiagnostics> {
+  const response = await fetch(`${baseUrl}/api/diagnostics/codex`, {
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error("Codex diagnostics failed");
+  return response.json();
 }
 
 export async function searchDeals(

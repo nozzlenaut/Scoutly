@@ -162,11 +162,16 @@ export default async function AdminPage({
           ))}
         </div>
 
-        <AdminAnalyticsDigest digest={digest} />
+        <div id="analytics" className="scroll-mt-24">
+          <AdminAnalyticsDigest digest={digest} />
+        </div>
 
-        <AdminFilterRules initialRules={manualRules} token={ADMIN_BROWSER_SESSION} />
+        <div id="filter-rules" className="scroll-mt-24">
+          <AdminFilterRules initialRules={manualRules} token={ADMIN_BROWSER_SESSION} />
+        </div>
 
         <AdminCollapsibleSection
+          id="recent-clicks"
           count={clicks.length}
           description="What users actually clicked before PriceSift redirected to a provider."
           title="Recent clicks"
@@ -203,6 +208,7 @@ export default async function AdminPage({
         </AdminCollapsibleSection>
 
         <AdminCollapsibleSection
+          id="filtered-listings"
           count={filtered.length}
           description="Useful for debugging false positives. These were seen from eBay but rejected before ranking."
           title="Recently filtered listings"
@@ -240,9 +246,13 @@ export default async function AdminPage({
           </div>
         </AdminCollapsibleSection>
 
-        <AdminBetaFeedback feedback={betaFeedback} />
+        <div id="feedback" className="scroll-mt-24">
+          <AdminBetaFeedback feedback={betaFeedback} />
+        </div>
 
-        <AdminReports initialReports={reports} token={ADMIN_BROWSER_SESSION} />
+        <div id="reports" className="scroll-mt-24">
+          <AdminReports initialReports={reports} token={ADMIN_BROWSER_SESSION} />
+        </div>
 
         <SiteFooter />
       </div>
