@@ -205,6 +205,7 @@ function downloadResults(books: ImportedBook[]): void {
     "Binding",
     "ISBN",
     "Status",
+    "Match Method",
     "Best Total",
     "Condition",
     "Clean Options",
@@ -235,6 +236,7 @@ function downloadResults(books: ImportedBook[]): void {
       book.binding,
       book.isbn,
       status,
+      book.response?.selected_match_method || "",
       top?.total_price?.toFixed(2) || "",
       top?.condition || "",
       book.response?.top_results?.length || 0,
@@ -407,7 +409,10 @@ export function GoodreadsImportTool() {
         updateBook(book.id, { searchState: "searching", batchId });
 
         try {
-          const response = await searchGoodreadsIsbn(book.isbn, metadata);
+          const response = await searchGoodreadsIsbn(book.isbn, metadata, {
+            title: book.title,
+            author: book.author,
+          });
           const found = response.top_results.length > 0;
           if (found) foundCount += 1;
           else missCount += 1;
@@ -743,6 +748,11 @@ export function GoodreadsImportTool() {
                             {book.response?.candidate_count || 0} candidates
                             reviewed
                           </p>
+                          {book.response?.selected_verification ? (
+                            <p className="mt-1 text-xs text-cyan-200/80">
+                              {book.response.selected_verification}
+                            </p>
+                          ) : null}
                         </div>
                       ) : null}
                     </div>

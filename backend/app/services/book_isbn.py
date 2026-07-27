@@ -199,6 +199,60 @@ def _title_tokens(title: str) -> set[str]:
     return tokens
 
 
+def _identity_tokens(value: str) -> set[str]:
+    """Return meaningful title tokens while preserving numeric titles such as 1984."""
+
+    base = (value or "").split("(", 1)[0].strip() or (value or "")
+    tokens: set[str] = set()
+    for token in TITLE_TOKEN_RE.findall(base.lower()):
+        if token in BOOK_TITLE_STOPWORDS or len(token) < 2:
+            continue
+        if token.isdigit() and len(token) > 4:
+            continue
+        tokens.add(token)
+    return tokens
+
+
+def _author_anchor(author: str | None) -> str | None:
+    tokens = [
+        token
+        for token in TITLE_TOKEN_RE.findall((author or "").lower())
+        if len(token) > 1 and token not in {"jr", "sr", "ii", "iii", "iv"}
+    ]
+    return tokens[-1] if tokens else None
+
+
+def _listing_matches_expected_book(
+    listing: Listing,
+    expected_title: str | None,
+    expected_author: str | None,
+) -> bool:
+    """Reject obvious eBay catalog drift using the Goodreads title as an anchor."""
+
+    expected_tokens = _identity_tokens(expected_title or "")
+    if not expected_tokens:
+        return True
+
+    listing_tokens = _identity_tokens(listing.title)
+    shared = expected_tokens & listing_tokens
+    author_anchor = _author_anchor(expected_author)
+
+    if len(expected_tokens) == 1:
+        return len(shared) == 1
+    if len(shared) >= 2:
+        return True
+    return bool(len(shared) == 1 and author_anchor and author_anchor in listing_tokens)
+
+
+def _listing_contains_exact_isbn(
+    listing: Listing,
+    accepted_isbns: tuple[str, ...],
+) -> bool:
+    text = f"{listing.title} {listing.description or ''}"
+    compact = ISBN_CLEAN_RE.sub("", text).upper()
+    return any(isbn and isbn in compact for isbn in accepted_isbns)
+
+
 def _apply_title_consensus_gate(listings: list[Listing]) -> tuple[list[Listing], int, list[str]]:
     """Reject a large ISBN result set when it has no coherent title identity.
 
@@ -277,6 +331,10 @@ def _annotate_book_listing(listing: Listing, *, collectible: bool, bundle: bool 
 
 def _filter_query_candidates(
     candidates: list[Listing],
+    *,
+    expected_title: str | None = None,
+    expected_author: str | None = None,
+    required_isbns: tuple[str, ...] = (),
 ) -> tuple[list[Listing], list[Listing], list[Listing], Counter[str], int, list[str]]:
     rejection_reasons: Counter[str] = Counter()
     eligible: list[Listing] = []
@@ -291,6 +349,21 @@ def _filter_query_candidates(
         derivative_reason = _derivative_rejection_reason(listing.title)
         if derivative_reason:
             rejection_reasons[derivative_reason] += 1
+            continue
+
+        if expected_title and not _listing_matches_expected_book(
+            listing,
+            expected_title,
+            expected_author,
+        ):
+            rejection_reasons["Listing title does not match Goodreads book"] += 1
+            continue
+
+        if required_isbns and not _listing_contains_exact_isbn(
+            listing,
+            required_isbns,
+        ):
+            rejection_reasons["Exact ISBN not visible in listing"] += 1
             continue
 
         url_key = _listing_key(listing)
@@ -310,7 +383,11 @@ def _filter_query_candidates(
     for listing in eligible:
         is_bundle = _is_bundle_listing(listing.title)
         is_collectible = _is_collectible_listing(listing.title)
-        annotated = _annotate_book_listing(listing, collectible=is_collectible, bundle=is_bundle)
+        annotated = _annotate_book_listing(
+            listing,
+            collectible=is_collectible,
+            bundle=is_bundle,
+        )
         if is_bundle:
             bundles.append(annotated)
         elif is_collectible:
@@ -318,8 +395,14 @@ def _filter_query_candidates(
         else:
             standard.append(annotated)
 
-    return standard, collectible, bundles, rejection_reasons, duplicates_removed, consensus_tokens
-
+    return (
+        standard,
+        collectible,
+        bundles,
+        rejection_reasons,
+        duplicates_removed,
+        consensus_tokens,
+    )
 
 def _serialize_listing(listing: Listing) -> dict[str, Any]:
     return listing.model_dump(mode="json")
@@ -339,6 +422,8 @@ async def search_used_books_by_isbn(
     provider: EbayProvider | None = None,
     limit: int = 35,
     item_location_country: str | None = None,
+    expected_title: str | None = None,
+    expected_author: str | None = None,
 ) -> dict[str, Any]:
     identity = isbn_identity(value)
     if not identity["valid"]:
@@ -353,6 +438,8 @@ async def search_used_books_by_isbn(
             "rejection_reasons": {"Invalid ISBN check digit or length": 1},
             "query_attempts": [],
             "selected_query_isbn": None,
+            "selected_match_method": None,
+            "selected_verification": None,
             "fallback_used": False,
             "top_results": [],
             "results": [],
@@ -368,22 +455,44 @@ async def search_used_books_by_isbn(
     total_candidates = 0
     total_duplicates_removed = 0
     selected_query_isbn: str | None = None
+    selected_match_method: str | None = None
+    selected_verification: str | None = None
     selected_standard: list[Listing] = []
     selected_collectible: list[Listing] = []
     selected_bundles: list[Listing] = []
-    collectible_fallback: tuple[str, list[Listing], list[Listing]] | None = None
+    collectible_fallback: tuple[
+        str,
+        str,
+        str,
+        list[Listing],
+        list[Listing],
+    ] | None = None
 
+    search_options: dict[str, str] = {}
+    if item_location_country:
+        search_options["item_location_country"] = item_location_country
+
+    # First use eBay's structured GTIN lookup. Goodreads title/author data is
+    # supplied only for Goodreads imports and protects against catalog drift.
     for index, isbn in enumerate(identity["query_isbns"]):
-        search_options = {}
-        if item_location_country:
-            search_options["item_location_country"] = item_location_country
         candidates = await provider.search_gtin(
             isbn,
             category="books",
             limit=limit,
             **search_options,
         )
-        standard, collectible, bundles, rejection_reasons, duplicates_removed, consensus_tokens = _filter_query_candidates(candidates)
+        (
+            standard,
+            collectible,
+            bundles,
+            rejection_reasons,
+            duplicates_removed,
+            consensus_tokens,
+        ) = _filter_query_candidates(
+            candidates,
+            expected_title=expected_title,
+            expected_author=expected_author,
+        )
 
         total_candidates += len(candidates)
         total_duplicates_removed += duplicates_removed
@@ -391,6 +500,7 @@ async def search_used_books_by_isbn(
         query_attempts.append(
             {
                 "isbn": isbn,
+                "method": "gtin",
                 "role": "primary" if index == 0 else "fallback",
                 "candidate_count": len(candidates),
                 "eligible_count": len(standard) + len(collectible) + len(bundles),
@@ -406,21 +516,119 @@ async def search_used_books_by_isbn(
 
         if standard:
             selected_query_isbn = isbn
+            selected_match_method = (
+                "gtin_title_verified" if expected_title else "gtin"
+            )
+            selected_verification = (
+                "eBay ISBN catalog match checked against the Goodreads title."
+                if expected_title
+                else "eBay ISBN catalog match."
+            )
             selected_standard = standard
             selected_collectible = collectible
             selected_bundles = bundles
             query_attempts[-1]["used_as_results"] = True
             break
 
-        # Keep a coherent collectible-only result set, but continue to the
-        # alternate ISBN once in case it has normal used copies.
         if (collectible or bundles) and collectible_fallback is None:
-            collectible_fallback = (isbn, collectible, bundles)
+            collectible_fallback = (
+                isbn,
+                "gtin_collectible_only",
+                "eBay ISBN catalog returned only collectible or multi-book copies.",
+                collectible,
+                bundles,
+            )
+
+    # eBay's GTIN index has real gaps. When it produces no standard result,
+    # search the ISBN as an ordinary keyword and accept only listings where the
+    # exact ISBN is visible in the title or description.
+    if not selected_standard:
+        accepted_isbns = tuple(identity["query_isbns"])
+        for index, isbn in enumerate(identity["query_isbns"]):
+            candidates = await provider.search(
+                isbn,
+                category="books",
+                buying_option="fixed_price",
+                **search_options,
+            )
+            (
+                standard,
+                collectible,
+                bundles,
+                rejection_reasons,
+                duplicates_removed,
+                consensus_tokens,
+            ) = _filter_query_candidates(
+                candidates,
+                expected_title=expected_title,
+                expected_author=expected_author,
+                required_isbns=accepted_isbns,
+            )
+
+            total_candidates += len(candidates)
+            total_duplicates_removed += duplicates_removed
+            aggregate_rejections.update(rejection_reasons)
+            query_attempts.append(
+                {
+                    "isbn": isbn,
+                    "method": "keyword",
+                    "role": "primary" if index == 0 else "fallback",
+                    "candidate_count": len(candidates),
+                    "eligible_count": len(standard) + len(collectible) + len(bundles),
+                    "standard_count": len(standard),
+                    "collectible_count": len(collectible),
+                    "bundle_count": len(bundles),
+                    "duplicates_removed": duplicates_removed,
+                    "consensus_tokens": consensus_tokens,
+                    "rejection_reasons": dict(rejection_reasons),
+                    "used_as_results": False,
+                }
+            )
+
+            if standard:
+                selected_query_isbn = isbn
+                selected_match_method = "keyword_isbn_verified"
+                selected_verification = (
+                    "Exact ISBN found in the listing text"
+                    + (
+                        " and title checked against Goodreads."
+                        if expected_title
+                        else "."
+                    )
+                )
+                selected_standard = standard
+                selected_collectible = collectible
+                selected_bundles = bundles
+                query_attempts[-1]["used_as_results"] = True
+                break
+
+            if (collectible or bundles) and collectible_fallback is None:
+                collectible_fallback = (
+                    isbn,
+                    "keyword_collectible_only",
+                    "Exact ISBN found, but only in collectible or multi-book copies.",
+                    collectible,
+                    bundles,
+                )
 
     if selected_query_isbn is None and collectible_fallback is not None:
-        selected_query_isbn, selected_collectible, selected_bundles = collectible_fallback
+        (
+            selected_query_isbn,
+            selected_match_method,
+            selected_verification,
+            selected_collectible,
+            selected_bundles,
+        ) = collectible_fallback
+        selected_method = (
+            "keyword"
+            if selected_match_method.startswith("keyword")
+            else "gtin"
+        )
         for attempt in query_attempts:
-            if attempt["isbn"] == selected_query_isbn:
+            if (
+                attempt["isbn"] == selected_query_isbn
+                and attempt["method"] == selected_method
+            ):
                 attempt["used_as_results"] = True
                 break
 
@@ -439,7 +647,11 @@ async def search_used_books_by_isbn(
     return {
         "isbn": identity,
         "candidate_count": total_candidates,
-        "eligible_count": len(selected_standard) + len(selected_collectible) + len(selected_bundles),
+        "eligible_count": (
+            len(selected_standard)
+            + len(selected_collectible)
+            + len(selected_bundles)
+        ),
         "standard_count": len(selected_standard),
         "collectible_count": len(selected_collectible),
         "bundle_count": len(selected_bundles),
@@ -447,7 +659,15 @@ async def search_used_books_by_isbn(
         "rejection_reasons": dict(aggregate_rejections),
         "query_attempts": query_attempts,
         "selected_query_isbn": selected_query_isbn,
-        "fallback_used": len(query_attempts) > 1 and selected_query_isbn == query_attempts[-1]["isbn"],
+        "selected_match_method": selected_match_method,
+        "selected_verification": selected_verification,
+        "fallback_used": bool(
+            selected_match_method
+            and (
+                selected_match_method.startswith("keyword")
+                or selected_query_isbn != identity["query_isbns"][0]
+            )
+        ),
         "top_results": serialized_standard[:3],
         "results": serialized_standard,
         "collectible_results": serialized_collectible,

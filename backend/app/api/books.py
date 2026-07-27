@@ -29,12 +29,16 @@ async def search_books_public(
     searchable_count: int = Query(default=0, ge=0, le=100_000),
     digital_count: int = Query(default=0, ge=0, le=100_000),
     missing_isbn_count: int = Query(default=0, ge=0, le=100_000),
+    expected_title: str | None = Query(default=None, max_length=300),
+    expected_author: str | None = Query(default=None, max_length=200),
 ) -> dict:
     try:
         result = await search_used_books_by_isbn(
             isbn,
             limit=limit,
             item_location_country="US" if us_only else None,
+            expected_title=expected_title,
+            expected_author=expected_author,
         )
         if analytics:
             normalized = (

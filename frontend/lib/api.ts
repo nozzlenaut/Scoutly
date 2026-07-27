@@ -1076,6 +1076,7 @@ export type BookIsbnIdentity = {
 export type BookQueryAttempt = {
   isbn: string;
   role: "primary" | "fallback" | string;
+  method?: "gtin" | "keyword" | string;
   candidate_count: number;
   eligible_count: number;
   standard_count: number;
@@ -1098,6 +1099,14 @@ export type BookLabResponse = {
   rejection_reasons: Record<string, number>;
   query_attempts: BookQueryAttempt[];
   selected_query_isbn: string | null;
+  selected_match_method?:
+    | "gtin"
+    | "gtin_title_verified"
+    | "keyword_isbn_verified"
+    | "gtin_collectible_only"
+    | "keyword_collectible_only"
+    | null;
+  selected_verification?: string | null;
   fallback_used: boolean;
   top_results: SearchResult[];
   results: SearchResult[];

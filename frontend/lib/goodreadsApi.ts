@@ -62,6 +62,7 @@ export type GoodreadsAnalyticsDigest = {
 export async function searchGoodreadsIsbn(
   isbn: string,
   metadata: GoodreadsSearchMetadata,
+  book: { title: string; author: string },
 ): Promise<BookLabResponse> {
   const params = new URLSearchParams({
     isbn,
@@ -76,6 +77,8 @@ export async function searchGoodreadsIsbn(
     digital_count: String(metadata.digitalCount),
     missing_isbn_count: String(metadata.missingIsbnCount),
   });
+  if (book.title) params.set("expected_title", book.title.slice(0, 300));
+  if (book.author) params.set("expected_author", book.author.slice(0, 200));
 
   const response = await fetch(
     `${baseUrl}/api/books/search?${params.toString()}`,
