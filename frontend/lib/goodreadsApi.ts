@@ -1,4 +1,3 @@
-
 import {
   adminFetch,
   buildEbaySearchUrl,
@@ -185,7 +184,6 @@ export function goodreadsAmazonFallback(
     exactIdentifier,
   };
 }
-
 
 export function exactListingOutboundUrl(
   result: SearchResult,

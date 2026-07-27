@@ -41,6 +41,19 @@ class _FakeBookProvider:
         ]
 
 
+    async def search(
+        self,
+        query: str,
+        category: str | None = None,
+        buying_option: str = "fixed_price",
+        item_location_country: str | None = None,
+    ) -> list[Listing]:
+        # The hybrid production provider supports keyword search. This legacy
+        # test double returns no keyword candidates unless a test explicitly
+        # grows a separate keyword fixture later.
+        return []
+
+
 def test_isbn_validation_and_conversion():
     assert is_valid_isbn10("0-306-40615-2")
     assert is_valid_isbn13("978-0-306-40615-7")

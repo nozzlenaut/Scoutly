@@ -5,6 +5,7 @@ import { track } from "@vercel/analytics";
 import { type ChangeEvent, useMemo, useRef, useState } from "react";
 import {
   exactListingOutboundUrl,
+  goodreadsAmazonFallback,
   otherEditionsOutboundUrl,
   searchGoodreadsIsbn,
 } from "@/lib/goodreadsApi";
@@ -183,8 +184,8 @@ function importRows(text: string): ImportedBook[] {
       binding,
       publisher: (record.Publisher || "").trim(),
       year: (record["Year Published"] || "").replace(/\.0$/, "").trim(),
-      isbn10,
-      isbn13,
+      isbn10: valid10,
+      isbn13: valid13,
       isbn,
       importStatus,
       searchState: "ready",
@@ -211,18 +212,39 @@ function downloadResults(books: ImportedBook[]): void {
     "Clean Options",
     "Candidates",
     "Listing",
+    "Separated Exact Listing",
+    "Amazon Fallback",
   ];
   const rows = books.map((book) => {
     const top = book.response?.top_results?.[0];
+    const separatedExact =
+      book.response?.collectible_results?.[0] ||
+      book.response?.bundle_results?.[0];
+    const hasSeparatedExact = Boolean(separatedExact);
+    const showAmazonFallback =
+      book.importStatus === "digital" || book.searchState === "miss";
+    const amazonFallback = goodreadsAmazonFallback(
+      {
+        title: book.title,
+        author: book.author,
+        binding: book.binding,
+        isbn10: book.isbn10,
+        isbn13: book.isbn13,
+      },
+      book.batchId || "export",
+      book.id,
+    );
     const status =
       book.searchState === "found"
         ? "Exact edition found"
         : book.searchState === "miss"
-          ? "No listing for exact edition"
+          ? hasSeparatedExact
+            ? "No standard used copy; separated exact alternative available"
+            : "No standard used copy for exact edition"
           : book.searchState === "error"
             ? "Search error"
             : book.importStatus === "digital"
-              ? "Digital/audio skipped"
+              ? "Digital/audio Amazon fallback available"
               : book.importStatus === "missing"
                 ? "ISBN missing"
                 : book.importStatus === "invalid"
@@ -242,6 +264,8 @@ function downloadResults(books: ImportedBook[]): void {
       book.response?.top_results?.length || 0,
       book.response?.candidate_count || 0,
       top?.url || "",
+      separatedExact?.url || "",
+      showAmazonFallback ? amazonFallback.url : "",
     ];
   });
 
@@ -461,8 +485,9 @@ export function GoodreadsImportTool() {
         </h1>
         <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">
           Export your Goodreads library, upload the CSV, and PriceSift will
-          search the exact physical ISBN saved for each book. Your file is
-          parsed in this browser and is not uploaded or retained.
+          search the exact physical ISBN saved for each book. Digital and
+          audio rows receive an unranked Amazon fallback. Your file stays
+          in this browser and is not uploaded or retained.
         </p>
 
         <div className="mt-6 rounded-3xl border border-emerald-200/25 bg-emerald-200/10 p-5 text-emerald-50">
@@ -579,7 +604,7 @@ export function GoodreadsImportTool() {
               {[
                 ["Books on shelf", counts.total],
                 ["Exact ISBNs ready", counts.ready],
-                ["Digital/audio skipped", counts.digital],
+                ["Digital/audio fallbacks", counts.digital],
                 ["Need an ISBN", counts.missing],
                 ["Exact editions found", counts.found],
               ].map(([label, value]) => (
@@ -669,6 +694,34 @@ export function GoodreadsImportTool() {
                   book.author,
                   batchId,
                 );
+                const separatedExact =
+                  book.response?.collectible_results?.[0] ||
+                  book.response?.bundle_results?.[0];
+                const separatedKind = book.response?.collectible_results
+                  ?.length
+                  ? "collectible"
+                  : "bundle";
+                const separatedUrl = separatedExact
+                  ? exactListingOutboundUrl(
+                      separatedExact,
+                      batchId,
+                      book.isbn || book.isbn10 || book.isbn13,
+                    )
+                  : "";
+                const amazonFallback = goodreadsAmazonFallback(
+                  {
+                    title: book.title,
+                    author: book.author,
+                    binding: book.binding,
+                    isbn10: book.isbn10,
+                    isbn13: book.isbn13,
+                  },
+                  batchId,
+                  book.id,
+                );
+                const showAmazonFallback =
+                  book.importStatus === "digital" ||
+                  book.searchState === "miss";
 
                 return (
                   <article
@@ -693,8 +746,9 @@ export function GoodreadsImportTool() {
                       </p>
 
                       {book.importStatus === "digital" ? (
-                        <p className="mt-3 text-sm text-violet-200">
-                          Digital or audio edition skipped.
+                        <p className="mt-3 text-sm leading-6 text-violet-200">
+                          eBay used-copy search skipped for this digital or
+                          audio edition. Use the Amazon fallback below.
                         </p>
                       ) : null}
                       {book.importStatus === "missing" ? (
@@ -724,12 +778,16 @@ export function GoodreadsImportTool() {
                       {book.searchState === "miss" ? (
                         <div className="mt-3">
                           <p className="font-bold text-amber-100">
-                            No listing for this exact edition.
+                            {separatedExact
+                              ? "No standard used copy for this exact edition."
+                              : "No listing for this exact edition."}
                           </p>
                           <p className="mt-1 text-sm leading-6 text-slate-400">
-                            PriceSift did not replace it with another ISBN.
-                            A broader marketplace search happens only when you
-                            choose it below.
+                            {separatedExact
+                              ? `PriceSift found only ${separatedKind} exact copies and kept them out of the standard price result.`
+                              : "PriceSift did not replace it with another ISBN."}{" "}
+                            Amazon and broader-edition fallbacks are available
+                            below.
                           </p>
                         </div>
                       ) : null}
@@ -774,6 +832,45 @@ export function GoodreadsImportTool() {
                           Open exact listing ↗
                         </a>
                       ) : null}
+                      {book.searchState === "miss" && separatedExact ? (
+                        <a
+                          href={separatedUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={() =>
+                            track("goodreads_separated_exact_clicked", {
+                              isbn: book.isbn,
+                              kind: separatedKind,
+                            })
+                          }
+                          className="rounded-xl border border-purple-200/25 bg-purple-200/10 px-4 py-2.5 text-sm font-bold text-purple-100 transition hover:bg-purple-200/15"
+                        >
+                          {separatedKind === "collectible"
+                            ? "Open collectible exact copy ↗"
+                            : "Open exact book bundle ↗"}
+                        </a>
+                      ) : null}
+                      {showAmazonFallback ? (
+                        <a
+                          href={amazonFallback.url}
+                          target="_blank"
+                          rel="sponsored noreferrer"
+                          onClick={() =>
+                            track("goodreads_amazon_fallback_clicked", {
+                              format: amazonFallback.format,
+                              has_exact_identifier:
+                                amazonFallback.exactIdentifier,
+                              source:
+                                book.importStatus === "digital"
+                                  ? "digital"
+                                  : "exact_miss",
+                            })
+                          }
+                          className="rounded-xl border border-orange-200/25 bg-orange-200/10 px-4 py-2.5 text-sm font-bold text-orange-100 transition hover:bg-orange-200/15"
+                        >
+                          {amazonFallback.label}
+                        </a>
+                      ) : null}
                       {book.searchState === "miss" ? (
                         <a
                           href={otherUrl}
@@ -801,9 +898,11 @@ export function GoodreadsImportTool() {
       <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 text-sm leading-6 text-slate-400">
         <p className="font-bold text-slate-200">Privacy</p>
         <p className="mt-2">
-          The CSV remains in your browser. PriceSift sends only the ISBNs you
-          choose to search, plus aggregate counts needed to understand whether
-          the beta works. It does not store your Goodreads account, ratings,
+          The CSV remains in your browser. Exact searches send the selected
+          ISBN, title, and author so PriceSift can reject obvious eBay catalog
+          mismatches, plus aggregate counts needed to evaluate the beta.
+          Clicking a marketplace link records that outbound click. PriceSift
+          does not upload or retain the CSV, Goodreads account, ratings,
           reviews, private notes, or complete reading list.
         </p>
       </section>
