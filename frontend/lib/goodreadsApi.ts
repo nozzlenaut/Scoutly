@@ -6,6 +6,10 @@ import {
   type BookLabResponse,
   type SearchResult,
 } from "@/lib/api";
+import {
+  buildAmazonAllOptionsUrl,
+  buildAmazonProductUrl,
+} from "@/lib/amazon";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -108,6 +112,80 @@ export async function getGoodreadsAnalyticsDigest(
   }
   return response.json();
 }
+
+export type GoodreadsAmazonFallback = {
+  url: string;
+  label: string;
+  format: "kindle" | "audiobook" | "book";
+  exactIdentifier: boolean;
+};
+
+export function goodreadsAmazonFallback(
+  book: {
+    title: string;
+    author: string;
+    binding: string;
+    isbn10: string;
+    isbn13: string;
+  },
+  batchId: string,
+  rowKey: string,
+): GoodreadsAmazonFallback {
+  const normalizedBinding = book.binding.trim().toLowerCase();
+  const audiobook = ["audiobook", "audio cd", "audible"].some((word) =>
+    normalizedBinding.includes(word),
+  );
+  const digital =
+    audiobook ||
+    ["kindle", "ebook", "e-book"].some((word) =>
+      normalizedBinding.includes(word),
+    );
+  const format: GoodreadsAmazonFallback["format"] = audiobook
+    ? "audiobook"
+    : digital
+      ? "kindle"
+      : "book";
+  const isbn10 = book.isbn10.trim();
+  const isbn13 = book.isbn13.trim();
+  const exactIdentifier = Boolean(isbn10 || isbn13);
+  const formatTerm =
+    format === "audiobook"
+      ? "Audible audiobook"
+      : format === "kindle"
+        ? "Kindle"
+        : "";
+  const titleQuery = [book.title, book.author, formatTerm]
+    .filter(Boolean)
+    .join(" ");
+  const query = isbn10 || isbn13 || titleQuery;
+  const destination = isbn10
+    ? buildAmazonProductUrl(isbn10)
+    : buildAmazonAllOptionsUrl(query);
+  const safeRowKey =
+    rowKey.replace(/[^A-Za-z0-9_-]/g, "").slice(0, 80) || "book";
+  const label =
+    format === "audiobook"
+      ? "Check audiobook options on Amazon · paid link ↗"
+      : format === "kindle"
+        ? "Check Kindle options on Amazon · paid link ↗"
+        : exactIdentifier
+          ? "Check exact edition on Amazon · paid link ↗"
+          : "Find this book on Amazon · paid link ↗";
+
+  return {
+    url: buildOutboundUrl(destination, {
+      query,
+      category: "books",
+      productId: `goodreads-amazon:${batchId}:${safeRowKey}`,
+      provider: "Amazon",
+      title: `Amazon fallback: ${book.title}`,
+    }),
+    label,
+    format,
+    exactIdentifier,
+  };
+}
+
 
 export function exactListingOutboundUrl(
   result: SearchResult,
