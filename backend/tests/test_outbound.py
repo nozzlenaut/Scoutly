@@ -60,7 +60,7 @@ def test_outbound_preserves_awin_affiliate_link_without_logging_get(monkeypatch,
 
 def test_browser_confirmed_amazon_click_is_logged(monkeypatch, tmp_path):
     monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
-    amazon_url = "https://www.amazon.com/dp/0593820258?tag=average3d-20"
+    amazon_url = "https://www.amazon.com/dp/0593820258?tag=pricesift-20"
     params = {
         "url": amazon_url,
         "provider": "Amazon",
@@ -81,7 +81,7 @@ def test_browser_confirmed_amazon_click_is_logged(monkeypatch, tmp_path):
     click_text = (tmp_path / "outbound_clicks.json").read_text(encoding="utf-8")
     assert "Amazon" in click_text
     assert '"affiliate_campaign_present": true' in click_text
-    assert '"affiliate_reference": "average3d-20"' in click_text
+    assert '"affiliate_reference": "pricesift-20"' in click_text
 
 
 def test_browser_confirmed_ebay_click_logs_metadata(monkeypatch, tmp_path):

@@ -1,7 +1,7 @@
 const AMAZON_ORIGIN = "https://www.amazon.com";
 
 function associateTag(): string {
-  return process.env.NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG?.trim() || "average3d-20";
+  return process.env.NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG?.trim() || "pricesift-20";
 }
 
 function cleanProductIdentifier(value: string): string {
