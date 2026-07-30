@@ -1,4 +1,3 @@
-
 import type { Metadata } from "next";
 import { CategoryStatusPanel } from "@/components/CategoryStatusPanel";
 import { SearchForm } from "@/components/SearchForm";
@@ -25,6 +24,13 @@ export default function HomePage() {
           shows up to three strong options for the exact item you chose. Fewer
           results on purpose. Less digging, more confidence.
         </p>
+
+        <a
+          href="/reuse"
+          className="mt-5 inline-flex rounded-full border border-emerald-300/30 bg-emerald-300/10 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-300/15"
+        >
+          Why PriceSift focuses on buying used →
+        </a>
 
         <div className="mt-6 max-w-3xl rounded-3xl border border-white/10 bg-white/[0.06] p-5 text-left text-sm leading-6 text-slate-300">
           <p>

@@ -10,6 +10,7 @@ export function SiteFooter() {
         <div className="flex gap-4">
           <Link href="/cameras" className="text-cyan-200 hover:text-cyan-100">Cameras</Link>
           <Link href="/lenses" className="text-cyan-200 hover:text-cyan-100">Lenses</Link>
+          <Link href="/reuse" className="text-emerald-200 hover:text-emerald-100">Why buy used?</Link>
           <Link href="/feedback" className="text-cyan-200 hover:text-cyan-100">Beta feedback</Link>
           <Link href="/disclosure" className="text-cyan-200 hover:text-cyan-100">Affiliate disclosure</Link>
         </div>
