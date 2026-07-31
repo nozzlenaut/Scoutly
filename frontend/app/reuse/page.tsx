@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   description:
     "PriceSift makes secondhand shopping easier by filtering out broken, incomplete, and misleading listings.",
   alternates: { canonical: "/reuse" },
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: "Why PriceSift focuses on buying used",
+    description:
+      "Make secondhand shopping easier by filtering out broken, incomplete, and misleading marketplace listings.",
+    url: "/reuse",
+  },
 };
 
 const problems = [
@@ -89,6 +96,12 @@ export default function ReusePage() {
               className="inline-flex justify-center rounded-xl bg-cyan-300 px-5 py-3 font-bold text-slate-950 transition hover:bg-cyan-200"
             >
               Search PriceSift
+            </Link>
+            <Link
+              href="/used"
+              className="inline-flex justify-center rounded-xl border border-emerald-300/20 px-5 py-3 font-medium text-emerald-100 transition hover:bg-emerald-300/10"
+            >
+              Browse used price guides
             </Link>
             <Link
               href="/disclosure"
