@@ -1,6 +1,8 @@
 "use client";
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { adminFetch } from "@/lib/api";
+import { ADMIN_BROWSER_SESSION } from "@/lib/adminSessionShared";
 
 type CategoryKey =
   | "cameras"
@@ -27,6 +29,10 @@ type ListingRow = {
   title: string;
   price: string;
   url: string;
+  condition?: string;
+  imageUrl?: string;
+  shipping?: number;
+  totalPrice?: number;
   notes: string;
   flags: Record<string, boolean>;
 };
@@ -50,6 +56,25 @@ type SearchAudit = {
   listings: ListingRow[];
   createdAt: string;
   updatedAt: string;
+};
+
+type RawEbayListing = {
+  title: string;
+  price: number;
+  shipping: number;
+  total_price: number;
+  condition: string;
+  url: string;
+  image_url: string | null;
+  item_location: string | null;
+  marketplace_item_id: string | null;
+};
+
+type RawEbayResponse = {
+  query: string;
+  returned: number;
+  method: { pricesift_filters_applied: boolean };
+  listings: RawEbayListing[];
 };
 
 const STORAGE_KEY = "pricesift-search-audits-v1";
@@ -169,6 +194,10 @@ function makeListing(): ListingRow {
     title: "",
     price: "",
     url: "",
+    condition: "",
+    imageUrl: "",
+    shipping: 0,
+    totalPrice: 0,
     notes: "",
     flags: {},
   };
@@ -308,6 +337,7 @@ export function SearchAuditTool() {
   const [activeId, setActiveId] = useState("");
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState("");
+  const [loadingListings, setLoadingListings] = useState(false);
   const [customIssueLabel, setCustomIssueLabel] = useState("");
   const importRef = useRef<HTMLInputElement>(null);
 
@@ -406,6 +436,63 @@ export function SearchAuditTool() {
     if (!active) return;
     const listings = active.listings.map((listing) => (listing.id === id ? { ...listing, ...patch } : listing));
     updateActive({ listings });
+  }
+
+  async function loadRawEbayResults() {
+    if (!active || loadingListings) return;
+    const query = active.query.trim();
+    if (!query) {
+      setNotice("Enter an eBay search first.");
+      return;
+    }
+
+    setLoadingListings(true);
+    setNotice("");
+    try {
+      const params = new URLSearchParams({
+        q: query,
+        limit: String(active.resultCount),
+        token: ADMIN_BROWSER_SESSION,
+      });
+      const response = await adminFetch(`/api/search-audit/ebay?${params.toString()}`, {
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.detail || `eBay audit search failed (${response.status})`);
+      }
+
+      const payload = (await response.json()) as RawEbayResponse;
+      const listings: ListingRow[] = payload.listings.map((listing, index) => ({
+        id: active.listings[index]?.id || makeId("listing"),
+        title: listing.title,
+        price: String(listing.price),
+        url: listing.url,
+        condition: listing.condition,
+        imageUrl: listing.image_url || "",
+        shipping: listing.shipping,
+        totalPrice: listing.total_price,
+        notes: "",
+        flags: {},
+      }));
+      while (listings.length < active.resultCount) listings.push(makeListing());
+
+      updateActive({
+        listings,
+        marketplace: "eBay",
+        condition: "Used",
+        location: "US",
+        purchaseFormat: "Buy It Now",
+        sortOrder: "Best Match",
+      });
+      setNotice(
+        `Loaded ${payload.returned} raw eBay result${payload.returned === 1 ? "" : "s"}. No PriceSift include/exclude filters were used.`,
+      );
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "The raw eBay results could not be loaded.");
+    } finally {
+      setLoadingListings(false);
+    }
   }
 
   function toggleFlag(listing: ListingRow, key: string) {
@@ -638,6 +725,12 @@ export function SearchAuditTool() {
               <input
                 value={active.query}
                 onChange={(event) => updateActive({ query: event.target.value })}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    void loadRawEbayResults();
+                  }
+                }}
                 placeholder="Sony a7 III body only"
                 className="mt-2 w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none focus:border-cyan-200/50"
               />
@@ -687,7 +780,14 @@ export function SearchAuditTool() {
           </div>
 
           <div className="mt-5 flex flex-wrap gap-3">
-            <a href={buildSearchUrl(active.query)} target="_blank" rel="noreferrer" className="rounded-2xl bg-white px-4 py-3 font-bold text-slate-950 hover:bg-slate-200">
+            <button
+              onClick={() => void loadRawEbayResults()}
+              disabled={loadingListings || !active.query.trim()}
+              className="rounded-2xl bg-cyan-200 px-4 py-3 font-black text-slate-950 hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loadingListings ? "Loading raw eBay results…" : "Load raw eBay results"}
+            </button>
+            <a href={buildSearchUrl(active.query)} target="_blank" rel="noreferrer" className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 font-bold text-white hover:bg-white/15">
               Open eBay search ↗
             </a>
             <a href={CATEGORY_LINKS[active.category]} target="_blank" rel="noreferrer" className="rounded-2xl border border-cyan-200/30 bg-cyan-200/10 px-4 py-3 font-bold text-cyan-100 hover:bg-cyan-200/15">
@@ -697,7 +797,9 @@ export function SearchAuditTool() {
               Export this audit
             </button>
           </div>
-          <p className="mt-3 text-xs text-slate-500">The eBay button pre-fills common audit filters. Confirm Used, US, Buy It Now, and Best Match before counting.</p>
+          <p className="mt-3 text-xs text-slate-400">
+            Raw means the exact text above goes to eBay with Used, US, Buy It Now, and Best Match. PriceSift catalog terms, include/exclude rules, local filters, and ranking are skipped.
+          </p>
         </section>
 
         <section className="rounded-3xl border border-white/10 bg-white/[0.05] p-5 sm:p-6">
@@ -705,7 +807,7 @@ export function SearchAuditTool() {
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-300">One row per listing</p>
               <h2 className="mt-1 text-2xl font-black text-white">Review the first {active.resultCount}</h2>
-              <p className="mt-2 text-sm text-slate-400">Flags can overlap. Price and title are optional, but they make the saved research much more useful later.</p>
+              <p className="mt-2 text-sm text-slate-400">The raw search fills the image, title, price, shipping, condition, and link. You mostly just inspect each listing and hit the tags.</p>
             </div>
             <div className="flex max-w-xl flex-1 gap-2 lg:justify-end">
               <input
@@ -737,8 +839,13 @@ export function SearchAuditTool() {
           <div className="mt-5 space-y-4">
             {active.listings.map((listing, index) => (
               <article key={listing.id} className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
-                <div className="grid gap-3 lg:grid-cols-[42px_minmax(0,1fr)_150px]">
+                <div className="grid gap-3 lg:grid-cols-[42px_88px_minmax(0,1fr)_150px]">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.07] font-black text-slate-300">{index + 1}</div>
+                  {listing.imageUrl ? (
+                    <img src={listing.imageUrl} alt="" loading="lazy" className="h-20 w-20 rounded-xl bg-white object-contain" />
+                  ) : (
+                    <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-center text-[10px] text-slate-600">No image</div>
+                  )}
                   <input
                     value={listing.title}
                     onChange={(event) => updateListing(listing.id, { title: event.target.value })}
@@ -753,6 +860,17 @@ export function SearchAuditTool() {
                     className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-cyan-200/50"
                   />
                 </div>
+
+                {listing.condition || listing.url || listing.shipping ? (
+                  <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                    {listing.condition ? <span>Condition: <strong className="text-slate-200">{listing.condition}</strong></span> : null}
+                    {listing.shipping ? <span>Shipping: <strong className="text-slate-200">{formatMoney(listing.shipping)}</strong></span> : null}
+                    {listing.totalPrice ? <span>Total: <strong className="text-slate-200">{formatMoney(listing.totalPrice)}</strong></span> : null}
+                    {listing.url ? (
+                      <a href={listing.url} target="_blank" rel="noreferrer" className="font-bold text-cyan-200 hover:text-cyan-100">Inspect listing ↗</a>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 <div className="mt-3 flex flex-wrap gap-2">
                   {issueDefinitions.map((issue) => {

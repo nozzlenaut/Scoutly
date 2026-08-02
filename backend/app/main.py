@@ -19,6 +19,7 @@ from app.api.keh import router as keh_router
 from app.api.books import router as books_router
 from app.api.shipping import router as shipping_router
 from app.api.diagnostics import router as diagnostics_router
+from app.api.search_audit import router as search_audit_router
 from app.services.database import database_health, initialize_database
 from app.services.data_migrations import apply_data_migrations
 from app.services.admin_auth import AdminAuthorizationMiddleware
@@ -65,4 +66,5 @@ app.include_router(keh_router, prefix="/api")
 app.include_router(books_router, prefix="/api")
 app.include_router(shipping_router, prefix="/api")
 app.include_router(diagnostics_router, prefix="/api")
+app.include_router(search_audit_router, prefix="/api")
 app.include_router(ebay_notifications_router, prefix="/api")
