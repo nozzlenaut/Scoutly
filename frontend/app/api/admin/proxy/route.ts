@@ -5,6 +5,7 @@ import { ADMIN_COOKIE_NAME } from "@/lib/adminSessionShared";
 const ALLOWED_TARGETS = [
   "/api/analytics/",
   "/api/qa/",
+  "/api/search-audit/",
   "/api/prices/",
   "/api/keh/overview",
   "/api/keh/inventory",
