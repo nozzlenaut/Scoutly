@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 const siteUrl = "https://www.pricesift.app";
+const siteDescription =
+  "Make buying secondhand easier with cleaner listings for exact used products—and resources to keep them in use.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -11,19 +13,19 @@ export const metadata: Metadata = {
     default: "PriceSift",
     template: "%s | PriceSift",
   },
-  description: "Find cleaner used listings and better prices for the exact item you already want.",
+  description: siteDescription,
   applicationName: "PriceSift",
   openGraph: {
     type: "website",
     url: siteUrl,
     siteName: "PriceSift",
     title: "PriceSift",
-    description: "Find cleaner used listings and better prices for the exact item you already want.",
+    description: siteDescription,
   },
   twitter: {
     card: "summary",
     title: "PriceSift",
-    description: "Find cleaner used listings and better prices for the exact item you already want.",
+    description: siteDescription,
   },
 };
 

@@ -5,13 +5,13 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata: Metadata = {
   title: "Why buy used?",
   description:
-    "PriceSift makes secondhand shopping easier by filtering out broken, incomplete, and misleading listings.",
+    "PriceSift makes buying secondhand easier and helps people keep useful products working longer.",
   alternates: { canonical: "/reuse" },
   robots: { index: true, follow: true },
   openGraph: {
-    title: "Why PriceSift focuses on buying used",
+    title: "Buy used. Keep it working. Keep it in use.",
     description:
-      "Make secondhand shopping easier by filtering out broken, incomplete, and misleading marketplace listings.",
+      "Make secondhand shopping easier, find the right product, and keep useful things working longer.",
     url: "/reuse",
   },
 };
@@ -47,7 +47,7 @@ export default function ReusePage() {
             Reduce. Reuse. Search better.
           </p>
           <h1 className="mt-4 max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">
-            Buying used should be the easy choice.
+            Buy used. Keep it working. Keep it in use.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-300">
             Plenty of useful products are already out there, ready for another
@@ -84,9 +84,17 @@ export default function ReusePage() {
               unnecessary.
             </p>
             <p className="mt-3 leading-7 text-slate-300">
+              Buying used is only part of the job. For recognized products,
+              PriceSift also points owners toward official manuals or support
+              resources, with a ManualsLib search when an exact maintained link is
+              not available. A missing instruction booklet should not be the
+              reason a working product gets replaced.
+            </p>
+            <p className="mt-3 leading-7 text-slate-300">
               PriceSift does not claim to calculate the environmental impact of
               each purchase. It simply tries to remove some of the friction that
-              pushes people away from buying secondhand in the first place.
+              pushes people away from buying secondhand—or from keeping something
+              they already own.
             </p>
           </div>
 

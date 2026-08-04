@@ -15,7 +15,7 @@ export const allCategories: SearchCategory[] = [
     group: "Photography",
     status: "active",
     description:
-      "Used camera bodies from eBay and KEH with exact-model and category-specific filtering.",
+      "Find the right used camera without sorting through wrong bodies, empty boxes, broken gear, and accessory bait.",
     placeholder: "Search by camera model",
     defaultQuery: "",
   },
@@ -25,7 +25,7 @@ export const allCategories: SearchCategory[] = [
     group: "Photography",
     status: "beta",
     description:
-      "Current used KEH lens inventory filtered by mount, prime or zoom type, focal range, and optional brand.",
+      "Give good glass another life with cleaner used lens inventory matched by mount, focal range, type, and brand.",
     placeholder: "Browse current KEH lenses",
     defaultQuery: "",
   },
@@ -35,7 +35,7 @@ export const allCategories: SearchCategory[] = [
     group: "PC Parts",
     status: "active",
     description:
-      "Used desktop graphics cards with strict model and form-factor filtering.",
+      "Reuse capable graphics hardware without wading through laptop chips, coolers, broken cards, and complete-PC listings.",
     placeholder: "Search by GPU model",
     defaultQuery: "",
   },
@@ -45,7 +45,7 @@ export const allCategories: SearchCategory[] = [
     group: "PC Parts",
     status: "active",
     description:
-      "Strict DDR3, DDR4, and DDR5 memory-kit searches built from exact specifications.",
+      "Match the exact used memory kit your system needs instead of gambling on a near-match that will not fit or work.",
     placeholder: "Build a RAM configuration",
     defaultQuery: "",
   },
@@ -55,7 +55,7 @@ export const allCategories: SearchCategory[] = [
     group: "PC Parts",
     status: "active",
     description:
-      "Consumer desktop processors selected by manufacturer, socket, generation, and exact model.",
+      "Keep a working PC useful longer with the exact compatible used processor—not a nearby generation or suffix.",
     placeholder: "Build an exact CPU search",
     defaultQuery: "",
   },
@@ -65,7 +65,7 @@ export const allCategories: SearchCategory[] = [
     group: "Gaming",
     status: "active",
     description:
-      "Core-model searches for complete Xbox, PlayStation, and Nintendo systems, with variants grouped together.",
+      "Find a complete used system—not a box, controller, shell, accessory bundle, or broken parts console.",
     placeholder: "Search by console model",
     defaultQuery: "",
   },
@@ -75,7 +75,7 @@ export const allCategories: SearchCategory[] = [
     group: "Books & Media",
     status: "beta",
     description:
-      "Exact used-book edition search using ISBN-10 or ISBN-13.",
+      "Find the exact used edition by ISBN and keep another physical copy in circulation.",
     placeholder: "Search by ISBN-10 or ISBN-13",
     defaultQuery: "",
   },
@@ -84,7 +84,8 @@ export const allCategories: SearchCategory[] = [
     label: "LEGO",
     group: "Collectibles",
     status: "beta",
-    description: "Beta exact-set search using set names or set numbers.",
+    description:
+      "Find the exact used set and keep a complete build out of the parts bin.",
     placeholder: "Search by set name or set number",
     defaultQuery: "",
   },
