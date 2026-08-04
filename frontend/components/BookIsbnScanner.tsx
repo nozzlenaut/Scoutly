@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { IScannerControls } from "@zxing/browser";
 
@@ -34,7 +35,9 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
   const controlsRef = useRef<IScannerControls | null>(null);
   const stoppedRef = useRef(false);
   const [open, setOpen] = useState(false);
-  const [status, setStatus] = useState("Aim at the ISBN barcode on the back cover.");
+  const [status, setStatus] = useState(
+    "Aim at the ISBN barcode on the back cover.",
+  );
   const [error, setError] = useState<string | null>(null);
 
   function stopCamera() {
@@ -72,16 +75,23 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
 
     async function begin() {
       if (!window.isSecureContext) {
-        setError("Camera scanning requires a secure HTTPS page. You can still type the ISBN above.");
+        setError(
+          "Camera scanning requires a secure HTTPS page. You can still type the ISBN above.",
+        );
         return;
       }
       if (!navigator.mediaDevices?.getUserMedia) {
-        setError("Camera access is not available in this browser. You can still type the ISBN above.");
+        setError(
+          "Camera access is not available in this browser. You can still type the ISBN above.",
+        );
         return;
       }
 
       try {
-        const [{ BrowserMultiFormatReader }, { BarcodeFormat, DecodeHintType }] = await Promise.all([
+        const [
+          { BrowserMultiFormatReader },
+          { BarcodeFormat, DecodeHintType },
+        ] = await Promise.all([
           import("@zxing/browser"),
           import("@zxing/library"),
         ]);
@@ -115,7 +125,9 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
             if (!result || stoppedRef.current) return;
             const digits = result.getText().replace(/\D/g, "");
             if (!validIsbn13(digits)) {
-              setStatus("That barcode is not a valid ISBN-13. Try the barcode beginning with 978 or 979.");
+              setStatus(
+                "That barcode is not a valid ISBN-13. Try the barcode beginning with 978 or 979.",
+              );
               return;
             }
 
@@ -143,18 +155,24 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
 
   return (
     <>
-      <div className="mt-3 flex flex-col justify-between gap-3 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.05] p-4 sm:flex-row sm:items-center">
-        <div>
-          <p className="font-semibold text-cyan-50">Have the book in your hand?</p>
-          <p className="mt-1 text-sm text-slate-300">Scan the back-cover ISBN barcode instead of typing it.</p>
-        </div>
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm sm:justify-start">
+        <span className="text-slate-400">Books tools:</span>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="min-h-11 rounded-xl border border-cyan-200/25 bg-cyan-200/10 px-5 text-sm font-bold text-cyan-50 transition hover:bg-cyan-200/15"
+          className="font-semibold text-cyan-200 underline decoration-cyan-200/30 underline-offset-4 transition hover:text-cyan-100"
         >
-          Scan ISBN
+          Scan an ISBN barcode
         </button>
+        <span className="hidden text-slate-600 sm:inline" aria-hidden="true">
+          ·
+        </span>
+        <Link
+          href="/books/goodreads"
+          className="font-semibold text-amber-200 underline decoration-amber-200/30 underline-offset-4 transition hover:text-amber-100"
+        >
+          Price a Goodreads export
+        </Link>
       </div>
 
       {open ? (
@@ -167,8 +185,12 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
           <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 p-5 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-200">ISBN scanner</p>
-                <h2 className="mt-1 text-2xl font-black">Scan the book barcode</h2>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-200">
+                  ISBN scanner
+                </p>
+                <h2 className="mt-1 text-2xl font-black">
+                  Scan the book barcode
+                </h2>
               </div>
               <button
                 type="button"
@@ -181,7 +203,13 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
             </div>
 
             <div className="relative mt-5 overflow-hidden rounded-2xl border border-white/10 bg-black">
-              <video ref={videoRef} muted playsInline autoPlay className="aspect-[4/3] w-full object-cover" />
+              <video
+                ref={videoRef}
+                muted
+                playsInline
+                autoPlay
+                className="aspect-[4/3] w-full object-cover"
+              />
               {!error ? (
                 <div
                   className="pointer-events-none absolute inset-x-[9%] top-1/2 h-24 -translate-y-1/2 rounded-xl border-2 border-cyan-200/90 shadow-[0_0_0_999px_rgba(2,6,23,0.35)]"
@@ -191,7 +219,9 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
             </div>
 
             <p
-              className={`mt-4 text-sm leading-6 ${error ? "text-amber-200" : "text-slate-300"}`}
+              className={`mt-4 text-sm leading-6 ${
+                error ? "text-amber-200" : "text-slate-300"
+              }`}
               role={error ? "alert" : "status"}
             >
               {error || status}
