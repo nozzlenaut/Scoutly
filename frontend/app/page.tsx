@@ -30,9 +30,9 @@ export default function HomePage() {
 
         <div
           id="search"
-          className="relative z-50 mt-9 w-full scroll-mt-6 [&>div]:!max-w-4xl [&>div]:!rounded-none [&>div]:!border-0 [&>div]:!bg-transparent [&>div]:!p-0 [&>div]:!shadow-none [&>div]:!backdrop-blur-none"
+          className="relative z-50 mt-9 w-full scroll-mt-6"
         >
-          <SearchForm />
+          <SearchForm bare />
         </div>
 
         <p className="mt-5 text-sm text-slate-400">

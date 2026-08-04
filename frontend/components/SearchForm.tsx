@@ -15,6 +15,7 @@ type SearchFormProps = {
   initialQuery?: string | null;
   initialUsOnly?: boolean | null;
   compact?: boolean;
+  bare?: boolean;
 };
 
 function announceSearchStart() {
@@ -26,6 +27,7 @@ export function SearchForm({
   initialQuery,
   initialUsOnly,
   compact = false,
+  bare = false,
 }: SearchFormProps) {
   const router = useRouter();
   const initialCategory = getCategory(initialCategoryId);
@@ -246,9 +248,13 @@ export function SearchForm({
           setActiveSuggestionIndex(-1);
         }
       }}
-      className={`relative z-50 mx-auto w-full rounded-[2rem] border border-white/10 bg-slate-950/35 text-left shadow-2xl shadow-black/30 backdrop-blur ${
-        compact ? "max-w-6xl p-3 sm:p-4" : "max-w-3xl p-4 sm:p-5"
-      }`}
+      className={
+        bare
+          ? "relative z-50 mx-auto w-full max-w-4xl text-left"
+          : `relative z-50 mx-auto w-full rounded-[2rem] border border-white/10 bg-slate-950/35 text-left shadow-2xl shadow-black/30 backdrop-blur ${
+              compact ? "max-w-6xl p-3 sm:p-4" : "max-w-3xl p-4 sm:p-5"
+            }`
+      }
     >
       <div className={compact ? "mb-3" : "mb-4"}>
         <p className="mb-2 text-xs uppercase tracking-[0.22em] text-slate-400">
