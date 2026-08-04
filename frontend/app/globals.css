@@ -3,26 +3,26 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
-  --pricesift-cream: #f4efe4;
-  --pricesift-cream-deep: #e9e2d3;
-  --pricesift-card: #fffaf0;
-  --pricesift-ink: #243127;
-  --pricesift-muted: #5d695f;
-  --pricesift-forest: #24513c;
-  --pricesift-forest-deep: #173829;
-  --pricesift-sage: #9dac91;
-  --pricesift-olive: #7d8354;
-  --pricesift-line: #d7cfbd;
+  color-scheme: dark;
+  --pricesift-navy: #050816;
+  --pricesift-navy-soft: #0a1325;
+  --pricesift-panel: #0d1a2d;
+  --pricesift-panel-strong: #12243a;
+  --pricesift-line: rgba(125, 211, 252, 0.16);
+  --pricesift-blue: #7dd3fc;
+  --pricesift-blue-strong: #38bdf8;
+  --pricesift-green: #86efac;
+  --pricesift-text: #f8fafc;
+  --pricesift-muted: #cbd5e1;
 }
 
 html {
-  background: var(--pricesift-cream);
+  background: var(--pricesift-navy);
 }
 
 body {
-  background: var(--pricesift-cream);
-  color: var(--pricesift-ink);
+  background: var(--pricesift-navy);
+  color: var(--pricesift-text);
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
@@ -38,118 +38,77 @@ h3,
 
 main {
   background:
-    radial-gradient(circle at top, rgba(157, 172, 145, 0.38), transparent 34rem),
-    linear-gradient(180deg, #f8f4ea 0%, var(--pricesift-cream) 48%, #eee6d8 100%) !important;
-  color: var(--pricesift-ink) !important;
+    radial-gradient(circle at top, rgba(14, 116, 144, 0.34), transparent 34rem),
+    linear-gradient(180deg, #07101f 0%, var(--pricesift-navy) 44%, #040711 100%) !important;
+  color: var(--pricesift-text);
 }
 
-main .text-white,
-main .text-slate-50,
-main .text-slate-100,
-main .text-slate-200 {
-  color: var(--pricesift-ink) !important;
+/* Give the existing cards a slightly more deliberate, blue-tinted surface. */
+main [class*="border-white/10"][class*="bg-white/"],
+main [class*="border-white/10"][class*="bg-slate-950/"] {
+  border-color: var(--pricesift-line) !important;
+  background-color: rgba(13, 26, 45, 0.78) !important;
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
 }
 
-main .text-slate-300,
-main .text-slate-400,
-main .text-slate-500 {
-  color: var(--pricesift-muted) !important;
+main [class*="border-white/15"][class*="bg-white/"],
+main [class*="border-white/20"][class*="bg-white/"] {
+  border-color: rgba(125, 211, 252, 0.2) !important;
+  background-color: rgba(18, 36, 58, 0.76) !important;
 }
 
-main .bg-slate-950,
-main .bg-slate-900 {
-  background-color: var(--pricesift-cream-deep) !important;
-}
-
-main [class*="bg-slate-950/"],
-main [class*="bg-white/"] {
-  background-color: rgba(255, 250, 240, 0.82) !important;
-}
-
-main [class*="border-white/"],
-footer [class*="border-white/"] {
-  border-color: rgba(84, 101, 84, 0.2) !important;
-}
-
-main [class*="text-cyan-"],
-footer [class*="text-cyan-"] {
-  color: var(--pricesift-forest) !important;
-}
-
-main [class*="border-cyan-"] {
-  border-color: rgba(36, 81, 60, 0.3) !important;
-}
-
-main .bg-cyan-200,
-main .bg-cyan-300,
-main .bg-white {
-  background-color: var(--pricesift-forest) !important;
-}
-
-main a.bg-cyan-200,
-main a.bg-cyan-300,
-main button.bg-cyan-200,
-main button.bg-cyan-300,
-main a.bg-white,
-main button.bg-white {
-  color: #fffdf7 !important;
-}
-
-main [class*="text-emerald-"],
-footer [class*="text-emerald-"] {
-  color: #4d684b !important;
-}
-
-main [class*="border-emerald-"] {
-  border-color: rgba(77, 104, 75, 0.3) !important;
-}
-
-main [class*="bg-emerald-"] {
-  background-color: rgba(157, 172, 145, 0.2) !important;
-}
-
-main [class*="text-amber-"],
-main [class*="text-orange-"] {
-  color: #786d36 !important;
-}
-
-main [class*="border-amber-"],
-main [class*="border-orange-"] {
-  border-color: rgba(125, 131, 84, 0.3) !important;
-}
-
-main [class*="bg-amber-300/"],
-main [class*="bg-amber-200/"],
-main [class*="bg-orange-300/"],
-main [class*="bg-orange-200/"] {
-  background-color: rgba(179, 170, 111, 0.16) !important;
-}
-
-main .bg-amber-100,
-main .bg-orange-100,
-main .bg-orange-200 {
-  background-color: var(--pricesift-olive) !important;
-  color: #fffdf7 !important;
-}
-
+/* Keep form controls dark, readable, and visually separate from their cards. */
 main input,
 main select,
 main textarea {
-  background-color: rgba(255, 250, 240, 0.92) !important;
-  border-color: rgba(84, 101, 84, 0.25) !important;
-  color: var(--pricesift-ink) !important;
+  background-color: rgba(5, 8, 22, 0.72) !important;
+  border-color: rgba(125, 211, 252, 0.18) !important;
+  color: var(--pricesift-text) !important;
 }
 
 main input::placeholder,
 main textarea::placeholder {
-  color: #7b847c !important;
+  color: #94a3b8 !important;
 }
 
 main input:focus,
 main select:focus,
 main textarea:focus {
-  border-color: var(--pricesift-forest) !important;
-  box-shadow: 0 0 0 3px rgba(36, 81, 60, 0.12);
+  border-color: var(--pricesift-blue-strong) !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+}
+
+/* Preserve the familiar cyan actions, with slightly stronger contrast. */
+main .bg-cyan-200,
+main .bg-cyan-300 {
+  background-color: var(--pricesift-blue) !important;
+  color: #082032 !important;
+}
+
+main .bg-cyan-200:hover,
+main .bg-cyan-300:hover {
+  background-color: #bae6fd !important;
+}
+
+/* Reuse and manual panels stay green, but remain part of the dark design. */
+main [class*="border-emerald-"][class*="bg-emerald-"] {
+  background-color: rgba(20, 83, 45, 0.18) !important;
+  border-color: rgba(134, 239, 172, 0.24) !important;
+}
+
+main [class*="border-cyan-"][class*="bg-cyan-"] {
+  background-color: rgba(8, 145, 178, 0.12) !important;
+  border-color: rgba(125, 211, 252, 0.22) !important;
+}
+
+main [class*="border-amber-"][class*="bg-amber-"] {
+  background-color: rgba(146, 64, 14, 0.14) !important;
+}
+
+main [class*="border-orange-"][class*="bg-orange-"] {
+  background-color: rgba(154, 52, 18, 0.12) !important;
 }
 
 main a,
@@ -158,6 +117,6 @@ footer a {
 }
 
 ::selection {
-  background: rgba(157, 172, 145, 0.55);
-  color: var(--pricesift-forest-deep);
+  background: rgba(56, 189, 248, 0.32);
+  color: #ffffff;
 }
