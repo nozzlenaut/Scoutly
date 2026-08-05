@@ -16,6 +16,7 @@ type SearchFormProps = {
   initialUsOnly?: boolean | null;
   compact?: boolean;
   bare?: boolean;
+  theme?: "dark" | "light";
 };
 
 function announceSearchStart() {
@@ -28,6 +29,7 @@ export function SearchForm({
   initialUsOnly,
   compact = false,
   bare = false,
+  theme = "dark",
 }: SearchFormProps) {
   const router = useRouter();
   const initialCategory = getCategory(initialCategoryId);
@@ -239,6 +241,43 @@ export function SearchForm({
     }
   }
 
+  const searchLabelClasses =
+    theme === "light" ? "sr-only text-ps-text-secondary" : "sr-only";
+  const searchInputClasses =
+    theme === "light"
+      ? "min-h-14 w-full rounded-2xl border border-ps-border bg-ps-control px-5 text-base text-ps-text-primary outline-none placeholder:text-ps-text-muted focus:border-ps-accent-strong focus:ring-2 focus:ring-ps-accent focus:ring-offset-2 focus:ring-offset-ps-surface"
+      : "min-h-14 w-full rounded-2xl border border-white/10 bg-white/10 px-5 text-base text-white outline-none placeholder:text-slate-400 focus:border-cyan-300";
+  const suggestionPanelClasses =
+    theme === "light"
+      ? "absolute left-0 right-0 top-16 z-[100] max-h-80 overflow-y-auto rounded-2xl border border-ps-border bg-ps-surface text-left shadow-2xl shadow-slate-900/10 backdrop-blur"
+      : "absolute left-0 right-0 top-16 z-[100] max-h-80 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/95 text-left shadow-2xl shadow-black/50 backdrop-blur";
+  const suggestionLabelClasses =
+    theme === "light"
+      ? "border-b border-ps-border px-4 py-2 text-xs uppercase tracking-[0.2em] text-ps-neutral"
+      : "border-b border-white/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-400";
+  const suggestionRowClasses = (selected: boolean) =>
+    `flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition ${
+      theme === "light"
+        ? selected
+          ? "bg-ps-accent-soft"
+          : "hover:bg-ps-accent-soft"
+        : selected
+          ? "bg-white/10"
+          : "hover:bg-white/10"
+    }`;
+  const suggestionPrimaryTextClasses =
+    theme === "light" ? "block font-semibold text-ps-text-primary" : "block font-semibold text-white";
+  const suggestionSecondaryTextClasses =
+    theme === "light" ? "text-xs text-ps-text-secondary" : "text-xs text-slate-300";
+  const searchButtonClasses =
+    theme === "light"
+      ? "flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-ps-accent-strong px-7 font-semibold text-white transition hover:bg-ps-accent-hover focus:ring-2 focus:ring-ps-accent focus:ring-offset-2 focus:ring-offset-ps-canvas disabled:cursor-wait disabled:opacity-80 sm:w-auto"
+      : "flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-cyan-300 px-7 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-wait disabled:opacity-80";
+  const categoryListClasses =
+    theme === "light" ? "grid grid-cols-2 gap-2 sm:flex sm:flex-wrap" : "flex flex-wrap gap-2";
+  const helpTextClasses =
+    theme === "light" ? "mt-3 text-sm text-ps-text-secondary" : "mt-3 text-sm text-slate-300";
+
   return (
     <div
       ref={wrapperRef}
@@ -257,11 +296,15 @@ export function SearchForm({
       }
     >
       <div className={compact ? "mb-3" : "mb-4"}>
-        <p className="mb-2 text-xs uppercase tracking-[0.22em] text-slate-400">
+        <p
+          className={`mb-2 text-xs uppercase tracking-[0.22em] ${
+            theme === "light" ? "text-ps-neutral" : "text-slate-400"
+          }`}
+        >
           Choose a category
         </p>
         <div
-          className="flex flex-wrap gap-2"
+          className={categoryListClasses}
           role="group"
           aria-label="Search category"
         >
@@ -274,19 +317,33 @@ export function SearchForm({
                 aria-pressed={isSelected}
                 disabled={isNavigating}
                 onClick={() => handleCategoryChange(category.id)}
-                className={`flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition disabled:cursor-wait disabled:opacity-70 ${
+                className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition disabled:cursor-wait disabled:opacity-70 ${
+                  theme === "light" ? "min-h-11 w-full whitespace-nowrap sm:w-auto" : ""
+                } ${
                   isSelected
-                    ? "border-white bg-white text-slate-950"
-                    : "border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]"
+                    ? theme === "light"
+                      ? "border-ps-accent-strong bg-ps-accent-soft text-ps-text-primary"
+                      : "border-white bg-white text-slate-950"
+                    : theme === "light"
+                      ? "border-ps-border bg-ps-surface text-ps-text-secondary hover:border-ps-border-strong hover:bg-ps-accent-soft"
+                      : "border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]"
                 }`}
               >
                 <span>{category.label}</span>
-                <StatusBadge status={category.status} selected={isSelected} />
+                {theme === "light" ? (
+                  category.status === "beta" ? (
+                    <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.12em] text-ps-info">
+                      Beta
+                    </span>
+                  ) : null
+                ) : (
+                  <StatusBadge status={category.status} selected={isSelected} />
+                )}
               </button>
             );
           })}
         </div>
-        {!compact ? (
+        {!compact && theme !== "light" ? (
           <p className="mt-3 text-sm text-slate-300">
             {selectedCategory.group} · {selectedCategory.description}
           </p>
@@ -300,6 +357,7 @@ export function SearchForm({
           compact={compact}
           isNavigating={isNavigating}
           onSearch={submitSearch}
+          theme={theme}
         />
       ) : selectedCategory.id === "cpus" ? (
         <CpuSearchBuilder
@@ -308,6 +366,7 @@ export function SearchForm({
           compact={compact}
           isNavigating={isNavigating}
           onSearch={submitSearch}
+          theme={theme}
         />
       ) : (
         <>
@@ -317,7 +376,7 @@ export function SearchForm({
           >
             <div className="flex w-full flex-col gap-3 sm:flex-row">
               <div className="relative flex-1">
-              <label htmlFor={inputId} className="sr-only">
+              <label htmlFor={inputId} className={searchLabelClasses}>
                 {selectedCategory.id === "books"
                   ? "Search by ISBN-10 or ISBN-13"
                   : `Search exact ${selectedCategory.label.toLowerCase()} item`}
@@ -354,7 +413,7 @@ export function SearchForm({
                     : undefined
                 }
                 aria-describedby={statusId}
-                className="min-h-14 w-full rounded-2xl border border-white/10 bg-white/10 px-5 text-base text-white outline-none placeholder:text-slate-400 focus:border-cyan-300"
+                className={searchInputClasses}
               />
 
               {showSuggestions && suggestions.length > 0 ? (
@@ -362,9 +421,9 @@ export function SearchForm({
                   id={listboxId}
                   role="listbox"
                   aria-label={`Matching ${selectedCategory.label}`}
-                  className="absolute left-0 right-0 top-16 z-[100] max-h-80 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/95 text-left shadow-2xl shadow-black/50 backdrop-blur"
+                  className={suggestionPanelClasses}
                 >
-                  <div className="border-b border-white/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-400">
+                  <div className={suggestionLabelClasses}>
                     Searchable models for {selectedCategory.label.toLowerCase()}
                   </div>
                   {suggestions.map((match, index) => {
@@ -379,15 +438,13 @@ export function SearchForm({
                         onMouseDown={(event) => event.preventDefault()}
                         onMouseEnter={() => setActiveSuggestionIndex(index)}
                         onClick={() => pickSuggestion(match)}
-                        className={`flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition ${
-                          selected ? "bg-white/10" : "hover:bg-white/10"
-                        }`}
+                        className={suggestionRowClasses(selected)}
                       >
                         <span>
-                          <span className="block font-semibold text-white">
+                          <span className={suggestionPrimaryTextClasses}>
                             {match.product.display_name}
                           </span>
-                          <span className="text-xs text-slate-300">
+                          <span className={suggestionSecondaryTextClasses}>
                             {match.product.metadata?.provider_scope === "keh"
                               ? "Current KEH model · KEH only"
                               : match.product.metadata?.provider_scope === "ebay_keh"
@@ -408,7 +465,7 @@ export function SearchForm({
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <button
                   disabled={isNavigating}
-                  className="flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-cyan-300 px-7 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-wait disabled:opacity-80"
+                  className={searchButtonClasses}
                 >
                   {isNavigating ? (
                     <>
@@ -419,7 +476,7 @@ export function SearchForm({
                     "Search"
                   )}
                 </button>
-                <UsOnlyToggle checked={usOnly} onChange={changeUsOnly} />
+                <UsOnlyToggle checked={usOnly} onChange={changeUsOnly} theme={theme} />
               </div>
             </div>
 
@@ -436,12 +493,12 @@ export function SearchForm({
             ) : null}
           </form>
 
-          {selectedCategory.id === "books" ? <BookIsbnScanner usOnly={usOnly} /> : null}
+          {selectedCategory.id === "books" ? <BookIsbnScanner usOnly={usOnly} theme={theme} /> : null}
 
           <p
             id={statusId}
             aria-live="polite"
-            className="mt-3 text-sm text-slate-300"
+            className={helpTextClasses}
           >
             {selectedCategory.id === "books"
               ? "Enter an ISBN-10 or ISBN-13. PriceSift searches that exact used-book edition; title-only searches are not sent to eBay."
@@ -454,7 +511,14 @@ export function SearchForm({
           </p>
           {selectedCategory.id === "cameras" ? (
             <p className="mt-2 text-xs text-slate-400">
-              <a href="/cameras" className="font-semibold text-cyan-200 hover:text-cyan-100">
+              <a
+                href="/cameras"
+                className={
+                  theme === "light"
+                    ? "font-semibold text-ps-accent-hover hover:text-ps-accent-strong"
+                    : "font-semibold text-cyan-200 hover:text-cyan-100"
+                }
+              >
                 Browse every camera model currently available at KEH
               </a>
             </p>
@@ -465,7 +529,7 @@ export function SearchForm({
       {selectedCategory.id === "ram" || selectedCategory.id === "cpus" ? (
         <div className="mt-4">
           <div className="flex justify-end">
-            <UsOnlyToggle checked={usOnly} onChange={changeUsOnly} />
+            <UsOnlyToggle checked={usOnly} onChange={changeUsOnly} theme={theme} />
           </div>
           {usOnly ? (
             <DeliveryPostalField
@@ -520,14 +584,28 @@ function DeliveryPostalField({
   );
 }
 
-function UsOnlyToggle({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
+function UsOnlyToggle({
+  checked,
+  onChange,
+  theme = "dark",
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  theme?: "dark" | "light";
+}) {
   return (
-    <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.05] px-4 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08]">
+    <label
+      className={
+        theme === "light"
+          ? "flex min-h-12 w-full cursor-pointer items-center justify-center gap-3 rounded-2xl border border-ps-border bg-ps-control px-4 text-sm font-semibold text-ps-text-primary transition hover:border-ps-border-strong hover:bg-ps-accent-soft sm:w-auto"
+          : "flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.05] px-4 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08]"
+      }
+    >
       <input
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="h-4 w-4 accent-cyan-300"
+        className={theme === "light" ? "h-4 w-4 accent-ps-accent-strong" : "h-4 w-4 accent-cyan-300"}
       />
       <span>US listings only</span>
     </label>

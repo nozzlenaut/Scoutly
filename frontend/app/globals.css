@@ -36,11 +36,18 @@ h3,
   letter-spacing: -0.025em;
 }
 
-main {
+main:not(.pricesift-home) {
   background:
     radial-gradient(circle at top, rgba(14, 116, 144, 0.34), transparent 34rem),
     linear-gradient(180deg, #07101f 0%, var(--pricesift-navy) 44%, #040711 100%) !important;
   color: var(--pricesift-text);
+}
+
+main.pricesift-home {
+  background:
+    radial-gradient(circle at top, rgba(95, 168, 211, 0.2), transparent 34rem),
+    linear-gradient(180deg, #f2f7fc 0%, #fbf8f1 44%, #fbf8f1 100%) !important;
+  color: #10233a;
 }
 
 /* Give the existing cards a slightly more deliberate, blue-tinted surface. */
@@ -60,22 +67,22 @@ main [class*="border-white/20"][class*="bg-white/"] {
 }
 
 /* Keep form controls dark, readable, and visually separate from their cards. */
-main input,
-main select,
-main textarea {
+main:not(.pricesift-home) input,
+main:not(.pricesift-home) select,
+main:not(.pricesift-home) textarea {
   background-color: rgba(5, 8, 22, 0.72) !important;
   border-color: rgba(125, 211, 252, 0.18) !important;
   color: var(--pricesift-text) !important;
 }
 
-main input::placeholder,
-main textarea::placeholder {
+main:not(.pricesift-home) input::placeholder,
+main:not(.pricesift-home) textarea::placeholder {
   color: #94a3b8 !important;
 }
 
-main input:focus,
-main select:focus,
-main textarea:focus {
+main:not(.pricesift-home) input:focus,
+main:not(.pricesift-home) select:focus,
+main:not(.pricesift-home) textarea:focus {
   border-color: var(--pricesift-blue-strong) !important;
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
 }
