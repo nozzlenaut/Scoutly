@@ -29,7 +29,13 @@ function cameraErrorMessage(error: unknown): string {
   return "The camera could not start. You can still type the ISBN above.";
 }
 
-export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
+export function BookIsbnScanner({
+  usOnly = false,
+  theme = "dark",
+}: {
+  usOnly?: boolean;
+  theme?: "dark" | "light";
+}) {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
@@ -156,20 +162,20 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
   return (
     <>
       <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm sm:justify-start">
-        <span className="text-slate-400">Books tools:</span>
+        <span className={theme === "light" ? "text-ps-neutral" : "text-slate-400"}>Books tools:</span>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="font-semibold text-cyan-200 underline decoration-cyan-200/30 underline-offset-4 transition hover:text-cyan-100"
+          className={theme === "light" ? "font-semibold text-ps-accent-hover underline underline-offset-4 transition hover:text-ps-text-primary" : "font-semibold text-cyan-200 underline decoration-cyan-200/30 underline-offset-4 transition hover:text-cyan-100"}
         >
           Scan an ISBN barcode
         </button>
-        <span className="hidden text-slate-600 sm:inline" aria-hidden="true">
+        <span className={theme === "light" ? "hidden text-ps-neutral sm:inline" : "hidden text-slate-600 sm:inline"} aria-hidden="true">
           ·
         </span>
         <Link
           href="/books/goodreads"
-          className="font-semibold text-amber-200 underline decoration-amber-200/30 underline-offset-4 transition hover:text-amber-100"
+          className={theme === "light" ? "font-semibold text-ps-accent-hover underline underline-offset-4 transition hover:text-ps-text-primary" : "font-semibold text-amber-200 underline decoration-amber-200/30 underline-offset-4 transition hover:text-amber-100"}
         >
           Price a Goodreads export
         </Link>
@@ -182,10 +188,10 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
           aria-modal="true"
           aria-label="Scan ISBN barcode"
         >
-          <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 p-5 shadow-2xl">
+          <div className={theme === "light" ? "w-full max-w-lg rounded-3xl border border-ps-border bg-ps-surface p-5 text-ps-text-primary shadow-2xl" : "w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 p-5 shadow-2xl"}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-200">
+                <p className={theme === "light" ? "text-xs font-bold uppercase tracking-[0.2em] text-ps-accent-hover" : "text-xs font-bold uppercase tracking-[0.2em] text-cyan-200"}>
                   ISBN scanner
                 </p>
                 <h2 className="mt-1 text-2xl font-black">
@@ -195,7 +201,7 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
               <button
                 type="button"
                 onClick={closeScanner}
-                className="rounded-xl border border-white/10 px-3 py-2 text-sm text-slate-200 hover:bg-white/[0.08]"
+                className={theme === "light" ? "rounded-xl border border-ps-border bg-ps-control px-3 py-2 text-sm text-ps-text-primary hover:border-ps-border-strong focus:border-ps-accent-strong focus:ring-2 focus:ring-ps-accent-strong" : "rounded-xl border border-white/10 px-3 py-2 text-sm text-slate-200 hover:bg-white/[0.08]"}
                 aria-label="Close ISBN scanner"
               >
                 Close
@@ -212,7 +218,7 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
               />
               {!error ? (
                 <div
-                  className="pointer-events-none absolute inset-x-[9%] top-1/2 h-24 -translate-y-1/2 rounded-xl border-2 border-cyan-200/90 shadow-[0_0_0_999px_rgba(2,6,23,0.35)]"
+                  className={theme === "light" ? "pointer-events-none absolute inset-x-[9%] top-1/2 h-24 -translate-y-1/2 rounded-xl border-2 border-ps-accent-strong shadow-[0_0_0_999px_rgba(2,6,23,0.35)]" : "pointer-events-none absolute inset-x-[9%] top-1/2 h-24 -translate-y-1/2 rounded-xl border-2 border-cyan-200/90 shadow-[0_0_0_999px_rgba(2,6,23,0.35)]"}
                   aria-hidden="true"
                 />
               ) : null}
@@ -220,7 +226,13 @@ export function BookIsbnScanner({ usOnly = false }: { usOnly?: boolean }) {
 
             <p
               className={`mt-4 text-sm leading-6 ${
-                error ? "text-amber-200" : "text-slate-300"
+                error
+                  ? theme === "light"
+                    ? "text-ps-warning"
+                    : "text-amber-200"
+                  : theme === "light"
+                    ? "text-ps-text-secondary"
+                    : "text-slate-300"
               }`}
               role={error ? "alert" : "status"}
             >
