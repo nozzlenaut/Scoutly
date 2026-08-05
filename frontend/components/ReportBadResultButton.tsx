@@ -17,9 +17,10 @@ type Props = {
   query: string;
   category: string;
   productId?: string;
+  theme?: "dark" | "light";
 };
 
-export function ReportBadResultButton({ result, query, category, productId }: Props) {
+export function ReportBadResultButton({ result, query, category, productId, theme = "dark" }: Props) {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const router = useRouter();
@@ -49,7 +50,7 @@ export function ReportBadResultButton({ result, query, category, productId }: Pr
 
   if (status === "saved") {
     return (
-      <p className="mt-3 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">
+      <p className={theme === "light" ? "mt-3 rounded-2xl border border-ps-border bg-ps-control px-4 py-3 text-sm text-ps-success" : "mt-3 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100"}>
         Thanks — PriceSift will hide this result for this item for 72 hours. Refreshing results...
       </p>
     );
@@ -60,14 +61,14 @@ export function ReportBadResultButton({ result, query, category, productId }: Pr
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="text-sm font-medium text-slate-400 underline decoration-slate-600 underline-offset-4 transition hover:text-slate-200"
+        className={theme === "light" ? "text-sm font-medium text-ps-accent-hover underline underline-offset-4 transition hover:text-ps-text-primary" : "text-sm font-medium text-slate-400 underline decoration-slate-600 underline-offset-4 transition hover:text-slate-200"}
       >
         Report bad result
       </button>
 
       {open ? (
-        <div className="mt-3 rounded-2xl border border-white/10 bg-slate-950/95 p-3 shadow-xl shadow-black/30">
-          <p className="mb-2 text-xs text-slate-400">What is wrong with this listing?</p>
+        <div className={theme === "light" ? "mt-3 rounded-2xl border border-ps-border bg-ps-surface p-3 shadow-xl shadow-slate-900/10" : "mt-3 rounded-2xl border border-white/10 bg-slate-950/95 p-3 shadow-xl shadow-black/30"}>
+          <p className={theme === "light" ? "mb-2 text-xs text-ps-neutral" : "mb-2 text-xs text-slate-400"}>What is wrong with this listing?</p>
           <div className="grid gap-2 sm:grid-cols-2">
             {REASONS.map((reason) => (
               <button
@@ -75,7 +76,7 @@ export function ReportBadResultButton({ result, query, category, productId }: Pr
                 type="button"
                 disabled={status === "saving"}
                 onClick={() => submit(reason.id)}
-                className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-sm text-slate-200 transition hover:bg-white/[0.08] disabled:cursor-wait disabled:opacity-60"
+                className={theme === "light" ? "rounded-xl border border-ps-border bg-ps-control px-3 py-2 text-left text-sm text-ps-text-primary transition hover:border-ps-border-strong hover:bg-ps-accent-soft disabled:cursor-wait disabled:opacity-60" : "rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-sm text-slate-200 transition hover:bg-white/[0.08] disabled:cursor-wait disabled:opacity-60"}
               >
                 {reason.label}
               </button>
@@ -85,7 +86,7 @@ export function ReportBadResultButton({ result, query, category, productId }: Pr
       ) : null}
 
       {status === "error" ? (
-        <p className="mt-2 text-xs text-amber-300">Could not save that report. Try again after refresh.</p>
+        <p className={theme === "light" ? "mt-2 text-xs text-ps-warning" : "mt-2 text-xs text-amber-300"}>Could not save that report. Try again after refresh.</p>
       ) : null}
     </div>
   );

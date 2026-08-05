@@ -17,16 +17,16 @@ import { lookupOpenLibraryAvailability } from "@/lib/openLibrary";
 
 function PageShell({ children }: { children: ReactNode }) {
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
+    <main className="pricesift-results min-h-screen bg-ps-canvas px-6 py-10 text-ps-text-primary">
       <div className="mx-auto max-w-6xl">
         <div className="flex items-center justify-between gap-4">
           <Link
             href="/"
-            className="text-2xl font-black tracking-tight text-white"
+            className="text-2xl font-black tracking-tight text-ps-text-primary"
           >
             PriceSift
           </Link>
-          <Link href="/" className="text-sm text-cyan-200 hover:text-cyan-100">
+          <Link href="/" className="text-sm font-semibold text-ps-accent-hover hover:text-ps-text-primary hover:underline">
             Home
           </Link>
         </div>
@@ -103,11 +103,11 @@ export default async function SearchPage({
   if (!category) {
     return (
       <PageShell>
-        <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
-          <SearchForm />
+        <section className="mt-8 rounded-[2rem] border border-ps-border bg-ps-surface p-5">
+          <SearchForm theme="light" />
         </section>
         <div
-          className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-6 text-amber-100"
+          className="mt-8 rounded-3xl border border-ps-border bg-ps-surface p-6 text-ps-warning"
           role="status"
         >
           <h1 className="text-2xl font-black">Category unavailable</h1>
@@ -127,15 +127,15 @@ export default async function SearchPage({
   if (!rawQuery) {
     return (
       <PageShell>
-        <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
-          <SearchForm initialCategoryId={category.id} initialQuery="" initialUsOnly={usOnly} compact />
+        <section className="mt-8 rounded-[2rem] border border-ps-border bg-ps-surface p-5">
+          <SearchForm initialCategoryId={category.id} initialQuery="" initialUsOnly={usOnly} compact theme="light" />
         </section>
         <div
-          className="mt-8 rounded-3xl border border-white/10 bg-white/[0.05] p-6 text-slate-200"
+          className="mt-8 rounded-3xl border border-ps-border bg-ps-surface p-6 text-ps-text-primary"
           role="status"
         >
           <h1 className="text-2xl font-black">Search needed</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-300">
+          <p className="mt-3 text-sm leading-6 text-ps-text-secondary">
             {category.id === "ram"
               ? "Complete the first four RAM builder choices above. PriceSift requires a clear DDR type, form factor, capacity, and stick configuration."
               : category.id === "cpus"
@@ -158,17 +158,18 @@ export default async function SearchPage({
     ]);
     return (
       <PageShell>
-        <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+        <section className="mt-8 rounded-[2rem] border border-ps-border bg-ps-surface p-4 sm:p-5">
           <SearchForm
             key={`${category.id}:${rawQuery}`}
             initialCategoryId={category.id}
             initialQuery={rawQuery}
             initialUsOnly={usOnly}
             compact
+            theme="light"
           />
         </section>
-        <SearchTransitionGuard key={`books:${rawQuery}:${usOnly ? "us" : "all"}`}>
-          <PublicBookResults data={bookData} query={rawQuery} deliveryEnabled={usOnly} openLibrary={openLibrary} />
+        <SearchTransitionGuard key={`books:${rawQuery}:${usOnly ? "us" : "all"}`} theme="light">
+          <PublicBookResults data={bookData} query={rawQuery} deliveryEnabled={usOnly} openLibrary={openLibrary} theme="light" />
         </SearchTransitionGuard>
       </PageShell>
     );
@@ -210,20 +211,21 @@ export default async function SearchPage({
   if (!resolved) {
     return (
       <PageShell>
-        <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+        <section className="mt-8 rounded-[2rem] border border-ps-border bg-ps-surface p-4 sm:p-5">
           <SearchForm
             key={`${category.id}:${rawQuery}`}
             initialCategoryId={category.id}
             initialQuery={rawQuery}
             initialUsOnly={usOnly}
             compact
+            theme="light"
           />
         </section>
 
-        <div className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-6 text-amber-50" role="status">
-          <p className="text-sm uppercase tracking-[0.22em] text-amber-100/70">Not supported yet</p>
+        <div className="mt-8 rounded-3xl border border-ps-border bg-ps-surface p-6 text-ps-text-primary" role="status">
+          <p className="text-sm uppercase tracking-[0.22em] text-ps-warning">Not supported yet</p>
           <h1 className="mt-2 text-2xl font-black">PriceSift could not match “{data.query}” to a supported catalog item.</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-amber-100/90">
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-ps-text-secondary">
             Public searches only run for products PriceSift knows how to identify and filter safely. Choose one of the suggested catalog items or try a more exact model name.
           </p>
           {likelyAlternatives.length > 0 ? (
@@ -234,7 +236,7 @@ export default async function SearchPage({
                   <Link
                     key={match.product.id}
                     href={`/search?category=${encodeURIComponent(category.id)}&q=${encodeURIComponent(match.product.display_name)}${usOnly ? "&us_only=1" : ""}`}
-                    className="rounded-full border border-amber-100/25 bg-slate-950/30 px-4 py-2 text-sm font-semibold text-amber-50 transition hover:bg-slate-950/50"
+                    className="rounded-full border border-ps-border bg-ps-control px-4 py-2 text-sm font-semibold text-ps-accent-hover transition hover:border-ps-border-strong hover:bg-ps-accent-soft"
                   >
                     {match.product.display_name}
                   </Link>
@@ -242,7 +244,7 @@ export default async function SearchPage({
               </div>
             </div>
           ) : null}
-          <p className="mt-5 text-xs leading-5 text-amber-100/70">
+          <p className="mt-5 text-xs leading-5 text-ps-neutral">
             No marketplace search was sent for this unsupported query. PriceSift is picky on purpose.
           </p>
         </div>
@@ -252,36 +254,40 @@ export default async function SearchPage({
 
   return (
     <PageShell>
-      <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+      <section className="mt-8 rounded-[2rem] border border-ps-border bg-ps-surface p-4 sm:p-5">
         <SearchForm
           key={`${category.id}:${rawQuery}`}
           initialCategoryId={category.id}
           initialQuery={rawQuery}
           initialUsOnly={usOnly}
           compact
+          theme="light"
         />
       </section>
 
-      <SearchTransitionGuard key={`${category.id}:${rawQuery}:${usOnly ? "us" : "all"}`}>
+      <SearchTransitionGuard key={`${category.id}:${rawQuery}:${usOnly ? "us" : "all"}`} theme="light">
         <div className="mt-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <p className="text-sm uppercase tracking-[0.25em] text-slate-400">
+            <p className="text-sm uppercase tracking-[0.25em] text-ps-neutral">
               Best used results
             </p>
             <h1 className="mt-2 text-4xl font-black">
               {resolved?.product.display_name ?? data.query}
             </h1>
-            <div className="mt-3 space-y-2 text-sm text-slate-300">
-              <p>
-                {isKehOnly ? "KEH camera model" : "Catalog item"}: {resolved.product.display_name} · Product match confidence {Math.round(resolved.confidence * 100)}%
+            <div className="mt-3 space-y-2 text-sm text-ps-text-secondary">
+              <p className="flex flex-wrap items-center gap-2">
+                <span>{isKehOnly ? "KEH camera model" : "Catalog item"}: {resolved.product.display_name}</span>
+                <span className="inline-flex whitespace-nowrap rounded-full bg-ps-accent-strong px-3 py-1 text-sm font-semibold text-white">
+                  Product match {Math.round(resolved.confidence * 100)}%
+                </span>
               </p>
               {isKehOnly ? (
-                <p className="text-slate-400">
+                <p className="text-ps-neutral">
                   This model comes from KEH’s standardized current inventory and is not mapped to PriceSift’s tuned eBay catalog, so no eBay search was sent.
                 </p>
               ) : null}
               {category.id === "consoles" ? (
-                <p className="text-slate-400">
+                <p className="text-ps-neutral">
                   {resolved.product.variant?.includes("Edition")
                     ? `Results are narrowed to the ${resolved.product.variant}.`
                     : `All ${resolved.product.display_name} variants are grouped unless your search names a specific edition.`}
@@ -290,18 +296,19 @@ export default async function SearchPage({
             </div>
           </div>
           <div className="flex flex-col items-start gap-3 sm:items-end">
-            <p className="text-sm text-slate-300">
+            <p className="text-sm text-ps-text-secondary">
               {providerLabel} · Up to 3 Buy It Now options
               {usOnly ? " · eBay limited to US-located items" : ""}
             </p>
             <ShareSearchButton
               label={resolved?.product.display_name ?? data.query}
               bestPrice={data.price_context.current_best_price}
+              theme="light"
             />
           </div>
         </div>
 
-        <PriceContextPanel context={data.price_context} />
+        <PriceContextPanel context={data.price_context} theme="light" />
 
         {data.results.length > 0 ? (
           <DeliveryResultsGrid
@@ -311,14 +318,15 @@ export default async function SearchPage({
             productId={resolved?.product.id}
             ariaLabel="Buy It Now results"
             deliveryEnabled={usOnly}
+            theme="light"
           />
         ) : (
           <div
-            className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-6 text-amber-50"
+            className="mt-8 rounded-3xl border border-ps-border bg-ps-surface p-6 text-ps-text-primary"
             role="status"
           >
             <h2 className="text-xl font-bold">{fixedPriceEmptyMessage}</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-amber-100/90">
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-ps-text-secondary">
               PriceSift removes incomplete items, replacement pieces and parts,
               empty boxes or packaging, accessory-only listings, broken items,
               and unclear variation listings when those signals are detected.
@@ -330,16 +338,16 @@ export default async function SearchPage({
                     href={broaderEbayUrl}
                     target="_blank"
                     rel="sponsored noreferrer"
-                    className="w-fit rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
+                    className="w-fit rounded-2xl bg-ps-accent-strong px-5 py-3 text-sm font-semibold text-white transition hover:bg-ps-accent-hover"
                   >
                     View broader Buy It Now results on eBay
                   </a>
-                  <span className="text-xs leading-5 text-amber-100/75">
+                  <span className="text-xs leading-5 text-ps-neutral">
                     PriceSift’s listing-quality filters do not apply after you open
                     the broader eBay search.
                   </span>
                 </div>
-                <p className="mt-4 text-sm text-amber-100/90">
+                <p className="mt-4 text-sm text-ps-text-secondary">
                   PriceSift is also checking ending-soon auctions below.
                 </p>
               </>
@@ -352,6 +360,7 @@ export default async function SearchPage({
           category={category.id}
           productId={resolved.product.id}
           emphasized={data.results.length === 0}
+          theme="light"
         />
 
         {!isKehOnly ? (
@@ -361,6 +370,7 @@ export default async function SearchPage({
             productId={resolved?.product.id}
             resolved={Boolean(resolved)}
             usOnly={usOnly}
+            theme="light"
           />
         ) : null}
       </SearchTransitionGuard>

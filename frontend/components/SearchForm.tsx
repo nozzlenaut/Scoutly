@@ -269,6 +269,10 @@ export function SearchForm({
     theme === "light" ? "block font-semibold text-ps-text-primary" : "block font-semibold text-white";
   const suggestionSecondaryTextClasses =
     theme === "light" ? "text-xs text-ps-text-secondary" : "text-xs text-slate-300";
+  const suggestionMatchClasses =
+    theme === "light"
+      ? "rounded-full border border-ps-border-strong bg-ps-accent-soft px-2 py-1 text-xs font-medium text-ps-info"
+      : "rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-1 text-xs font-medium text-cyan-100";
   const searchButtonClasses =
     theme === "light"
       ? "flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-ps-accent-strong px-7 font-semibold text-white transition hover:bg-ps-accent-hover focus:ring-2 focus:ring-ps-accent focus:ring-offset-2 focus:ring-offset-ps-canvas disabled:cursor-wait disabled:opacity-80 sm:w-auto"
@@ -290,9 +294,13 @@ export function SearchForm({
       className={
         bare
           ? "relative z-50 mx-auto w-full max-w-4xl text-left"
-          : `relative z-50 mx-auto w-full rounded-[2rem] border border-white/10 bg-slate-950/35 text-left shadow-2xl shadow-black/30 backdrop-blur ${
-              compact ? "max-w-6xl p-3 sm:p-4" : "max-w-3xl p-4 sm:p-5"
-            }`
+          : theme === "light"
+            ? `relative z-50 mx-auto w-full rounded-[2rem] border border-ps-border bg-ps-surface text-left shadow-xl shadow-slate-900/10 ${
+                compact ? "max-w-6xl p-3 sm:p-4" : "max-w-3xl p-4 sm:p-5"
+              }`
+            : `relative z-50 mx-auto w-full rounded-[2rem] border border-white/10 bg-slate-950/35 text-left shadow-2xl shadow-black/30 backdrop-blur ${
+                compact ? "max-w-6xl p-3 sm:p-4" : "max-w-3xl p-4 sm:p-5"
+              }`
       }
     >
       <div className={compact ? "mb-3" : "mb-4"}>
@@ -452,7 +460,7 @@ export function SearchForm({
                                 : `Exact catalog item · ${match.product.product_type.replace("_", " ")}`}
                           </span>
                         </span>
-                        <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-1 text-xs font-medium text-cyan-100">
+                        <span className={suggestionMatchClasses}>
                           Product match {Math.round(match.confidence * 100)}%
                         </span>
                       </button>
@@ -469,7 +477,7 @@ export function SearchForm({
                 >
                   {isNavigating ? (
                     <>
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950" />
+                      <span className={theme === "light" ? "h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" : "h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950"} />
                       Searching…
                     </>
                   ) : (
@@ -485,6 +493,7 @@ export function SearchForm({
                 inputId={deliveryPostalId}
                 value={deliveryPostalCode}
                 error={deliveryPostalError}
+                theme={theme}
                 onChange={(value) => {
                   setDeliveryPostalCode(value);
                   setDeliveryPostalError(null);
@@ -510,7 +519,7 @@ export function SearchForm({
             {isNavigating ? " Loading fresh results…" : ""}
           </p>
           {selectedCategory.id === "cameras" ? (
-            <p className="mt-2 text-xs text-slate-400">
+            <p className={theme === "light" ? "mt-2 text-xs text-ps-neutral" : "mt-2 text-xs text-slate-400"}>
               <a
                 href="/cameras"
                 className={
@@ -536,6 +545,7 @@ export function SearchForm({
               inputId={deliveryPostalId}
               value={deliveryPostalCode}
               error={deliveryPostalError}
+              theme={theme}
               onChange={(value) => {
                 setDeliveryPostalCode(value);
                 setDeliveryPostalError(null);
@@ -553,16 +563,18 @@ function DeliveryPostalField({
   value,
   error,
   onChange,
+  theme = "dark",
 }: {
   inputId: string;
   value: string;
   error: string | null;
   onChange: (value: string) => void;
+  theme?: "dark" | "light";
 }) {
   return (
-    <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3 sm:flex-row sm:items-end sm:gap-4">
+    <div className={theme === "light" ? "mt-3 flex flex-col gap-2 border-t border-ps-border pt-3 sm:flex-row sm:items-end sm:gap-4" : "mt-3 flex flex-col gap-2 border-t border-white/10 pt-3 sm:flex-row sm:items-end sm:gap-4"}>
       <label htmlFor={inputId} className="block w-full sm:w-48">
-        <span className="mb-1 block text-xs font-bold uppercase tracking-[0.16em] text-cyan-100">
+        <span className={theme === "light" ? "mb-1 block text-xs font-bold uppercase tracking-[0.16em] text-ps-text-secondary" : "mb-1 block text-xs font-bold uppercase tracking-[0.16em] text-cyan-100"}>
           Delivery ZIP (optional)
         </span>
         <input
@@ -574,10 +586,10 @@ function DeliveryPostalField({
           maxLength={10}
           placeholder="48035"
           aria-invalid={Boolean(error)}
-          className="min-h-11 w-full rounded-xl border border-white/10 bg-white/10 px-4 text-white outline-none placeholder:text-slate-500 focus:border-cyan-300"
+          className={theme === "light" ? "min-h-11 w-full rounded-xl border border-ps-border bg-ps-control px-4 text-ps-text-primary outline-none placeholder:text-ps-text-muted focus:border-ps-accent-strong focus:ring-2 focus:ring-ps-accent" : "min-h-11 w-full rounded-xl border border-white/10 bg-white/10 px-4 text-white outline-none placeholder:text-slate-500 focus:border-cyan-300"}
         />
       </label>
-      <p className={`flex-1 text-xs leading-5 ${error ? "text-amber-200" : "text-slate-400"}`} role={error ? "alert" : undefined}>
+      <p className={`flex-1 text-xs leading-5 ${error ? (theme === "light" ? "text-ps-warning" : "text-amber-200") : (theme === "light" ? "text-ps-text-secondary" : "text-slate-400")}`} role={error ? "alert" : undefined}>
         {error || "Delivery details will appear inside each eBay result. PriceSift does not save your ZIP."}
       </p>
     </div>

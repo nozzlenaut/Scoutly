@@ -241,7 +241,7 @@ export function SpecSearchBuilder({
         >
           {isNavigating ? (
             <>
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950" />
+              <span className={theme === "light" ? "h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" : "h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950"} />
               Searching…
             </>
           ) : (

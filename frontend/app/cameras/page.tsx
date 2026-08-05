@@ -21,27 +21,27 @@ export default async function CamerasPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-8 text-white sm:px-6 sm:py-10">
+    <main className="pricesift-public min-h-screen px-4 py-8 text-ps-text-primary sm:px-6 sm:py-10">
       <div className="mx-auto max-w-[1500px]">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <Link href="/" className="text-2xl font-black tracking-tight text-white">PriceSift</Link>
-          <Link href="/#search" className="text-sm font-semibold text-cyan-200 hover:text-cyan-100">Search all categories</Link>
+          <Link href="/" className="text-2xl font-black tracking-tight text-ps-text-primary">PriceSift</Link>
+          <Link href="/#search" className="text-sm font-semibold text-ps-accent-hover hover:text-ps-text-primary hover:underline">Search all categories</Link>
         </div>
 
         <section className="mt-8">
-          <p className="text-sm uppercase tracking-[0.25em] text-cyan-200">Current used-camera inventory</p>
+          <p className="text-sm uppercase tracking-[0.25em] text-ps-accent-hover">Current used-camera inventory</p>
           <h1 className="mt-2 max-w-5xl text-4xl font-black sm:text-5xl">Camera models currently available at KEH</h1>
-          <p className="mt-4 max-w-4xl text-base leading-7 text-slate-300">
+          <p className="mt-4 max-w-4xl text-base leading-7 text-ps-text-secondary">
             KEH’s standardized feed is grouped into exact camera models. Models confidently matched to PriceSift’s tuned catalog can compare eBay and KEH. Everything else remains KEH-only instead of being sent through an unsafe broad marketplace search.
           </p>
         </section>
 
         {data ? (
-          <PublicKehCameraDirectory data={data} />
+          <PublicKehCameraDirectory data={data} theme="light" />
         ) : (
-          <div className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-7 text-amber-50">
+          <div className="mt-8 rounded-3xl border border-ps-warning/40 bg-amber-50 p-7 text-ps-text-primary">
             <h2 className="text-2xl font-black">KEH camera inventory is temporarily unavailable.</h2>
-            <p className="mt-3 text-sm text-amber-100/90">Try the normal PriceSift camera search while the next feed sync completes.</p>
+            <p className="mt-3 text-sm text-ps-text-secondary">Try the normal PriceSift camera search while the next feed sync completes.</p>
           </div>
         )}
 

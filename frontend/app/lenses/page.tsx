@@ -21,17 +21,17 @@ export default async function PublicLensesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-8 text-white sm:px-6 sm:py-10">
+    <main className="pricesift-public min-h-screen px-4 py-8 text-ps-text-primary sm:px-6 sm:py-10">
       <div className="mx-auto max-w-[1500px]">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <Link href="/" className="text-2xl font-black tracking-tight text-white">PriceSift</Link>
-          <Link href="/#search" className="text-sm font-semibold text-cyan-200 hover:text-cyan-100">All categories</Link>
+          <Link href="/" className="text-2xl font-black tracking-tight text-ps-text-primary">PriceSift</Link>
+          <Link href="/#search" className="text-sm font-semibold text-ps-accent-hover hover:text-ps-text-primary hover:underline">All categories</Link>
         </div>
 
         <div className="mt-8">
-          <p className="text-sm uppercase tracking-[0.25em] text-cyan-200">Photography beta</p>
+          <p className="text-sm uppercase tracking-[0.25em] text-ps-accent-hover">Photography beta</p>
           <h1 className="mt-2 text-4xl font-black sm:text-5xl">Find used lenses currently at KEH</h1>
-          <p className="mt-4 max-w-4xl text-base leading-7 text-slate-300">
+          <p className="mt-4 max-w-4xl text-base leading-7 text-ps-text-secondary">
             Browse structured KEH inventory by the details that define compatibility. Public lens results are KEH-only for now;
             eBay lens listings remain disabled while PriceSift privately tests their inconsistent titles, mounts, and accessory listings.
           </p>
@@ -40,12 +40,12 @@ export default async function PublicLensesPage() {
         {initialData ? (
           <PublicKehLensFinder initialData={initialData} />
         ) : (
-          <div className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-7 text-amber-50" role="status">
+          <div className="mt-8 rounded-3xl border border-ps-warning/40 bg-amber-50 p-7 text-ps-text-primary" role="status">
             <h2 className="text-2xl font-black">KEH lens inventory is unavailable right now.</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-amber-100/90">
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-ps-text-secondary">
               The public KEH feed may be syncing or temporarily disabled. Camera and other PriceSift categories remain available.
             </p>
-            <Link href="/#search" className="mt-5 inline-flex rounded-2xl bg-white px-5 py-3 font-bold text-slate-950">Return to search</Link>
+            <Link href="/#search" className="mt-5 inline-flex rounded-2xl bg-ps-accent-strong px-5 py-3 font-bold text-white hover:bg-ps-accent-hover">Return to search</Link>
           </div>
         )}
 

@@ -18,6 +18,7 @@ type Props = {
   productId?: string;
   ariaLabel: string;
   deliveryEnabled?: boolean;
+  theme?: "dark" | "light";
 };
 
 export function DeliveryResultsGrid({
@@ -27,6 +28,7 @@ export function DeliveryResultsGrid({
   productId,
   ariaLabel,
   deliveryEnabled = false,
+  theme = "dark",
 }: Props) {
   const itemIds = useMemo(
     () => results
@@ -94,6 +96,7 @@ export function DeliveryResultsGrid({
             variant="buy_now"
             deliveryStatus={hasDeliveryLookup ? status : "idle"}
             deliveryEstimate={hasDeliveryLookup ? estimatesById.get(itemId) || null : null}
+            theme={theme}
           />
         );
       })}

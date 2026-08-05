@@ -5,9 +5,10 @@ import { useState } from "react";
 type Props = {
   label: string;
   bestPrice?: number | null;
+  theme?: "dark" | "light";
 };
 
-export function ShareSearchButton({ label, bestPrice }: Props) {
+export function ShareSearchButton({ label, bestPrice, theme = "dark" }: Props) {
   const [status, setStatus] = useState<"idle" | "shared" | "copied" | "error">("idle");
 
   async function share() {
@@ -42,7 +43,7 @@ export function ShareSearchButton({ label, bestPrice }: Props) {
     <button
       type="button"
       onClick={share}
-      className="rounded-2xl border border-white/15 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-slate-100 transition hover:bg-white/[0.1]"
+      className={theme === "light" ? "rounded-2xl border border-ps-border bg-ps-control px-4 py-2 text-sm font-semibold text-ps-text-primary transition hover:border-ps-border-strong hover:bg-ps-accent-soft" : "rounded-2xl border border-white/15 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-slate-100 transition hover:bg-white/[0.1]"}
     >
       {buttonLabel}
     </button>

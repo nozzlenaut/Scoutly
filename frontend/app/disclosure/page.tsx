@@ -9,13 +9,13 @@ export const metadata: Metadata = {
 
 export default function DisclosurePage() {
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/[0.05] p-8 shadow-2xl shadow-black/20">
-        <Link href="/" className="text-sm text-cyan-200 hover:text-cyan-100">← Back to PriceSift</Link>
-        <p className="mt-8 text-sm uppercase tracking-[0.25em] text-slate-500">Affiliate disclosure</p>
+    <main className="pricesift-public min-h-screen px-6 py-10 text-ps-text-primary">
+      <section className="mx-auto max-w-3xl rounded-3xl border border-ps-border bg-ps-surface p-8 shadow-xl shadow-ps-border/30">
+        <Link href="/" className="text-sm text-ps-accent-hover hover:text-ps-text-primary hover:underline">← Back to PriceSift</Link>
+        <p className="mt-8 text-sm uppercase tracking-[0.25em] text-ps-neutral">Affiliate disclosure</p>
         <h1 className="mt-3 text-4xl font-black">How PriceSift makes money</h1>
-        <div className="mt-6 space-y-5 text-base leading-8 text-slate-300">
-          <p className="rounded-2xl border border-orange-200/20 bg-orange-200/[0.06] p-4 font-semibold text-orange-50">
+        <div className="mt-6 space-y-5 text-base leading-8 text-ps-text-secondary">
+          <p className="rounded-2xl border border-ps-warning/40 bg-amber-50 p-4 font-semibold text-ps-text-primary">
             As an Amazon Associate I earn from qualifying purchases.
           </p>
           <p>

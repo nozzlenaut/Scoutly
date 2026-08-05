@@ -50,14 +50,14 @@ function FacetSelect({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+      <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-ps-neutral">
         {label}
       </span>
       <select
         value={value}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
-        className="min-h-12 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 text-white outline-none focus:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-40"
+        className="min-h-12 w-full rounded-2xl border border-ps-border bg-ps-control px-4 text-ps-text-primary outline-none focus:border-ps-accent-strong focus:ring-2 focus:ring-ps-accent disabled:cursor-not-allowed disabled:opacity-40"
       >
         <option value="">{placeholder}</option>
         {publicFacets(options, kind).map((option) => (
@@ -78,7 +78,7 @@ function ConditionSummary({ model }: { model: KehLensModel }) {
 function FocalRangeHelp({ lensType }: { lensType: string }) {
   if (lensType === "Prime") {
     return (
-      <p className="mt-3 text-xs leading-5 text-slate-500">
+      <p className="mt-3 text-xs leading-5 text-ps-neutral">
         Prime groups use the lens focal length: under 20mm, 20–35mm, 36–60mm,
         61–105mm, 106–200mm, and over 200mm.
       </p>
@@ -86,7 +86,7 @@ function FocalRangeHelp({ lensType }: { lensType: string }) {
   }
   if (lensType === "Zoom") {
     return (
-      <p className="mt-3 text-xs leading-5 text-slate-500">
+      <p className="mt-3 text-xs leading-5 text-ps-neutral">
         Zoom groups use the starting focal length: under 16mm ultra-wide,
         16–23mm wide, 24–49mm standard, 50–99mm telephoto, and 100mm+ super-telephoto.
         A 5× or greater range beginning at 35mm or wider is grouped as a travel zoom.
@@ -152,30 +152,30 @@ export function PublicKehLensFinder({ initialData }: { initialData: KehLensBuild
   return (
     <>
       <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
-          <p className="text-sm text-slate-400">Available KEH listings</p>
+        <div className="rounded-3xl border border-ps-border bg-ps-surface p-5">
+          <p className="text-sm text-ps-text-secondary">Available KEH listings</p>
           <p className="mt-2 text-3xl font-black">{data.summary.listing_count}</p>
         </div>
-        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
-          <p className="text-sm text-slate-400">Unique lens models</p>
+        <div className="rounded-3xl border border-ps-border bg-ps-surface p-5">
+          <p className="text-sm text-ps-text-secondary">Unique lens models</p>
           <p className="mt-2 text-3xl font-black">{data.summary.model_count}</p>
         </div>
-        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
-          <p className="text-sm text-slate-400">Matching models</p>
+        <div className="rounded-3xl border border-ps-border bg-ps-surface p-5">
+          <p className="text-sm text-ps-text-secondary">Matching models</p>
           <p className="mt-2 text-3xl font-black">{readyToBrowse ? data.summary.filtered_model_count : "—"}</p>
         </div>
-        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
-          <p className="text-sm text-slate-400">Matching listings</p>
+        <div className="rounded-3xl border border-ps-border bg-ps-surface p-5">
+          <p className="text-sm text-ps-text-secondary">Matching listings</p>
           <p className="mt-2 text-3xl font-black">{readyToBrowse ? data.summary.filtered_listing_count : "—"}</p>
         </div>
       </section>
 
-      <section className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-5 sm:p-6">
+      <section className="mt-8 rounded-3xl border border-ps-border bg-ps-surface p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-sm uppercase tracking-[0.22em] text-cyan-200">KEH-only lens beta</p>
+            <p className="text-sm uppercase tracking-[0.22em] text-ps-accent-hover">KEH-only lens beta</p>
             <h2 className="mt-2 text-2xl font-bold">Find an in-stock used lens</h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-ps-text-secondary">
               Choose a mount, prime or zoom, and focal range. Brand is optional. PriceSift then shows
               exact lens models currently available from KEH. eBay lens results remain private while
               their listing quality is tested.
@@ -185,7 +185,7 @@ export function PublicKehLensFinder({ initialData }: { initialData: KehLensBuild
             type="button"
             onClick={reset}
             disabled={!mount && !lensType && !focalGroup && !brand}
-            className="rounded-2xl border border-white/10 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-2xl border border-ps-border px-4 py-2 text-sm font-semibold text-ps-text-secondary hover:bg-ps-accent-soft disabled:cursor-not-allowed disabled:opacity-40"
           >
             Start over
           </button>
@@ -245,21 +245,21 @@ export function PublicKehLensFinder({ initialData }: { initialData: KehLensBuild
 
         {readyToBrowse ? (
           <div className="mt-5 flex flex-wrap items-center gap-2 text-sm">
-            <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-cyan-100">{mount}</span>
-            <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-cyan-100">{lensType}</span>
-            <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-cyan-100">{focalGroup}</span>
-            <span className="rounded-full bg-white/10 px-3 py-1 text-slate-300">{brand || "Any brand"}</span>
+            <span className="rounded-full bg-ps-accent-soft px-3 py-1 text-ps-accent-hover">{mount}</span>
+            <span className="rounded-full bg-ps-accent-soft px-3 py-1 text-ps-accent-hover">{lensType}</span>
+            <span className="rounded-full bg-ps-accent-soft px-3 py-1 text-ps-accent-hover">{focalGroup}</span>
+            <span className="rounded-full bg-ps-control px-3 py-1 text-ps-text-secondary">{brand || "Any brand"}</span>
           </div>
         ) : null}
 
-        {busy ? <p className="mt-4 text-sm text-cyan-200">Updating available lenses…</p> : null}
+        {busy ? <p className="mt-4 text-sm text-ps-info">Updating available lenses…</p> : null}
         {message ? (
-          <p className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-3 text-sm text-rose-100">
+          <p className="mt-4 rounded-2xl border border-rose-300/50 bg-rose-50 p-3 text-sm text-rose-800">
             {message}
           </p>
         ) : null}
         {!hasLensInventory ? (
-          <p className="mt-5 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-sm text-amber-100">
+          <p className="mt-5 rounded-2xl border border-ps-warning/40 bg-amber-50 p-4 text-sm text-ps-warning">
             KEH lens inventory is temporarily unavailable. Please check again after the next inventory sync.
           </p>
         ) : null}
@@ -267,10 +267,10 @@ export function PublicKehLensFinder({ initialData }: { initialData: KehLensBuild
 
       <section className="mt-8">
         {!readyToBrowse ? (
-          <div className="rounded-3xl border border-dashed border-white/15 bg-white/[0.03] p-8 text-center sm:p-12">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Available models appear here</p>
+          <div className="rounded-3xl border border-dashed border-ps-border-strong bg-ps-surface p-8 text-center sm:p-12">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ps-neutral">Available models appear here</p>
             <h2 className="mt-3 text-2xl font-bold">Choose a mount, lens type, and focal group</h2>
-            <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+            <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-ps-text-secondary">
               Only combinations present in current KEH inventory appear in the dropdowns, so an unavailable
               focal group cannot lead you into a dead-end search.
             </p>
@@ -279,42 +279,42 @@ export function PublicKehLensFinder({ initialData }: { initialData: KehLensBuild
           <>
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <p className="text-sm uppercase tracking-[0.2em] text-cyan-200">Choose an exact lens</p>
+                <p className="text-sm uppercase tracking-[0.2em] text-ps-accent-hover">Choose an exact lens</p>
                 <h2 className="mt-1 text-2xl font-bold">Models currently available at KEH</h2>
-                <p className="mt-1 text-sm text-slate-500">Open a model to compare its three lowest-priced current listings.</p>
+                <p className="mt-1 text-sm text-ps-neutral">Open a model to compare its three lowest-priced current listings.</p>
               </div>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-ps-text-secondary">
                 {data.models.length} models · {data.summary.filtered_listing_count} listings
               </p>
             </div>
 
             <div className="mt-5 grid gap-4">
               {data.models.map((model) => (
-                <details key={model.model_key} className="group overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] open:bg-white/[0.06]">
+                <details key={model.model_key} className="group overflow-hidden rounded-3xl border border-ps-border bg-ps-surface open:bg-ps-accent-soft">
                   <summary className="cursor-pointer list-none p-4 sm:p-5">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex min-w-0 items-center gap-4">
                         {model.image_url ? (
                           <img src={model.image_url} alt="" className="h-20 w-20 shrink-0 rounded-2xl bg-white object-contain p-1" />
                         ) : (
-                          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white/5 text-xs text-slate-500">No image</div>
+                          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-ps-control text-xs text-ps-neutral">No image</div>
                         )}
                         <div className="min-w-0">
-                          <h3 className="font-bold text-white group-open:text-cyan-100">{model.model_name}</h3>
-                          <p className="mt-1 text-sm text-slate-400">{model.brand} · {model.mount} · {model.focal_group}</p>
-                          <p className="mt-2 text-xs text-slate-500"><ConditionSummary model={model} /></p>
+                          <h3 className="font-bold text-ps-text-primary group-open:text-ps-accent-hover">{model.model_name}</h3>
+                          <p className="mt-1 text-sm text-ps-text-secondary">{model.brand} · {model.mount} · {model.focal_group}</p>
+                          <p className="mt-2 text-xs text-ps-neutral"><ConditionSummary model={model} /></p>
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-3 text-sm sm:justify-end">
-                        <span className="rounded-full bg-white/10 px-3 py-1 text-slate-200">{model.listing_count} available</span>
-                        <span className="font-bold text-emerald-200">from {money(model.lowest_price, model.currency)}</span>
-                        <span className="font-semibold text-cyan-200 group-open:hidden">View listings ↓</span>
-                        <span className="hidden font-semibold text-cyan-200 group-open:inline">Hide listings ↑</span>
+                        <span className="rounded-full bg-ps-control px-3 py-1 text-ps-text-secondary">{model.listing_count} available</span>
+                        <span className="font-bold text-ps-success">from {money(model.lowest_price, model.currency)}</span>
+                        <span className="font-semibold text-ps-accent-hover group-open:hidden">View listings ↓</span>
+                        <span className="hidden font-semibold text-ps-accent-hover group-open:inline">Hide listings ↑</span>
                       </div>
                     </div>
                   </summary>
 
-                  <div className="border-t border-white/10 p-4 sm:p-5">
+                  <div className="border-t border-ps-border p-4 sm:p-5">
                     <div className="grid gap-4 lg:grid-cols-3">
                       {model.listings.map((listing, index) => {
                         const outboundUrl = buildOutboundUrl(listing.affiliate_url, {
@@ -324,18 +324,18 @@ export function PublicKehLensFinder({ initialData }: { initialData: KehLensBuild
                           title: listing.title,
                         });
                         return (
-                          <article key={listing.aw_product_id} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                          <article key={listing.aw_product_id} className="rounded-2xl border border-ps-border bg-ps-control p-4">
                             <div className="flex items-start gap-3">
                               {listing.image_url ? <img src={listing.image_url} alt="" className="h-20 w-20 rounded-xl bg-white object-contain p-1" /> : null}
                               <div className="min-w-0">
-                                <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">KEH option {index + 1}</p>
-                                <p className="mt-1 line-clamp-3 text-sm font-semibold text-white">{listing.title}</p>
+                                <p className="text-xs font-bold uppercase tracking-[0.18em] text-ps-neutral">KEH option {index + 1}</p>
+                                <p className="mt-1 line-clamp-3 text-sm font-semibold text-ps-text-primary">{listing.title}</p>
                               </div>
                             </div>
                             <div className="mt-4 flex items-end justify-between gap-3">
                               <div>
-                                <p className="text-xl font-black text-white">{money(listing.price, listing.currency)}</p>
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xl font-black text-ps-text-primary">{money(listing.price, listing.currency)}</p>
+                                <p className="text-xs text-ps-text-secondary">
                                   {listing.condition_grade_code
                                     ? `${listing.condition_grade_code}${listing.condition_grade_label ? ` · ${listing.condition_grade_label}` : ""}`
                                     : "Used"}
@@ -345,7 +345,7 @@ export function PublicKehLensFinder({ initialData }: { initialData: KehLensBuild
                                 href={outboundUrl}
                                 target="_blank"
                                 rel="sponsored noreferrer"
-                                className="rounded-xl bg-emerald-300 px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-emerald-200"
+                                className="rounded-xl bg-ps-success px-4 py-2 text-sm font-bold text-white transition hover:opacity-90"
                               >
                                 View at KEH
                               </a>
@@ -354,7 +354,7 @@ export function PublicKehLensFinder({ initialData }: { initialData: KehLensBuild
                         );
                       })}
                     </div>
-                    <p className="mt-4 text-xs leading-5 text-slate-500">
+                    <p className="mt-4 text-xs leading-5 text-ps-neutral">
                       Prices and availability come from the latest KEH feed sync and can change before checkout.
                       Outbound KEH links are affiliate links.
                     </p>
@@ -365,9 +365,9 @@ export function PublicKehLensFinder({ initialData }: { initialData: KehLensBuild
             </div>
           </>
         ) : (
-          <div className="rounded-3xl border border-amber-300/20 bg-amber-300/10 p-7 text-amber-50">
+          <div className="rounded-3xl border border-ps-warning/40 bg-amber-50 p-7 text-ps-text-primary">
             <h2 className="text-xl font-bold">No current KEH inventory matches this combination.</h2>
-            <p className="mt-2 text-sm leading-6 text-amber-100/90">
+            <p className="mt-2 text-sm leading-6 text-ps-text-secondary">
               Try another focal group or remove the optional brand filter. PriceSift does not substitute a different mount or lens type.
             </p>
           </div>

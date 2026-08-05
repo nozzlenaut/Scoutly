@@ -19,20 +19,20 @@ export const metadata: Metadata = {
 
 export default function GoodreadsImportPage() {
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-8 text-white sm:px-6 sm:py-10">
+    <main className="pricesift-public min-h-screen px-4 py-8 text-ps-text-primary sm:px-6 sm:py-10">
       <div className="mx-auto max-w-7xl">
         <div className="flex items-center justify-between gap-4">
-          <Link href="/" className="text-2xl font-black tracking-tight text-white">
+          <Link href="/" className="text-2xl font-black tracking-tight text-ps-text-primary">
             PriceSift
           </Link>
           <div className="flex items-center gap-4 text-sm">
             <Link
               href="/search?category=books"
-              className="text-cyan-200 hover:text-cyan-100"
+              className="text-ps-accent-hover hover:text-ps-text-primary hover:underline"
             >
               Search one ISBN
             </Link>
-            <Link href="/" className="text-slate-400 hover:text-white">
+            <Link href="/" className="text-ps-text-secondary hover:text-ps-text-primary hover:underline">
               Home
             </Link>
           </div>

@@ -476,23 +476,23 @@ export function GoodreadsImportTool() {
 
   return (
     <div className="mt-8 space-y-6">
-      <section className="rounded-[2rem] border border-cyan-200/20 bg-cyan-200/[0.07] p-6 sm:p-8">
-        <p className="text-sm font-bold uppercase tracking-[0.22em] text-cyan-200">
+      <section className="rounded-[2rem] border border-ps-border bg-ps-accent-soft p-6 sm:p-8">
+        <p className="text-sm font-bold uppercase tracking-[0.22em] text-ps-accent-hover">
           Goodreads Import · Beta
         </p>
-        <h1 className="mt-3 text-4xl font-black text-white sm:text-5xl">
+        <h1 className="mt-3 text-4xl font-black text-ps-text-primary sm:text-5xl">
           Price an entire reading list.
         </h1>
-        <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">
+        <p className="mt-4 max-w-3xl text-base leading-7 text-ps-text-secondary">
           Export your Goodreads library, upload the CSV, and PriceSift will
           search the exact physical ISBN saved for each book. Digital and
           audio rows receive an unranked Amazon fallback. Your file stays
           in this browser and is not uploaded or retained.
         </p>
 
-        <div className="mt-6 rounded-3xl border border-emerald-200/25 bg-emerald-200/10 p-5 text-emerald-50">
+        <div className="mt-6 rounded-3xl border border-ps-success/40 bg-emerald-50 p-5 text-ps-text-primary">
           <p className="font-black">Exact editions only.</p>
-          <p className="mt-2 text-sm leading-6 text-emerald-100/90">
+          <p className="mt-2 text-sm leading-6 text-ps-text-secondary">
             PriceSift searches the ISBN contained in your Goodreads export.
             It will never silently replace it with another edition. A broader
             edition search is offered only after an exact-edition miss, and
@@ -501,13 +501,13 @@ export function GoodreadsImportTool() {
         </div>
       </section>
 
-      <section className="rounded-[2rem] border border-white/10 bg-white/[0.05] p-6 sm:p-8">
+      <section className="rounded-[2rem] border border-ps-border bg-ps-surface p-6 sm:p-8">
         <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
-            <h2 className="text-2xl font-black text-white">
+            <h2 className="text-2xl font-black text-ps-text-primary">
               1. Export your Goodreads library
             </h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-ps-text-secondary">
               Goodreads currently exposes its CSV export through the website.
               The mobile app may not show the export option, so open the page
               in a desktop browser when necessary.
@@ -518,18 +518,18 @@ export function GoodreadsImportTool() {
             target="_blank"
             rel="noreferrer"
             onClick={() => track("goodreads_export_link_clicked")}
-            className="rounded-2xl border border-white/15 bg-white px-5 py-3 text-center font-bold text-slate-950 transition hover:bg-slate-200"
+            className="rounded-2xl bg-ps-accent-strong px-5 py-3 text-center font-bold text-white transition hover:bg-ps-accent-hover"
           >
             Click here to export from Goodreads ↗
           </a>
         </div>
       </section>
 
-      <section className="rounded-[2rem] border border-white/10 bg-white/[0.05] p-6 sm:p-8">
-        <h2 className="text-2xl font-black text-white">
+      <section className="rounded-[2rem] border border-ps-border bg-ps-surface p-6 sm:p-8">
+        <h2 className="text-2xl font-black text-ps-text-primary">
           2. Upload the exported CSV
         </h2>
-        <p className="mt-3 text-sm leading-6 text-slate-400">
+        <p className="mt-3 text-sm leading-6 text-ps-text-secondary">
           Choose the file named <code>goodreads_library_export.csv</code>.
           Ratings, reviews, notes, and account details are ignored.
         </p>
@@ -549,17 +549,17 @@ export function GoodreadsImportTool() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="rounded-2xl bg-cyan-200 px-5 py-3 font-bold text-slate-950 transition hover:bg-cyan-100"
+            className="rounded-2xl bg-ps-accent-strong px-5 py-3 font-bold text-white transition hover:bg-ps-accent-hover"
           >
             Choose Goodreads CSV
           </button>
           {fileName ? (
-            <span className="text-sm text-slate-300">{fileName}</span>
+            <span className="text-sm text-ps-text-secondary">{fileName}</span>
           ) : null}
         </div>
 
         {parseError ? (
-          <div className="mt-5 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-4 text-sm text-rose-100">
+          <div className="mt-5 rounded-2xl border border-rose-300/50 bg-rose-50 p-4 text-sm text-rose-800">
             {parseError}
           </div>
         ) : null}
@@ -567,19 +567,19 @@ export function GoodreadsImportTool() {
 
       {books.length ? (
         <>
-          <section className="rounded-[2rem] border border-white/10 bg-white/[0.05] p-6 sm:p-8">
+          <section className="rounded-[2rem] border border-ps-border bg-ps-surface p-6 sm:p-8">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <h2 className="text-2xl font-black text-white">
+                <h2 className="text-2xl font-black text-ps-text-primary">
                   3. Choose a shelf and search
                 </h2>
-                <p className="mt-3 text-sm leading-6 text-slate-400">
+                <p className="mt-3 text-sm leading-6 text-ps-text-secondary">
                   Searches run two at a time. Large shelves may take a few
                   minutes, but you can leave the page open and let it work.
                 </p>
               </div>
 
-              <label className="block text-sm font-semibold text-slate-200">
+              <label className="block text-sm font-semibold text-ps-text-secondary">
                 Goodreads shelf
                 <select
                   value={selectedShelf}
@@ -588,7 +588,7 @@ export function GoodreadsImportTool() {
                     setSelectedShelf(event.target.value);
                     setCompleted(0);
                   }}
-                  className="mt-2 block min-w-56 rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white"
+                  className="mt-2 block min-w-56 rounded-xl border border-ps-border bg-ps-control px-4 py-3 text-ps-text-primary focus:border-ps-accent-strong focus:ring-2 focus:ring-ps-accent"
                 >
                   <option value="all">All shelves</option>
                   {shelves.map((shelf) => (
@@ -610,12 +610,12 @@ export function GoodreadsImportTool() {
               ].map(([label, value]) => (
                 <div
                   key={String(label)}
-                  className="rounded-2xl border border-white/10 bg-slate-950/40 p-4"
+                  className="rounded-2xl border border-ps-border bg-ps-control p-4"
                 >
-                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
+                  <p className="text-xs uppercase tracking-[0.16em] text-ps-neutral">
                     {label}
                   </p>
-                  <p className="mt-2 text-2xl font-black text-white">
+                  <p className="mt-2 text-2xl font-black text-ps-text-primary">
                     {value}
                   </p>
                 </div>
@@ -627,7 +627,7 @@ export function GoodreadsImportTool() {
                 type="button"
                 disabled={running || counts.ready === 0}
                 onClick={() => void searchAll()}
-                className="rounded-2xl bg-emerald-200 px-5 py-3 font-bold text-slate-950 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-2xl bg-ps-success px-5 py-3 font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {running
                   ? `Searching ${completed} of ${counts.ready}…`
@@ -638,14 +638,14 @@ export function GoodreadsImportTool() {
                 <button
                   type="button"
                   onClick={() => downloadResults(visibleBooks)}
-                  className="rounded-2xl border border-white/15 px-5 py-3 font-bold text-white transition hover:bg-white/[0.08]"
+                  className="rounded-2xl border border-ps-border px-5 py-3 font-bold text-ps-text-primary transition hover:bg-ps-accent-soft"
                 >
                   Download results CSV
                 </button>
               ) : null}
 
               {searchedBooks.length ? (
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-ps-text-secondary">
                   {counts.found} found · {counts.misses} exact-edition misses
                   {counts.errors ? ` · ${counts.errors} errors` : ""}
                   {bestTotal > 0
@@ -656,9 +656,9 @@ export function GoodreadsImportTool() {
             </div>
 
             {running ? (
-              <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/10">
+              <div className="mt-5 h-3 overflow-hidden rounded-full bg-ps-border">
                 <div
-                  className="h-full rounded-full bg-cyan-200 transition-all"
+                  className="h-full rounded-full bg-ps-accent-strong transition-all"
                   style={{
                     width: `${Math.min(
                       100,
@@ -670,18 +670,18 @@ export function GoodreadsImportTool() {
             ) : null}
           </section>
 
-          <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
-            <div className="border-b border-white/10 p-5 sm:p-6">
-              <h2 className="text-2xl font-black text-white">
+          <section className="overflow-hidden rounded-[2rem] border border-ps-border bg-ps-surface">
+            <div className="border-b border-ps-border p-5 sm:p-6">
+              <h2 className="text-2xl font-black text-ps-text-primary">
                 Exact-edition results
               </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-400">
+              <p className="mt-2 text-sm leading-6 text-ps-text-secondary">
                 Candidate counts are available for transparency, but the
                 primary answer is the cheapest clean exact-edition copy.
               </p>
             </div>
 
-            <div className="divide-y divide-white/10">
+            <div className="divide-y divide-ps-border">
               {visibleBooks.map((book) => {
                 const top = book.response?.top_results?.[0];
                 const cleanCount = book.response?.top_results?.length || 0;
@@ -730,59 +730,59 @@ export function GoodreadsImportTool() {
                   >
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-lg font-black text-white">
+                        <h3 className="text-lg font-black text-ps-text-primary">
                           {book.title}
                         </h3>
                         {book.binding ? (
-                          <span className="rounded-full border border-white/10 px-2.5 py-1 text-xs text-slate-400">
+                          <span className="rounded-full border border-ps-border px-2.5 py-1 text-xs text-ps-neutral">
                             {book.binding}
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-1 text-sm text-slate-400">
+                      <p className="mt-1 text-sm text-ps-text-secondary">
                         {book.author || "Unknown author"}
                         {book.year ? ` · ${book.year}` : ""}
                         {book.isbn ? ` · ISBN ${book.isbn}` : ""}
                       </p>
 
                       {book.importStatus === "digital" ? (
-                        <p className="mt-3 text-sm leading-6 text-violet-200">
+                        <p className="mt-3 text-sm leading-6 text-ps-info">
                           eBay used-copy search skipped for this digital or
                           audio edition. Use the Amazon fallback below.
                         </p>
                       ) : null}
                       {book.importStatus === "missing" ? (
-                        <p className="mt-3 text-sm text-amber-200">
+                        <p className="mt-3 text-sm text-ps-warning">
                           Goodreads did not include an ISBN for this edition.
                         </p>
                       ) : null}
                       {book.importStatus === "invalid" ? (
-                        <p className="mt-3 text-sm text-amber-200">
+                        <p className="mt-3 text-sm text-ps-warning">
                           Goodreads included an ISBN that did not pass checksum
                           validation.
                         </p>
                       ) : null}
                       {book.searchState === "queued" ||
                       book.searchState === "searching" ? (
-                        <p className="mt-3 text-sm text-cyan-200">
+                        <p className="mt-3 text-sm text-ps-info">
                           {book.searchState === "searching"
                             ? "Searching this exact ISBN…"
                             : "Queued for exact-edition search…"}
                         </p>
                       ) : null}
                       {book.searchState === "error" ? (
-                        <p className="mt-3 text-sm text-rose-200">
+                        <p className="mt-3 text-sm text-rose-800">
                           Search error: {book.error}
                         </p>
                       ) : null}
                       {book.searchState === "miss" ? (
                         <div className="mt-3">
-                          <p className="font-bold text-amber-100">
+                          <p className="font-bold text-ps-warning">
                             {separatedExact
                               ? "No standard used copy for this exact edition."
                               : "No listing for this exact edition."}
                           </p>
-                          <p className="mt-1 text-sm leading-6 text-slate-400">
+                          <p className="mt-1 text-sm leading-6 text-ps-text-secondary">
                             {separatedExact
                               ? `PriceSift found only ${separatedKind} exact copies and kept them out of the standard price result.`
                               : "PriceSift did not replace it with another ISBN."}{" "}
@@ -796,10 +796,10 @@ export function GoodreadsImportTool() {
                           <p className="text-xl font-black text-emerald-200">
                             ${top.total_price.toFixed(2)}
                           </p>
-                          <p className="mt-1 line-clamp-2 text-sm text-slate-300">
+                          <p className="mt-1 line-clamp-2 text-sm text-ps-text-secondary">
                             {top.title}
                           </p>
-                          <p className="mt-1 text-xs text-slate-500">
+                          <p className="mt-1 text-xs text-ps-neutral">
                             {top.condition || "Condition not supplied"} ·{" "}
                             {cleanCount} clean option
                             {cleanCount === 1 ? "" : "s"} shown ·{" "}
@@ -807,7 +807,7 @@ export function GoodreadsImportTool() {
                             reviewed
                           </p>
                           {book.response?.selected_verification ? (
-                            <p className="mt-1 text-xs text-cyan-200/80">
+                            <p className="mt-1 text-xs text-ps-info">
                               {book.response.selected_verification}
                             </p>
                           ) : null}
@@ -827,7 +827,7 @@ export function GoodreadsImportTool() {
                               provider: top.provider,
                             })
                           }
-                          className="rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-slate-200"
+                          className="rounded-xl bg-ps-accent-strong px-4 py-2.5 text-sm font-bold text-white transition hover:bg-ps-accent-hover"
                         >
                           Open exact listing ↗
                         </a>
@@ -843,7 +843,7 @@ export function GoodreadsImportTool() {
                               kind: separatedKind,
                             })
                           }
-                          className="rounded-xl border border-purple-200/25 bg-purple-200/10 px-4 py-2.5 text-sm font-bold text-purple-100 transition hover:bg-purple-200/15"
+                          className="rounded-xl border border-ps-border bg-ps-control px-4 py-2.5 text-sm font-bold text-ps-accent-hover transition hover:bg-ps-accent-soft"
                         >
                           {separatedKind === "collectible"
                             ? "Open collectible exact copy ↗"
@@ -866,7 +866,7 @@ export function GoodreadsImportTool() {
                                   : "exact_miss",
                             })
                           }
-                          className="rounded-xl border border-orange-200/25 bg-orange-200/10 px-4 py-2.5 text-sm font-bold text-orange-100 transition hover:bg-orange-200/15"
+                          className="rounded-xl border border-ps-warning/40 bg-amber-50 px-4 py-2.5 text-sm font-bold text-ps-warning transition hover:bg-ps-surface-strong"
                         >
                           {amazonFallback.label}
                         </a>
@@ -881,7 +881,7 @@ export function GoodreadsImportTool() {
                               isbn: book.isbn,
                             })
                           }
-                          className="rounded-xl border border-amber-200/25 bg-amber-200/10 px-4 py-2.5 text-sm font-bold text-amber-100 transition hover:bg-amber-200/15"
+                          className="rounded-xl border border-ps-warning/40 bg-amber-50 px-4 py-2.5 text-sm font-bold text-ps-warning transition hover:bg-ps-surface-strong"
                         >
                           Search other editions ↗
                         </a>
@@ -895,8 +895,8 @@ export function GoodreadsImportTool() {
         </>
       ) : null}
 
-      <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 text-sm leading-6 text-slate-400">
-        <p className="font-bold text-slate-200">Privacy</p>
+      <section className="rounded-3xl border border-ps-border bg-ps-surface p-5 text-sm leading-6 text-ps-text-secondary">
+        <p className="font-bold text-ps-text-primary">Privacy</p>
         <p className="mt-2">
           The CSV remains in your browser. Exact searches send the selected
           ISBN, title, and author so PriceSift can reject obvious eBay catalog

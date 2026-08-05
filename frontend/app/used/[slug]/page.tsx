@@ -87,7 +87,7 @@ export default async function IndexedProductPage({
       : null;
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
+    <main className="pricesift-public min-h-screen px-6 py-10 text-ps-text-primary">
       {structuredData ? (
         <script
           type="application/ld+json"
@@ -100,29 +100,29 @@ export default async function IndexedProductPage({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/used"
-            className="text-sm text-cyan-200 hover:text-cyan-100"
+            className="text-sm text-ps-accent-hover hover:text-ps-text-primary hover:underline"
           >
             ← Used price guides
           </Link>
           <Link
             href={`/search?${searchParams.toString()}`}
-            className="text-sm text-cyan-200 hover:text-cyan-100"
+            className="text-sm text-ps-accent-hover hover:text-ps-text-primary hover:underline"
           >
             Run live PriceSift search →
           </Link>
         </div>
 
-        <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 sm:p-9">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">
+        <section className="mt-8 rounded-[2rem] border border-ps-border bg-ps-surface p-6 sm:p-9">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-ps-accent-hover">
             Cleaner current used listings
           </p>
           <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
             Used {product.title}
           </h1>
-          <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-300">
+          <p className="mt-5 max-w-3xl text-lg leading-8 text-ps-text-secondary">
             {product.description}
           </p>
-          <p className="mt-3 text-xs text-slate-500">
+          <p className="mt-3 text-xs text-ps-neutral">
             Last checked{" "}
             {new Date(checkedAt).toLocaleString("en-US", {
               timeZone: "America/Detroit",
@@ -130,7 +130,7 @@ export default async function IndexedProductPage({
             ET
           </p>
 
-          {data ? <PriceContextPanel context={data.price_context} /> : null}
+          {data ? <PriceContextPanel context={data.price_context} theme="light" /> : null}
 
           {results.length > 0 ? (
             <DeliveryResultsGrid
@@ -140,13 +140,14 @@ export default async function IndexedProductPage({
               productId={resolved?.product.id}
               ariaLabel={`Used ${product.title} listings`}
               deliveryEnabled={false}
+              theme="light"
             />
           ) : (
-            <div className="mt-8 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-5 text-amber-50">
+            <div className="mt-8 rounded-2xl border border-ps-warning/40 bg-amber-50 p-5 text-ps-text-primary">
               <h2 className="text-xl font-bold">
                 No qualifying listings are available right now.
               </h2>
-              <p className="mt-2 text-sm leading-6 text-amber-100/90">
+              <p className="mt-2 text-sm leading-6 text-ps-text-secondary">
                 {data
                   ? `PriceSift checked ${data.diagnostics.fixed_price_candidates} candidate listings and kept only exact, eligible matches.`
                   : "PriceSift could not refresh marketplace inventory at this moment. The buying guidance below is still available."}
@@ -158,20 +159,21 @@ export default async function IndexedProductPage({
             query={product.query}
             category={product.category}
             productId={resolved?.product.id}
+            theme="light"
           />
 
           <div className="mt-8 grid gap-5 lg:grid-cols-2">
-            <section className="rounded-2xl border border-white/10 bg-slate-950/50 p-5">
+            <section className="rounded-2xl border border-ps-border bg-ps-control p-5">
               <h2 className="text-xl font-bold">Common listing traps</h2>
-              <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-300">
+              <ul className="mt-4 space-y-3 text-sm leading-6 text-ps-text-secondary">
                 {product.commonTraps.map((trap) => (
                   <li key={trap}>• {trap}</li>
                 ))}
               </ul>
             </section>
-            <section className="rounded-2xl border border-white/10 bg-slate-950/50 p-5">
+            <section className="rounded-2xl border border-ps-border bg-ps-control p-5">
               <h2 className="text-xl font-bold">How this page works</h2>
-              <p className="mt-4 text-sm leading-6 text-slate-300">
+              <p className="mt-4 text-sm leading-6 text-ps-text-secondary">
                 This page is tied to one manually approved exact product.
                 PriceSift resolves the catalog identity, checks current
                 marketplace candidates, removes obvious wrong-model,
@@ -180,7 +182,7 @@ export default async function IndexedProductPage({
               </p>
               <Link
                 href="/reuse"
-                className="mt-4 inline-flex text-sm font-semibold text-emerald-200 hover:text-emerald-100"
+                className="mt-4 inline-flex text-sm font-semibold text-ps-success hover:text-ps-text-primary hover:underline"
               >
                 Why PriceSift focuses on buying used →
               </Link>
@@ -195,7 +197,7 @@ export default async function IndexedProductPage({
                   <Link
                     key={item.slug}
                     href={`/used/${item.slug}`}
-                    className="rounded-full border border-white/10 px-4 py-2 text-sm text-cyan-100 hover:bg-white/10"
+                    className="rounded-full border border-ps-border px-4 py-2 text-sm text-ps-accent-hover hover:bg-ps-accent-soft"
                   >
                     {item.title}
                   </Link>

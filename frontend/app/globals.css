@@ -36,7 +36,7 @@ h3,
   letter-spacing: -0.025em;
 }
 
-main:not(.pricesift-home) {
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) {
   background:
     radial-gradient(circle at top, rgba(14, 116, 144, 0.34), transparent 34rem),
     linear-gradient(180deg, #07101f 0%, var(--pricesift-navy) 44%, #040711 100%) !important;
@@ -50,9 +50,32 @@ main.pricesift-home {
   color: #10233a;
 }
 
+main.pricesift-results {
+  background:
+    radial-gradient(circle at top, rgba(95, 168, 211, 0.16), transparent 34rem),
+    linear-gradient(180deg, #f2f7fc 0%, #fbf8f1 44%, #fbf8f1 100%) !important;
+  color: #10233a;
+  color-scheme: light;
+}
+
+main.pricesift-public {
+  background-color: #fbf8f1;
+  background-image: radial-gradient(circle at top, rgba(234, 244, 251, 0.92), rgba(251, 248, 241, 0) 46%);
+  color: #10233a;
+  color-scheme: light;
+}
+
+main.pricesift-public footer a {
+  @apply text-ps-accent-hover hover:text-ps-text-primary hover:underline;
+}
+
+main.pricesift-public footer a[href="/reuse"] {
+  @apply text-ps-success;
+}
+
 /* Give the existing cards a slightly more deliberate, blue-tinted surface. */
-main [class*="border-white/10"][class*="bg-white/"],
-main [class*="border-white/10"][class*="bg-slate-950/"] {
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) [class*="border-white/10"][class*="bg-white/"],
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) [class*="border-white/10"][class*="bg-slate-950/"] {
   border-color: var(--pricesift-line) !important;
   background-color: rgba(13, 26, 45, 0.78) !important;
   box-shadow:
@@ -60,61 +83,61 @@ main [class*="border-white/10"][class*="bg-slate-950/"] {
     inset 0 1px 0 rgba(255, 255, 255, 0.025);
 }
 
-main [class*="border-white/15"][class*="bg-white/"],
-main [class*="border-white/20"][class*="bg-white/"] {
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) [class*="border-white/15"][class*="bg-white/"],
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) [class*="border-white/20"][class*="bg-white/"] {
   border-color: rgba(125, 211, 252, 0.2) !important;
   background-color: rgba(18, 36, 58, 0.76) !important;
 }
 
 /* Keep form controls dark, readable, and visually separate from their cards. */
-main:not(.pricesift-home) input,
-main:not(.pricesift-home) select,
-main:not(.pricesift-home) textarea {
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) input,
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) select,
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) textarea {
   background-color: rgba(5, 8, 22, 0.72) !important;
   border-color: rgba(125, 211, 252, 0.18) !important;
   color: var(--pricesift-text) !important;
 }
 
-main:not(.pricesift-home) input::placeholder,
-main:not(.pricesift-home) textarea::placeholder {
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) input::placeholder,
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) textarea::placeholder {
   color: #94a3b8 !important;
 }
 
-main:not(.pricesift-home) input:focus,
-main:not(.pricesift-home) select:focus,
-main:not(.pricesift-home) textarea:focus {
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) input:focus,
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) select:focus,
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) textarea:focus {
   border-color: var(--pricesift-blue-strong) !important;
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
 }
 
 /* Preserve the familiar cyan actions, with slightly stronger contrast. */
-main .bg-cyan-200,
-main .bg-cyan-300 {
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) .bg-cyan-200,
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) .bg-cyan-300 {
   background-color: var(--pricesift-blue) !important;
   color: #082032 !important;
 }
 
-main .bg-cyan-200:hover,
-main .bg-cyan-300:hover {
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) .bg-cyan-200:hover,
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) .bg-cyan-300:hover {
   background-color: #bae6fd !important;
 }
 
 /* Reuse and manual panels stay green, but remain part of the dark design. */
-main [class*="border-emerald-"][class*="bg-emerald-"] {
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) [class*="border-emerald-"][class*="bg-emerald-"] {
   background-color: rgba(20, 83, 45, 0.18) !important;
   border-color: rgba(134, 239, 172, 0.24) !important;
 }
 
-main [class*="border-cyan-"][class*="bg-cyan-"] {
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) [class*="border-cyan-"][class*="bg-cyan-"] {
   background-color: rgba(8, 145, 178, 0.12) !important;
   border-color: rgba(125, 211, 252, 0.22) !important;
 }
 
-main [class*="border-amber-"][class*="bg-amber-"] {
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) [class*="border-amber-"][class*="bg-amber-"] {
   background-color: rgba(146, 64, 14, 0.14) !important;
 }
 
-main [class*="border-orange-"][class*="bg-orange-"] {
+main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) [class*="border-orange-"][class*="bg-orange-"] {
   background-color: rgba(154, 52, 18, 0.12) !important;
 }
 
