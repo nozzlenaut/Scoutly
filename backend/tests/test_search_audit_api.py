@@ -1,5 +1,9 @@
 import asyncio
+import base64
 from types import SimpleNamespace
+
+import pytest
+from fastapi import HTTPException
 
 from app.api import search_audit
 
@@ -64,3 +68,59 @@ def test_raw_audit_search_uses_literal_query_and_skips_pricesift_category(monkey
     assert result["listings"][0]["total_price"] == 1100.0
     assert result["listings"][0]["condition"] == "Used"
     assert result["listings"][0]["url"] == "https://www.ebay.com/itm/123"
+
+PNG_DATA_URL = "data:image/png;base64," + base64.b64encode(
+    base64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+    )
+).decode("ascii")
+
+
+def _buffer_payload() -> search_audit.BufferDraftPayload:
+    return search_audit.BufferDraftPayload(
+        audit_id="audit-api",
+        post_text="A draft only.",
+        alt_text="A PriceSift audit card.",
+        image_data_url=PNG_DATA_URL,
+    )
+
+
+def test_buffer_draft_endpoint_requires_admin(monkeypatch):
+    monkeypatch.setenv("SCOUTLY_ADMIN_TOKEN", "test-token")
+    with pytest.raises(HTTPException) as error:
+        asyncio.run(
+            search_audit.create_audit_buffer_draft(
+                payload=_buffer_payload(),
+                request=SimpleNamespace(base_url="http://localhost:8000/"),
+                token="wrong-token",
+            )
+        )
+    assert error.value.status_code == 401
+
+
+def test_buffer_draft_endpoint_uses_public_base_and_service(monkeypatch):
+    monkeypatch.setenv("SCOUTLY_ADMIN_TOKEN", "test-token")
+    monkeypatch.setenv("PUBLIC_API_BASE_URL", "https://api.pricesift.test")
+    calls = {}
+
+    async def fake_create_buffer_draft(**kwargs):
+        calls.update(kwargs)
+        return {
+            "status": "created",
+            "buffer_post_id": "draft-123",
+            "dry_run": True,
+            "message": "Dry run passed.",
+        }
+
+    monkeypatch.setattr(search_audit, "create_buffer_draft", fake_create_buffer_draft)
+    result = asyncio.run(
+        search_audit.create_audit_buffer_draft(
+            payload=_buffer_payload(),
+            request=SimpleNamespace(base_url="http://localhost:8000/"),
+            token="test-token",
+        )
+    )
+
+    assert result["buffer_post_id"] == "draft-123"
+    assert calls["audit_id"] == "audit-api"
+    assert calls["public_base_url"] == "https://api.pricesift.test"

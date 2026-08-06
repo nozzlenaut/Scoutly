@@ -56,6 +56,12 @@ type SearchAudit = {
   listings: ListingRow[];
   createdAt: string;
   updatedAt: string;
+  bufferPostText?: string;
+  bufferAltText?: string;
+  bufferDraftId?: string;
+  bufferDraftDryRun?: boolean;
+  bufferDraftStatus?: "idle" | "creating" | "created" | "error";
+  bufferDraftMessage?: string;
 };
 
 type RawEbayListing = {
@@ -332,6 +338,111 @@ function buildUltraCompactPost(audit: SearchAudit, issues: IssueDefinition[], co
   return candidate.length <= 300 ? candidate : `${candidate.slice(0, 299)}…`;
 }
 
+function buildAuditAltText(
+  audit: SearchAudit,
+  issues: IssueDefinition[],
+  counts: Record<string, number>,
+  priceRange: string,
+): string {
+  const problems = issues
+    .filter((issue) => !issue.positive && (counts[issue.key] || 0) > 0)
+    .map((issue) => `${counts[issue.key]} ${issue.label.toLowerCase()}`);
+  const worth = issues.find((issue) => issue.positive);
+  const worthCount = worth ? counts[worth.key] || 0 : 0;
+  const details = [
+    problems.length ? problems.join(", ") : "no issue totals marked",
+    priceRange ? `observed prices ${priceRange}` : "no price range recorded",
+    worthCount ? `${worthCount} marked worth investigating` : "none marked worth investigating",
+  ];
+  return `PriceSift search audit card for “${audit.query || "untitled search"}.” ${audit.resultCount} ${audit.condition.toLowerCase()} ${audit.marketplace} listings were reviewed: ${details.join("; ")}.`;
+}
+
+function wrapCanvasText(
+  context: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+): string[] {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const candidate = line ? `${line} ${word}` : word;
+    if (line && context.measureText(candidate).width > maxWidth) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = candidate;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function generateAuditShareImage(
+  audit: SearchAudit,
+  issues: IssueDefinition[],
+  counts: Record<string, number>,
+  priceRange: string,
+): string {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1200;
+  canvas.height = 675;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("This browser could not create the audit share image.");
+
+  context.fillStyle = "#f4efe4";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = "#173d2d";
+  context.fillRect(0, 0, 32, canvas.height);
+
+  context.fillStyle = "#173d2d";
+  context.font = "700 26px Arial, sans-serif";
+  context.fillText("PRICESIFT SEARCH AUDIT", 82, 84);
+
+  context.font = "700 54px Georgia, serif";
+  const queryLines = wrapCanvasText(context, audit.query || "Untitled search", 1000).slice(0, 2);
+  queryLines.forEach((line, index) => context.fillText(line, 82, 158 + index * 64));
+
+  const startY = queryLines.length > 1 ? 320 : 260;
+  context.fillStyle = "#536556";
+  context.font = "600 25px Arial, sans-serif";
+  context.fillText(
+    `${audit.resultCount} ${audit.condition.toLowerCase()} ${audit.marketplace} listings reviewed`,
+    82,
+    startY,
+  );
+
+  const problemLines = issues
+    .filter((issue) => !issue.positive && (counts[issue.key] || 0) > 0)
+    .slice(0, 4)
+    .map((issue) => `${counts[issue.key]}  ${issue.label}`);
+  const worth = issues.find((issue) => issue.positive);
+  const worthCount = worth ? counts[worth.key] || 0 : 0;
+  if (worthCount > 0) problemLines.push(`${worthCount}  Worth investigating`);
+  if (problemLines.length === 0) problemLines.push("Add issue flags to complete the audit");
+
+  context.fillStyle = "#22342a";
+  context.font = "700 30px Arial, sans-serif";
+  problemLines.slice(0, 5).forEach((line, index) => {
+    context.fillText(line, 82, startY + 62 + index * 49);
+  });
+
+  if (priceRange) {
+    context.fillStyle = "#6c7b68";
+    context.font = "600 23px Arial, sans-serif";
+    context.fillText(`Observed price range: ${priceRange}`, 82, 590);
+  }
+
+  context.fillStyle = "#173d2d";
+  context.font = "700 25px Arial, sans-serif";
+  context.fillText("Many listings. Few clean comparisons.", 690, 590);
+  context.font = "600 21px Arial, sans-serif";
+  context.fillStyle = "#6c7b68";
+  context.fillText("pricesift.app", 952, 632);
+
+  return canvas.toDataURL("image/png");
+}
+
 export function SearchAuditTool() {
   const [audits, setAudits] = useState<SearchAudit[]>([]);
   const [activeId, setActiveId] = useState("");
@@ -401,6 +512,10 @@ export function SearchAuditTool() {
   const compactPost = active ? buildCompactPost(active, issueDefinitions, counts, priceRange) : "";
   const ultraCompactPost = active ? buildUltraCompactPost(active, issueDefinitions, counts, priceRange) : "";
   const blueskyPost = detailedPost.length <= 300 ? detailedPost : compactPost.length <= 300 ? compactPost : ultraCompactPost;
+  const generatedAltText = active ? buildAuditAltText(active, issueDefinitions, counts, priceRange) : "";
+  const editablePost = active?.bufferPostText ?? blueskyPost;
+  const editableAltText = active?.bufferAltText ?? generatedAltText;
+  const creatingBufferDraft = active?.bufferDraftStatus === "creating";
   const detailedReply = active
     ? [
         `Here’s the same “${active.query || "[search term]"}” search in PriceSift.`,
@@ -531,6 +646,12 @@ export function SearchAuditTool() {
       scheduledFor: "",
       screenshotDone: false,
       videoDone: false,
+      bufferPostText: undefined,
+      bufferAltText: undefined,
+      bufferDraftId: undefined,
+      bufferDraftDryRun: undefined,
+      bufferDraftStatus: "idle",
+      bufferDraftMessage: undefined,
       listings: active.listings.map((listing) => ({ ...listing, id: makeId("listing") })),
       createdAt: now,
       updatedAt: now,
@@ -557,6 +678,74 @@ export function SearchAuditTool() {
       setNotice(`${label} copied.`);
     } catch {
       setNotice("Copy failed. Select the text manually instead.");
+    }
+  }
+
+  async function createBufferDraft() {
+    if (!active || creatingBufferDraft || active.bufferDraftStatus === "created") return;
+    if (!active.query.trim()) {
+      setNotice("Enter the audit search before creating a Buffer draft.");
+      return;
+    }
+    const postText = editablePost.trim();
+    const altText = editableAltText.trim();
+    if (!postText || postText.length > 300) {
+      setNotice("The Bluesky draft must contain 1–300 characters.");
+      return;
+    }
+    if (!altText) {
+      setNotice("Add image alt text before creating the Buffer draft.");
+      return;
+    }
+
+    updateActive({ bufferDraftStatus: "creating", bufferDraftMessage: "Creating Buffer draft…" });
+    setNotice("");
+    try {
+      const imageDataUrl = generateAuditShareImage(active, issueDefinitions, counts, priceRange);
+      const params = new URLSearchParams({ token: ADMIN_BROWSER_SESSION });
+      const response = await adminFetch(`/api/search-audit/buffer-draft?${params.toString()}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          audit_id: active.id,
+          post_text: postText,
+          alt_text: altText,
+          image_data_url: imageDataUrl,
+        }),
+        cache: "no-store",
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        const detail = payload?.detail;
+        const message = typeof detail === "string" ? detail : detail?.message;
+        if (response.status === 409 && detail?.buffer_post_id) {
+          updateActive({
+            bufferDraftId: detail.buffer_post_id,
+            bufferDraftDryRun: String(detail.buffer_post_id).startsWith("dry-run-"),
+            bufferDraftStatus: "created",
+            bufferDraftMessage: message || "This audit already has a Buffer draft.",
+          });
+          setNotice(message || "This audit already has a Buffer draft.");
+          return;
+        }
+        throw new Error(message || `Buffer draft failed (${response.status}).`);
+      }
+
+      const message = payload?.message || "Buffer draft created. Nothing was published or scheduled.";
+      updateActive({
+        bufferPostText: postText,
+        bufferAltText: altText,
+        bufferDraftId: payload?.buffer_post_id || "created",
+        bufferDraftDryRun: Boolean(payload?.dry_run),
+        bufferDraftStatus: "created",
+        bufferDraftMessage: message,
+        screenshotDone: true,
+      });
+      setNotice(message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "The Buffer draft could not be created.";
+      updateActive({ bufferDraftStatus: "error", bufferDraftMessage: message });
+      setNotice(message);
     }
   }
 
@@ -974,13 +1163,46 @@ export function SearchAuditTool() {
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-300">Main post</p>
                 <h2 className="mt-1 text-2xl font-black text-white">Pain-point audit</h2>
               </div>
-              <span className={`rounded-full px-3 py-1 text-xs font-black ${blueskyPost.length <= 300 ? "bg-emerald-200/15 text-emerald-100" : "bg-rose-200/15 text-rose-100"}`}>
-                {blueskyPost.length}/300
+              <span className={`rounded-full px-3 py-1 text-xs font-black ${editablePost.length <= 300 ? "bg-emerald-200/15 text-emerald-100" : "bg-rose-200/15 text-rose-100"}`}>
+                {editablePost.length}/300
               </span>
             </div>
-            <textarea readOnly value={blueskyPost} className="mt-4 min-h-72 w-full rounded-2xl border border-white/10 bg-slate-950 p-4 text-sm leading-6 text-slate-100" />
+            <textarea
+              value={editablePost}
+              onChange={(event) => updateActive({ bufferPostText: event.target.value, bufferDraftStatus: "idle", bufferDraftId: undefined })}
+              className="mt-4 min-h-72 w-full rounded-2xl border border-white/10 bg-slate-950 p-4 text-sm leading-6 text-slate-100"
+            />
             {detailedPost.length > 300 ? <p className="mt-2 text-xs text-amber-200">The detailed draft was too long, so the tool switched to a compact version.</p> : null}
-            <button onClick={() => copyText(blueskyPost, "Main post")} className="mt-4 w-full rounded-2xl bg-cyan-200 px-4 py-3 font-black text-slate-950 hover:bg-cyan-100">Copy main post</button>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button onClick={() => copyText(editablePost, "Main post")} className="rounded-xl bg-cyan-200 px-4 py-2.5 font-black text-slate-950 hover:bg-cyan-100">Copy main post</button>
+              <button onClick={() => updateActive({ bufferPostText: undefined, bufferDraftStatus: "idle", bufferDraftId: undefined })} className="rounded-xl border border-white/10 px-4 py-2.5 font-bold text-slate-200 hover:bg-white/[0.06]">Reset generated text</button>
+            </div>
+
+            <label className="mt-5 block">
+              <span className="text-sm font-semibold text-slate-200">Image alt text</span>
+              <textarea
+                value={editableAltText}
+                onChange={(event) => updateActive({ bufferAltText: event.target.value, bufferDraftStatus: "idle", bufferDraftId: undefined })}
+                className="mt-2 min-h-28 w-full rounded-2xl border border-white/10 bg-slate-950 p-4 text-sm leading-6 text-slate-100"
+              />
+            </label>
+
+            <button
+              onClick={() => void createBufferDraft()}
+              disabled={creatingBufferDraft || active.bufferDraftStatus === "created" || editablePost.length === 0 || editablePost.length > 300}
+              className="mt-4 w-full rounded-2xl border border-emerald-200/30 bg-emerald-200/15 px-4 py-3 font-black text-emerald-100 hover:bg-emerald-200/20 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {creatingBufferDraft
+                ? "Creating Buffer draft…"
+                : active.bufferDraftStatus === "created"
+                  ? active.bufferDraftDryRun
+                    ? "✓ Dry run passed"
+                    : "✓ Buffer draft created"
+                  : "Create Buffer draft"}
+            </button>
+            <p className="mt-2 text-xs text-slate-400">Creates a draft for the configured PriceSift Bluesky channel. It never publishes or schedules automatically.</p>
+            {active.bufferDraftMessage ? <p className={`mt-3 text-sm ${active.bufferDraftStatus === "error" ? "text-rose-200" : "text-emerald-100"}`}>{active.bufferDraftMessage}</p> : null}
+            {active.bufferDraftId ? <p className="mt-1 break-all text-xs text-slate-500">Buffer draft ID: {active.bufferDraftId}</p> : null}
           </div>
 
           <div className="rounded-3xl border border-fuchsia-200/20 bg-fuchsia-200/[0.07] p-5 sm:p-6">
