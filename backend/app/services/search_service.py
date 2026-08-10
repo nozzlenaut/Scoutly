@@ -12,6 +12,7 @@ from app.models.search import PriceContext, SearchDiagnostics
 from app.providers.ebay import EbayProvider, ebay_config_from_env
 from app.providers.mock import MockAmazonProvider, MockEbayProvider
 from app.ranking.scorer import best_listing, is_bad_listing, rejection_reasons, score_listing, top_listings
+from app.services.ai_console_review import is_ai_console_review_target, review_console_listings
 from app.services.feedback_store import filter_reported_listings, log_filtered_listings
 from app.services.keh_feed import public_keh_listings
 from app.services.price_store import build_price_context, record_price_snapshot
@@ -32,6 +33,8 @@ def _build_providers():
 
 
 PROVIDERS = _build_providers()
+_AI_FIXED_SHORTLIST_LIMIT = 12
+_AI_AUCTION_SHORTLIST_LIMIT = 6
 
 
 def _provider_queries_for_product(query: str, product: Product | None) -> list[str]:
@@ -189,6 +192,56 @@ def _listing_rejection_summary(
 def _merge_reason_counts(target: dict[str, int], counts: Counter[str]) -> None:
     for reason, count in counts.items():
         target[reason] = target.get(reason, 0) + count
+
+
+def _candidate_limits(product: Product | None) -> tuple[int, int]:
+    if is_ai_console_review_target(product):
+        return _AI_FIXED_SHORTLIST_LIMIT, _AI_AUCTION_SHORTLIST_LIMIT
+    return 3, 3
+
+
+async def _review_ai_console_shortlists(
+    product: Product | None,
+    fixed_listings: list[Listing],
+    auction_listings: list[Listing],
+    diagnostics: SearchDiagnostics,
+) -> tuple[list[Listing], list[Listing]]:
+    if not is_ai_console_review_target(product):
+        return fixed_listings, auction_listings
+
+    combined = [*fixed_listings, *auction_listings]
+    review = await review_console_listings(combined, product)
+    if not review.applied:
+        if review.skipped_reason not in {None, "not_target"}:
+            diagnostics.ai_review_skipped_reason = review.skipped_reason
+        return fixed_listings, auction_listings
+
+    diagnostics.ai_review_applied = True
+    diagnostics.ai_review_skipped_reason = None
+    kept_object_ids = {id(listing) for listing in review.kept}
+    reviewed_fixed = [listing for listing in fixed_listings if id(listing) in kept_object_ids]
+    reviewed_auctions = [listing for listing in auction_listings if id(listing) in kept_object_ids]
+
+    fixed_rejected = len(fixed_listings) - len(reviewed_fixed)
+    auction_rejected = len(auction_listings) - len(reviewed_auctions)
+    diagnostics.ai_review_rejected += fixed_rejected + auction_rejected
+
+    if fixed_rejected:
+        diagnostics.fixed_price_filtered += fixed_rejected
+        diagnostics.fixed_price_eligible = max(0, diagnostics.fixed_price_eligible - fixed_rejected)
+        diagnostics.fixed_price_rejection_reasons["ai console review"] = (
+            diagnostics.fixed_price_rejection_reasons.get("ai console review", 0)
+            + fixed_rejected
+        )
+    if auction_rejected:
+        diagnostics.auction_filtered += auction_rejected
+        diagnostics.auction_eligible = max(0, diagnostics.auction_eligible - auction_rejected)
+        diagnostics.auction_rejection_reasons["ai console review"] = (
+            diagnostics.auction_rejection_reasons.get("ai console review", 0)
+            + auction_rejected
+        )
+
+    return reviewed_fixed, reviewed_auctions
 
 
 def _auction_sort_key(listing: Listing) -> tuple[int, datetime, float]:
@@ -409,6 +462,7 @@ async def search_best_deals_with_auctions(
     provider_price_candidates: dict[str, list[Listing]] = {}
     provider_candidate_counts: dict[str, int] = {}
     provider_filtered_counts: dict[str, int] = {}
+    fixed_shortlist_limit, auction_shortlist_limit = _candidate_limits(product)
 
     for provider_key in _provider_keys_for_product(provider_keys, product):
         provider_fixed_candidates: list[Listing] = []
@@ -464,13 +518,16 @@ async def search_best_deals_with_auctions(
                             auction_listings,
                             scoped_product,
                             max_hours=auction_hours,
-                            limit=3,
+                            limit=auction_shortlist_limit,
                         )
                     )
 
         fixed_results.extend(provider_fixed_candidates)
 
-        provider_auction_results, auction_duplicates = _top_combined_auctions_with_stats(provider_auction_candidates, limit=3)
+        provider_auction_results, auction_duplicates = _top_combined_auctions_with_stats(
+            provider_auction_candidates,
+            limit=auction_shortlist_limit,
+        )
         diagnostics.auction_duplicates_removed += auction_duplicates
         auction_results.extend(provider_auction_results)
 
@@ -484,10 +541,31 @@ async def search_best_deals_with_auctions(
             provider_candidate_counts["keh"] = len(keh_candidates)
             provider_filtered_counts["keh"] = 0
 
-    final_fixed_results, fixed_duplicates = _cheapest_fixed_listings_with_stats(fixed_results, limit=3)
+    fixed_shortlist, fixed_duplicates = _cheapest_fixed_listings_with_stats(
+        fixed_results,
+        limit=fixed_shortlist_limit,
+    )
     diagnostics.fixed_price_duplicates_removed += fixed_duplicates
-    final_auction_results, auction_duplicates = _top_combined_auctions_with_stats(auction_results, limit=3)
+    auction_shortlist, auction_duplicates = _top_combined_auctions_with_stats(
+        auction_results,
+        limit=auction_shortlist_limit,
+    )
     diagnostics.auction_duplicates_removed += auction_duplicates
+
+    fixed_shortlist, auction_shortlist = await _review_ai_console_shortlists(
+        product,
+        fixed_shortlist,
+        auction_shortlist,
+        diagnostics,
+    )
+    final_fixed_results, _post_review_fixed_duplicates = _cheapest_fixed_listings_with_stats(
+        fixed_shortlist,
+        limit=3,
+    )
+    final_auction_results, _post_review_auction_duplicates = _top_combined_auctions_with_stats(
+        auction_shortlist,
+        limit=3,
+    )
 
     current_prices: list[float] = []
     if product is not None:
@@ -541,6 +619,7 @@ async def search_auction_deals(
     search_products = _search_product_scopes(product)
     auction_results: list[Listing] = []
     diagnostics = SearchDiagnostics()
+    _fixed_shortlist_limit, auction_shortlist_limit = _candidate_limits(product)
 
     for provider_key in _provider_keys_for_product(provider_keys, product):
         if provider_key.lower() != "ebay":
@@ -569,15 +648,31 @@ async def search_auction_deals(
                     auction_listings,
                     scoped_product,
                     max_hours=auction_hours,
-                    limit=3,
+                    limit=auction_shortlist_limit,
                 )
             )
-        provider_auction_results, auction_duplicates = _top_combined_auctions_with_stats(provider_auction_candidates, limit=3)
+        provider_auction_results, auction_duplicates = _top_combined_auctions_with_stats(
+            provider_auction_candidates,
+            limit=auction_shortlist_limit,
+        )
         diagnostics.auction_duplicates_removed += auction_duplicates
         auction_results.extend(provider_auction_results)
 
-    final_auction_results, auction_duplicates = _top_combined_auctions_with_stats(auction_results, limit=3)
+    auction_shortlist, auction_duplicates = _top_combined_auctions_with_stats(
+        auction_results,
+        limit=auction_shortlist_limit,
+    )
     diagnostics.auction_duplicates_removed += auction_duplicates
+    _ignored_fixed, auction_shortlist = await _review_ai_console_shortlists(
+        product,
+        [],
+        auction_shortlist,
+        diagnostics,
+    )
+    final_auction_results, _post_review_duplicates = _top_combined_auctions_with_stats(
+        auction_shortlist,
+        limit=3,
+    )
 
     return (
         product_match,
