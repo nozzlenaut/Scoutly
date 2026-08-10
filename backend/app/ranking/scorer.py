@@ -1,7 +1,7 @@
 import re
 
 from app.catalog.catalog import GLOBAL_BAD_LISTING_TERMS, listing_match_rejection_reasons
-from app.catalog.normalizer import has_term
+from app.catalog.normalizer import compact_text, has_term
 from app.models.listing import Listing
 from app.models.product import Product
 from app.services.filter_rules import manual_filter_rejection_reasons
@@ -174,6 +174,14 @@ def rejection_reasons(listing: Listing, product: Product | None = None) -> list[
         and not has_term(listing.title, "console")
     ):
         reasons.append("controller listing without console evidence")
+
+    if (
+        product is not None
+        and product.category == "consoles"
+        and str(product.metadata.get("family") or "").lower() == "nintendo-wii"
+        and "wiiu" in compact_text(listing.title, strip_filler=False)
+    ):
+        reasons.append("console model conflict: wii u")
 
     if listing.seller_feedback_score == 0:
         reasons.append("seller feedback score is zero")
