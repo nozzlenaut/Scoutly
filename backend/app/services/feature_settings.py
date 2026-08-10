@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import time
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,9 @@ from app.services.database import database_configured, database_connection
 
 logger = logging.getLogger(__name__)
 _AI_CONSOLE_BETA_KEY = "ai_console_review_enabled"
+_CACHE_SECONDS = 5.0
+_CACHED_ENABLED: bool | None = None
+_CACHED_AT = 0.0
 
 
 def _data_dir() -> Path:
@@ -53,7 +57,14 @@ def _ensure_database_table(connection: Any) -> None:
     )
 
 
-def ai_console_review_enabled() -> bool:
+def _cache_value(value: bool) -> bool:
+    global _CACHED_ENABLED, _CACHED_AT
+    _CACHED_ENABLED = bool(value)
+    _CACHED_AT = time.monotonic()
+    return _CACHED_ENABLED
+
+
+def _read_persisted_enabled() -> bool:
     if database_configured():
         try:
             with database_connection() as connection:
@@ -72,6 +83,12 @@ def ai_console_review_enabled() -> bool:
     return bool(_read_file_settings().get(_AI_CONSOLE_BETA_KEY, False))
 
 
+def ai_console_review_enabled() -> bool:
+    if _CACHED_ENABLED is not None and time.monotonic() - _CACHED_AT < _CACHE_SECONDS:
+        return _CACHED_ENABLED
+    return _cache_value(_read_persisted_enabled())
+
+
 def set_ai_console_review_enabled(enabled: bool) -> bool:
     value = bool(enabled)
     if database_configured():
@@ -87,14 +104,14 @@ def set_ai_console_review_enabled(enabled: bool) -> bool:
                     """,
                     (_AI_CONSOLE_BETA_KEY, json.dumps(value)),
                 )
-            return value
+            return _cache_value(value)
         except Exception:
             logger.exception("AI console feature-setting write failed; using file fallback.")
 
     settings = _read_file_settings()
     settings[_AI_CONSOLE_BETA_KEY] = value
     _write_file_settings(settings)
-    return value
+    return _cache_value(value)
 
 
 def ai_console_review_status() -> dict[str, Any]:
