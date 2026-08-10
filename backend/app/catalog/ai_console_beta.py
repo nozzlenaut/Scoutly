@@ -71,6 +71,7 @@ AI_CONSOLE_BETA_PRODUCTS = (
             "remote only",
             "sensor bar only",
             "wii u",
+            "wiiu",
         ],
         metadata={
             "family": "nintendo-wii",
