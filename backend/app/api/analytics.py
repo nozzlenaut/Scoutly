@@ -126,6 +126,12 @@ def update_ai_console_beta(
     token: str | None = Query(None),
 ) -> dict:
     _require_admin_token(token)
+    current = ai_console_review_status()
+    if payload.enabled and not current.get("api_key_configured"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Configure OPENAI_API_KEY before enabling the AI console beta.",
+        )
     set_ai_console_review_enabled(payload.enabled)
     return ai_console_review_status()
 
