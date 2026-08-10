@@ -1,11 +1,13 @@
 import asyncio
 
-import app.api.search as search_api
+import app.services.ai_console_rate_limit as ai_rate_limit
 import app.services.ai_console_review as ai_console_review
+import app.services.search_service as search_service
 from app.catalog.ai_console_beta import match_ai_console_beta_product
 from app.catalog.catalog import listing_matches_product
 from app.models.listing import Listing
 from app.models.search import SearchDiagnostics
+from app.services.ai_console_rate_limit import AIRateLimitDecision
 from app.services.ai_console_review import AIConsoleReviewResult, is_ai_console_review_target
 from app.services.product_discovery import resolve_discoverable_product, suggest_discoverable_products
 
@@ -58,6 +60,10 @@ def test_nintendo_64_is_discoverable_as_beta_product():
     assert resolved.product.id == "console-nintendo-64"
     assert any(match.product.id == "console-nintendo-64" for match in suggestions)
     assert is_ai_console_review_target(resolved.product)
+    assert listing_matches_product(
+        "Nintendo N64 Nintendo 64 Console System Tested Working",
+        resolved.product,
+    )
 
 
 def test_switch_2_is_ai_review_target():
@@ -73,7 +79,7 @@ def test_ai_review_fails_open_without_credentials(monkeypatch):
     assert product_match is not None
     listing = _listing("Nintendo Wii Console System Tested Working", "1001")
 
-    monkeypatch.setenv("AI_CONSOLE_REVIEW_ENABLED", "true")
+    monkeypatch.setattr(ai_console_review, "ai_console_review_enabled", lambda: True)
     monkeypatch.setenv("OPENAI_API_KEY", "")
 
     review = asyncio.run(
@@ -83,9 +89,10 @@ def test_ai_review_fails_open_without_credentials(monkeypatch):
     assert review.applied is False
     assert review.kept == [listing]
     assert review.rejected == []
+    assert review.skipped_reason == "disabled_or_unconfigured"
 
 
-def test_ai_review_can_reject_wrong_generation_after_deterministic_pass(monkeypatch):
+def test_ai_review_can_reject_wrong_generation_after_guardrails(monkeypatch):
     product_match = match_ai_console_beta_product("Nintendo Wii", "consoles")
     assert product_match is not None
     wrong_generation = _listing("Nintendo Wii U Console System", "2001")
@@ -99,7 +106,12 @@ def test_ai_review_can_reject_wrong_generation_after_deterministic_pass(monkeypa
             1: (True, "target Wii console"),
         }
 
-    monkeypatch.setenv("AI_CONSOLE_REVIEW_ENABLED", "true")
+    monkeypatch.setattr(ai_console_review, "ai_console_review_enabled", lambda: True)
+    monkeypatch.setattr(
+        ai_console_review,
+        "reserve_ai_console_review_call",
+        lambda: AIRateLimitDecision(True, None, 20, 300),
+    )
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
     monkeypatch.setattr(ai_console_review, "_request_decisions", fake_request_decisions)
 
@@ -115,42 +127,61 @@ def test_ai_review_can_reject_wrong_generation_after_deterministic_pass(monkeypa
     assert review.rejected == [(wrong_generation, "wrong generation: Wii U")]
 
 
-def test_api_post_review_updates_visible_results_and_diagnostics(monkeypatch):
+def test_ai_shortlist_backfills_to_three_after_rejections(monkeypatch):
     product_match = match_ai_console_beta_product("Nintendo Wii", "consoles")
     assert product_match is not None
-    bad_fixed = _listing("Nintendo Wii U Console System", "3001")
-    good_fixed = _listing("Nintendo Wii Console System Tested Working", "3002")
-    good_auction = _listing("Nintendo Wii Console Unit Working", "3003")
+    listings = [
+        _listing(f"Nintendo Wii Console System Tested Working #{index}", str(3000 + index), 20 + index)
+        for index in range(1, 6)
+    ]
 
-    async def fake_review(listings, product):
+    async def fake_review(candidates, product):
         assert product.id == "console-nintendo-wii"
+        assert candidates == listings
         return AIConsoleReviewResult(
-            kept=[good_fixed, good_auction],
-            rejected=[(bad_fixed, "wrong generation")],
+            kept=listings[2:],
+            rejected=[
+                (listings[0], "wrong item"),
+                (listings[1], "ambiguous listing"),
+            ],
             applied=True,
         )
 
-    monkeypatch.setattr(search_api, "review_console_listings", fake_review)
-    diagnostics = SearchDiagnostics(
-        fixed_price_candidates=5,
-        fixed_price_filtered=2,
-        fixed_price_eligible=3,
-        auction_candidates=2,
-        auction_filtered=1,
-        auction_eligible=1,
-    )
+    monkeypatch.setattr(search_service, "review_console_listings", fake_review)
+    diagnostics = SearchDiagnostics(fixed_price_candidates=20, fixed_price_eligible=5)
 
+    assert search_service._candidate_limits(product_match.product) == (12, 6)
     reviewed_fixed, reviewed_auctions = asyncio.run(
-        search_api._apply_ai_console_beta_review(
-            product_match,
-            [bad_fixed, good_fixed],
-            [good_auction],
+        search_service._review_ai_console_shortlists(
+            product_match.product,
+            listings,
+            [],
             diagnostics,
         )
     )
+    final_fixed, _duplicates = search_service._cheapest_fixed_listings_with_stats(
+        reviewed_fixed,
+        limit=3,
+    )
 
-    assert reviewed_fixed == [good_fixed]
-    assert reviewed_auctions == [good_auction]
-    assert diagnostics.fixed_price_filtered == 3
-    assert diagnostics.fixed_price_eligible == 2
-    assert diagnostics.fixed_price_rejection_reasons["ai console review"] == 1
+    assert reviewed_auctions == []
+    assert final_fixed == listings[2:5]
+    assert diagnostics.ai_review_applied is True
+    assert diagnostics.ai_review_rejected == 2
+    assert diagnostics.fixed_price_rejection_reasons["ai console review"] == 2
+
+
+def test_ai_rate_limit_blocks_after_configured_minute_cap(monkeypatch):
+    monkeypatch.setattr(ai_rate_limit, "database_configured", lambda: False)
+    monkeypatch.setenv("AI_CONSOLE_REVIEW_MAX_PER_MINUTE", "2")
+    monkeypatch.setenv("AI_CONSOLE_REVIEW_MAX_PER_DAY", "100")
+    ai_rate_limit._MEMORY_BUCKETS.clear()
+
+    first = ai_rate_limit.reserve_ai_console_review_call()
+    second = ai_rate_limit.reserve_ai_console_review_call()
+    third = ai_rate_limit.reserve_ai_console_review_call()
+
+    assert first.allowed is True
+    assert second.allowed is True
+    assert third.allowed is False
+    assert third.reason == "minute_limit"
