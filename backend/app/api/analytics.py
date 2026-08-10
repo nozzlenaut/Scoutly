@@ -5,6 +5,10 @@ from pydantic import BaseModel, Field
 from app.services.admin_auth import require_admin_token as _require_admin_token
 from app.services.analytics_store import analytics_digest
 from app.services.beta_feedback_store import list_beta_feedback
+from app.services.feature_settings import (
+    ai_console_review_status,
+    set_ai_console_review_enabled,
+)
 from app.services.feedback_store import (
     active_bad_result_reports,
     analytics_summary,
@@ -44,6 +48,10 @@ class ManualFilterRuleResponse(BaseModel):
     source_item_id: str | None = None
     enabled: bool = True
     created_at: str
+
+
+class AIConsoleBetaToggleRequest(BaseModel):
+    enabled: bool
 
 
 @router.get("/analytics/summary")
@@ -104,6 +112,28 @@ def get_beta_feedback(
 ) -> dict:
     _require_admin_token(token)
     return {"feedback": list_beta_feedback(limit)}
+
+
+@router.get("/analytics/ai-console-beta")
+def get_ai_console_beta_status(token: str | None = Query(None)) -> dict:
+    _require_admin_token(token)
+    return ai_console_review_status()
+
+
+@router.post("/analytics/ai-console-beta")
+def update_ai_console_beta(
+    payload: AIConsoleBetaToggleRequest,
+    token: str | None = Query(None),
+) -> dict:
+    _require_admin_token(token)
+    current = ai_console_review_status()
+    if payload.enabled and not current.get("api_key_configured"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Configure OPENAI_API_KEY before enabling the AI console beta.",
+        )
+    set_ai_console_review_enabled(payload.enabled)
+    return ai_console_review_status()
 
 
 @router.get("/analytics/filter-rules")

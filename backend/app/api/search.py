@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.models.search import SearchResponse
-from app.services.search_service import search_auction_deals, search_best_deals_with_auctions
 from app.services.analytics_store import SearchEvent, log_search_event
 from app.services.product_discovery import suggest_discoverable_products
+from app.services.search_service import search_auction_deals, search_best_deals_with_auctions
 
 router = APIRouter()
 

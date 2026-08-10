@@ -448,19 +448,29 @@ def console_builder_title_matches_product(title: str, product: Product) -> bool:
         return True
 
     if family == "nintendo-switch":
-        if "switch" not in compact or "switch2" in compact:
+        if "switch" not in compact:
             return False
+        is_switch2 = "switch2" in compact
         is_oled = has_term(title, "oled")
         is_lite = has_term(title, "lite")
         is_heg = "heg001" in compact
         is_hac = "hac001" in compact
+        if model == "switch2":
+            # Switch 2 used to be intentionally rejected here because broad
+            # Switch results were polluted by older variants. The AI beta now
+            # gives it its own explicit identity while every older Switch model
+            # continues to reject Switch 2 listings.
+            if not is_switch2:
+                return False
+            if is_oled or is_lite or is_heg or is_hac:
+                return False
+        elif is_switch2:
+            return False
         if model == "oled" and not is_oled:
             return False
         if model == "lite" and not is_lite:
             return False
         if model == "standard" and (is_oled or is_lite or is_heg):
-            return False
-        if model == "switch2" and (is_oled or is_lite or is_heg or is_hac):
             return False
         # Standard Switch listings are inconsistently titled. Accept V1/V2,
         # HAC model codes, the word Standard, or normal console/system wording,

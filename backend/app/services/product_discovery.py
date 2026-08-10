@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from app.catalog.ai_console_beta import (
+    match_ai_console_beta_product,
+    suggest_ai_console_beta_products,
+)
 from app.catalog.catalog import match_product, normalize_category, suggest_products
 from app.models.product import ProductMatch
 from app.services.keh_feed import match_keh_camera_product, suggest_keh_camera_products
@@ -7,6 +11,13 @@ from app.services.keh_feed import match_keh_camera_product, suggest_keh_camera_p
 
 def resolve_discoverable_product(query: str, category: str | None) -> ProductMatch | None:
     catalog_match = match_product(query, category)
+
+    if normalize_category(category) == "consoles":
+        beta_match = match_ai_console_beta_product(query, category)
+        if beta_match is not None:
+            return beta_match
+        return catalog_match
+
     if normalize_category(category) != "cameras":
         return catalog_match
 
@@ -34,6 +45,18 @@ def suggest_discoverable_products(
 ) -> list[ProductMatch]:
     limit = max(1, min(limit, 20))
     matches = list(suggest_products(query, category, limit=limit))
+
+    if normalize_category(category) == "consoles":
+        by_product_id = {match.product.id: match for match in matches}
+        for beta_match in suggest_ai_console_beta_products(query, category, limit=limit):
+            existing = by_product_id.get(beta_match.product.id)
+            if existing is None or beta_match.confidence > existing.confidence:
+                by_product_id[beta_match.product.id] = beta_match
+        return sorted(
+            by_product_id.values(),
+            key=lambda match: (-match.confidence, match.product.display_name.lower()),
+        )[:limit]
+
     if normalize_category(category) != "cameras":
         return matches
 

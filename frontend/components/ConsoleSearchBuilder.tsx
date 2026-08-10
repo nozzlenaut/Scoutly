@@ -28,6 +28,42 @@ type ChoiceFieldProps = {
   onChange: (value: string) => void;
 };
 
+const AI_BETA_NINTENDO_FAMILIES: SpecOption[] = [
+  { id: "nintendo-64", label: "Nintendo 64" },
+  { id: "nintendo-wii", label: "Wii" },
+];
+
+function betaConsoleQuery(selection: ConsoleBuilderSelection): string | null {
+  if (!consoleSelectionIsSearchable(selection)) return null;
+  if (selection.family === "nintendo-64") return "Nintendo 64";
+  if (selection.family === "nintendo-wii") return "Nintendo Wii";
+  return buildConsoleQuery(selection);
+}
+
+function parseBetaConsoleQuery(query?: string | null): ConsoleBuilderSelection {
+  if (!query) return parseConsoleQuery(query);
+  const compact = query.toLowerCase().replace(/[^a-z0-9]+/g, "");
+  if (compact === "n64" || compact.includes("nintendo64")) {
+    return {
+      brand: "nintendo",
+      family: "nintendo-64",
+      model: "n64",
+      storage: "",
+      edition: "",
+    };
+  }
+  if (compact.includes("wii") && !compact.includes("wiiu")) {
+    return {
+      brand: "nintendo",
+      family: "nintendo-wii",
+      model: "wii",
+      storage: "",
+      edition: "",
+    };
+  }
+  return parseConsoleQuery(query);
+}
+
 function ChoiceField({
   label,
   step,
@@ -75,15 +111,35 @@ export function ConsoleSearchBuilder({
   onSearch,
 }: Props) {
   const [selection, setSelection] = useState<ConsoleBuilderSelection>(() =>
-    parseConsoleQuery(initialQuery),
+    parseBetaConsoleQuery(initialQuery),
   );
-  const families = useMemo(() => consoleFamilyOptions(selection), [selection]);
-  const models = useMemo(() => consoleModelOptions(selection), [selection]);
-  const query = buildConsoleQuery(selection);
+  const families = useMemo(() => {
+    const base = consoleFamilyOptions(selection);
+    if (selection.brand !== "nintendo") return base;
+    const existing = new Set(base.map((option) => option.id));
+    const additions = AI_BETA_NINTENDO_FAMILIES.filter((option) => !existing.has(option.id));
+    const switchIndex = base.findIndex((option) => option.id === "nintendo-switch");
+    if (switchIndex < 0) return [...additions, ...base];
+    return [
+      ...base.slice(0, switchIndex + 1),
+      ...additions,
+      ...base.slice(switchIndex + 1),
+    ];
+  }, [selection]);
+  const models = useMemo(() => {
+    if (selection.family === "nintendo-64") {
+      return [{ id: "n64", label: "Nintendo 64" }];
+    }
+    if (selection.family === "nintendo-wii") {
+      return [{ id: "wii", label: "Wii" }];
+    }
+    return consoleModelOptions(selection);
+  }, [selection]);
+  const query = betaConsoleQuery(selection);
 
   function searchNext(next: ConsoleBuilderSelection) {
     setSelection(next);
-    const nextQuery = buildConsoleQuery(next);
+    const nextQuery = betaConsoleQuery(next);
     if (nextQuery) onSearch(nextQuery);
   }
 
