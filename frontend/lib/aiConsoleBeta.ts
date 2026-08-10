@@ -7,6 +7,8 @@ export type AIConsoleBetaStatus = {
   api_key_configured: boolean;
   ready: boolean;
   model: string;
+  rate_limit_per_minute: number;
+  rate_limit_per_day: number;
   targets: string[];
 };
 
