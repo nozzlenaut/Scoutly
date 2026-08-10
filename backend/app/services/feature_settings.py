@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from app.services.ai_console_rate_limit import ai_console_rate_limits
 from app.services.database import database_configured, database_connection
 
 logger = logging.getLogger(__name__)
@@ -118,10 +119,13 @@ def ai_console_review_status() -> dict[str, Any]:
     enabled = ai_console_review_enabled()
     api_key_configured = bool(os.getenv("OPENAI_API_KEY", "").strip())
     model = os.getenv("AI_CONSOLE_REVIEW_MODEL", "gpt-5-nano").strip() or "gpt-5-nano"
+    per_minute, per_day = ai_console_rate_limits()
     return {
         "enabled": enabled,
         "api_key_configured": api_key_configured,
         "ready": enabled and api_key_configured,
         "model": model,
+        "rate_limit_per_minute": per_minute,
+        "rate_limit_per_day": per_day,
         "targets": ["Nintendo Wii", "Nintendo 64", "Nintendo Switch 2"],
     }
