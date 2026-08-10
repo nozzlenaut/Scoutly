@@ -66,12 +66,35 @@ def test_nintendo_64_is_discoverable_as_beta_product():
     )
 
 
-def test_switch_2_is_ai_review_target():
-    resolved = resolve_discoverable_product("Nintendo Switch 2", "consoles")
+def test_switch_2_is_ai_review_target_and_stays_separate_from_older_switches():
+    switch_2 = resolve_discoverable_product("Nintendo Switch 2", "consoles")
+    standard_switch = resolve_discoverable_product("Nintendo Switch", "consoles")
 
-    assert resolved is not None
-    assert resolved.product.id == "console-nintendo-switch-2"
-    assert is_ai_console_review_target(resolved.product)
+    assert switch_2 is not None
+    assert switch_2.product.id == "console-nintendo-switch-2"
+    assert is_ai_console_review_target(switch_2.product)
+    assert listing_matches_product(
+        "Nintendo Switch 2 Console System Tested Working",
+        switch_2.product,
+    )
+    assert not listing_matches_product(
+        "Nintendo Switch OLED Console System HEG-001 Tested Working",
+        switch_2.product,
+    )
+    assert not listing_matches_product(
+        "Nintendo Switch Lite Console System Tested Working",
+        switch_2.product,
+    )
+    assert not listing_matches_product(
+        "Nintendo Switch V2 Console HAC-001(-01) Tested Working",
+        switch_2.product,
+    )
+
+    assert standard_switch is not None
+    assert not listing_matches_product(
+        "Nintendo Switch 2 Console System Tested Working",
+        standard_switch.product,
+    )
 
 
 def test_ai_review_fails_open_without_credentials(monkeypatch):
