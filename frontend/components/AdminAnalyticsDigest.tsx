@@ -9,6 +9,7 @@ type Props = {
 
 export function AdminAnalyticsDigest({ digest }: Props) {
   const [copyStatus, setCopyStatus] = useState<"idle" | "summary" | "json" | "error">("idle");
+  const unresolvedSearches = digest.top_unresolved_searches || [];
 
   async function copy(value: string, nextStatus: "summary" | "json") {
     try {
@@ -31,7 +32,7 @@ export function AdminAnalyticsDigest({ digest }: Props) {
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200">Light analytics</p>
           <h2 className="mt-2 text-2xl font-black">Last {digest.days} days</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
-            Search and click trends only. No IP addresses, accounts, cookies, or personal identifiers are stored.
+            Search and click trends only. No IP addresses, accounts, or cookies are stored. Unresolved rows show the search text users entered.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -54,10 +55,11 @@ export function AdminAnalyticsDigest({ digest }: Props) {
 
       {copyStatus === "error" ? <p className="mt-3 text-sm text-amber-200">Clipboard access failed. Select the text below manually.</p> : null}
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
         <Metric label="Searches" value={String(digest.search_count)} />
         <Metric label="With results" value={String(digest.with_results_count)} />
         <Metric label="No-result rate" value={formatPercent(digest.no_result_rate)} />
+        <Metric label="Unresolved" value={String(digest.unresolved_count ?? 0)} />
         <Metric label="Tracked clicks" value={String(digest.click_count)} />
         <Metric label="Approx. click rate" value={formatPercent(digest.approximate_click_rate)} />
         <Metric label="US-only use" value={formatPercent(digest.us_only_rate)} />
@@ -69,7 +71,7 @@ export function AdminAnalyticsDigest({ digest }: Props) {
         </p>
       ) : null}
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+      <div className="mt-5 grid gap-5 lg:grid-cols-3">
         <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
           <h3 className="font-bold">Categories</h3>
           <div className="mt-3 space-y-2 text-sm">
@@ -93,6 +95,39 @@ export function AdminAnalyticsDigest({ digest }: Props) {
               </div>
             ))}
             {digest.top_searches.length === 0 ? <p className="text-slate-500">No public searches logged yet.</p> : null}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-amber-300/20 bg-amber-300/[0.04] p-4">
+          <h3 className="font-bold">Top unresolved searches</h3>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            Searches that did not match a supported catalog item. Obvious punctuation, casing, and typo variants are grouped conservatively.
+          </p>
+          <div className="mt-3 space-y-2 text-sm">
+            {unresolvedSearches.slice(0, 10).map((row, index) => (
+              <div key={`${row.category}-${row.normalized_query}-${index}`} className="border-b border-white/5 pb-2">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-semibold text-amber-100">{row.query}</p>
+                  <span className="shrink-0 rounded-full bg-amber-300/10 px-2 py-0.5 text-xs font-bold text-amber-200">
+                    {row.searches}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-slate-500">
+                  {row.category}
+                  {row.variants.length > 1
+                    ? ` · ${row.variants.length} grouped variants`
+                    : ""}
+                </p>
+                {row.variants.length > 1 ? (
+                  <p className="mt-1 text-xs leading-5 text-slate-600">
+                    {row.variants.map((variant) => `${variant.query} (${variant.searches})`).join(" · ")}
+                  </p>
+                ) : null}
+              </div>
+            ))}
+            {unresolvedSearches.length === 0 ? (
+              <p className="text-slate-500">No unresolved public searches in this period.</p>
+            ) : null}
           </div>
         </div>
       </div>

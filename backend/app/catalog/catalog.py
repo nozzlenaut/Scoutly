@@ -896,6 +896,7 @@ def _console_has_hardware_evidence(title: str) -> bool:
         r"\bcuh[-\s]?\d{4}[a-z]?\b",  # PlayStation 4
         r"\b(?:model\s*)?(?:1540|1681|1787)\b",  # Xbox One revisions
         r"\b(?:spr|red|ktr)[-\s]?001\b",  # Nintendo 3DS XL families
+        r"\bpch[-\s]?[12]\d{3}\b",  # PlayStation Vita families
     ]
     return any(re.search(pattern, raw, re.I) for pattern in model_code_patterns)
 
@@ -923,6 +924,7 @@ def _console_has_strong_hardware_evidence(title: str) -> bool:
         r"\bcuh[-\s]?\d{4}[a-z]?\b",
         r"\b(?:model\s*)?(?:1540|1681|1787)\b",
         r"\b(?:spr|red|ktr)[-\s]?001\b",
+        r"\bpch[-\s]?[12]\d{3}\b",
     ]
     if any(re.search(pattern, scrubbed, re.I) for pattern in model_code_patterns):
         return True
@@ -1559,9 +1561,65 @@ def _console_title_matches_product(title: str, product: Product) -> bool:
     normalized_title = normalize_text(title, strip_filler=False)
     compact_title = compact_text(title, strip_filler=False)
     product_text = normalize_text(f"{product.brand} {product.model} {product.variant or ''}", strip_filler=False)
+    family = compact_text(
+        str(product.metadata.get("family") or ""), strip_filler=False
+    )
+    model_scope = str(product.metadata.get("model_scope") or "").lower()
 
     def has_raw(term: str) -> bool:
         return _raw_has_term(title, term)
+
+    if family == "valvesteamdeck":
+        if "steamdeck" not in compact_title:
+            return False
+        if model_scope == "oled" and (not has_raw("oled") or has_raw("lcd")):
+            return False
+        accessory_signals = [
+            "screen protector",
+            "tempered glass",
+            "ssd upgrade",
+            "replacement ssd",
+            "nvme ssd",
+            "charger",
+            "ac adapter",
+            "power adapter",
+        ]
+        included_accessory_context = [
+            "with screen protector",
+            "screen protector included",
+            "ssd installed",
+            "upgraded ssd",
+            "with charger",
+            "charger included",
+            "with ac adapter",
+            "ac adapter included",
+        ]
+        if _has_any_term(title, accessory_signals) and not _has_any_term(
+            title, included_accessory_context
+        ):
+            return False
+        return _console_has_strong_hardware_evidence(title)
+
+    if family == "sonyplaystationvita":
+        has_vita_identity = (
+            "playstationvita" in compact_title
+            or "psvita" in compact_title
+            or bool(re.search(r"pch[12]\d{3}", compact_title))
+        )
+        if not has_vita_identity:
+            return False
+        title_is_slim = (
+            has_raw("slim")
+            or has_raw("vita 2000")
+            or bool(re.search(r"pch2\d{3}", compact_title))
+        )
+        title_is_original = (
+            has_raw("vita 1000")
+            or bool(re.search(r"pch1\d{3}", compact_title))
+        )
+        if model_scope == "slim" and (not title_is_slim or title_is_original):
+            return False
+        return _console_has_strong_hardware_evidence(title)
 
     if product.brand.lower() == "playstation":
         is_ps5 = any(marker in compact_text(alias, strip_filler=False) for alias in product.aliases + [product.display_name] for marker in ["ps5", "playstation5"])
@@ -1758,6 +1816,19 @@ def _missing_strict_query_clue(query: str, product: Product) -> bool:
         product.category == "consoles"
         and bool(product.metadata.get("variants_grouped"))
     )
+
+    console_family = compact_text(
+        str(product.metadata.get("family") or ""), strip_filler=False
+    )
+    console_scope = str(product.metadata.get("model_scope") or "").lower()
+    if (
+        product.category == "consoles"
+        and console_family == "sonyplaystationvita"
+        and console_scope == "slim"
+    ):
+        query_compact = compact_text(query, strip_filler=False)
+        if re.search(r"pch1\d{3}", query_compact) or has_term(query, "vita 1000"):
+            return True
 
     if product.category == "consoles" and not grouped_console_variants:
         query_raw = normalize_text(query, strip_filler=False)

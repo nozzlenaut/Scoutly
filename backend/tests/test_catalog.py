@@ -722,6 +722,65 @@ def test_rejects_3ds_accessories_games_and_selection_variations():
     ) is True
 
 
+def test_queued_handheld_console_models_resolve_grouped_variants_and_filter_nearby_models():
+    steam_deck_ids = {
+        match_product(query, category="consoles").product.id
+        for query in [
+            "Steam Deck OLED",
+            "Steam Deck OLED 512GB",
+            "Valve Steam Deck OLED 1TB",
+        ]
+    }
+    assert steam_deck_ids == {"console-valve-steam-deck-oled"}
+
+    vita_ids = {
+        match_product(query, category="consoles").product.id
+        for query in [
+            "PlayStation Vita Slim",
+            "PS Vita 2000",
+            "PCH-2001",
+        ]
+    }
+    assert vita_ids == {"console-sony-playstation-vita-slim"}
+    assert match_product("PlayStation Vita PCH-1000", category="consoles") is None
+
+    steam_deck = match_product("Steam Deck OLED", category="consoles").product
+    assert listing_matches_product(
+        "Valve Steam Deck OLED 512GB Handheld Console Tested",
+        steam_deck,
+    ) is True
+    assert listing_matches_product(
+        "Valve Steam Deck LCD 512GB Handheld Console Tested",
+        steam_deck,
+    ) is False
+    assert listing_matches_product(
+        "Steam Deck OLED Carrying Case",
+        steam_deck,
+    ) is False
+    assert listing_matches_product(
+        "1TB NVMe SSD Upgrade for Valve Steam Deck OLED Handheld Console",
+        steam_deck,
+    ) is False
+    assert listing_matches_product(
+        "Valve Steam Deck OLED 1TB Handheld Console with Charger Tested",
+        steam_deck,
+    ) is True
+
+    vita_slim = match_product("PlayStation Vita Slim", category="consoles").product
+    assert listing_matches_product(
+        "Sony PlayStation Vita PCH-2001 Slim Handheld Console Tested",
+        vita_slim,
+    ) is True
+    assert listing_matches_product(
+        "Sony PlayStation Vita PCH-1001 OLED Handheld Console Tested",
+        vita_slim,
+    ) is False
+    assert listing_matches_product(
+        "Replacement LCD Screen for Sony PS Vita Slim PCH-2000",
+        vita_slim,
+    ) is False
+
+
 def test_wii_u_storage_and_edition_variants_resolve_to_one_model():
     deluxe = match_product("Nintendo Wii U 32GB Deluxe", category="consoles")
     basic = match_product("Nintendo Wii U 8GB Basic", category="consoles")

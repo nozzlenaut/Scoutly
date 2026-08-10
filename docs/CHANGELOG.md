@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Adds grouped catalog support for Steam Deck OLED 512GB/1TB systems and PlayStation Vita Slim/PCH-2000-series handhelds; LEGO 10327 and the RTX 5060 Ti 16GB were already present on `main` and are not duplicated.
+- Surfaces actual unresolved public search text in the existing 7/30/90-day admin analytics digest, with counts, recent timestamps, and conservative grouping of casing, punctuation, and obvious typo variants.
+- Keeps supported products with temporarily empty inventory separate from genuinely unresolved catalog searches.
+- Requires no database migration or new environment variables because public search events already store the submitted query and resolution status.
+
 ## v0.6.37
 
 - Adds a separate Amazon fallback card for resolved PriceSift products, stable camera-model pages, and exact expanded KEH lens models without mixing unverified Amazon offers into the ranked top three.

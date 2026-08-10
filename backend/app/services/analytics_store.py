@@ -3,9 +3,12 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
+import unicodedata
 from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime, timedelta
+from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
@@ -184,6 +187,158 @@ def _pct(numerator: int, denominator: int) -> float | None:
     return round((numerator / denominator) * 100, 1)
 
 
+def _display_query(value: Any) -> str:
+    return re.sub(r"\s+", " ", str(value or "")).strip()
+
+
+def _normalize_unresolved_query(value: Any) -> str:
+    normalized = unicodedata.normalize("NFKC", _display_query(value)).casefold()
+    normalized = normalized.replace("&", " and ")
+    normalized = re.sub(r"[^\w\s]+", " ", normalized, flags=re.UNICODE)
+    return re.sub(r"\s+", " ", normalized).strip()
+
+
+def _model_clue_tokens(value: str) -> list[str]:
+    return re.findall(
+        r"\b(?:[a-z]*\d+[a-z\d]*|i|ii|iii|iv|v|vi|vii|viii|ix|x)\b",
+        value,
+    )
+
+
+def _obvious_query_variants(left: str, right: str) -> bool:
+    """Conservatively group punctuation variants and likely one-edit typos.
+
+    Model numbers are kept separate even when the surrounding text is almost
+    identical. The fuzzy threshold is intentionally high so this report does
+    not turn nearby products into fake demand for one product.
+    """
+
+    if left == right:
+        return True
+    if min(len(left), len(right)) < 6 or left[:1] != right[:1]:
+        return False
+    if _model_clue_tokens(left) != _model_clue_tokens(right):
+        return False
+    left_tokens = left.split()
+    right_tokens = right.split()
+    if len(left_tokens) != len(right_tokens):
+        return False
+    changed_tokens = [
+        (left_token, right_token)
+        for left_token, right_token in zip(left_tokens, right_tokens, strict=True)
+        if left_token != right_token
+    ]
+    if len(changed_tokens) != 1:
+        return False
+    changed_left, changed_right = changed_tokens[0]
+    if min(len(changed_left), len(changed_right)) < 4:
+        return False
+    return (
+        SequenceMatcher(None, changed_left, changed_right).ratio() >= 0.75
+        and SequenceMatcher(None, left, right).ratio() >= 0.92
+    )
+
+
+def _iso_datetime(value: datetime | None) -> str | None:
+    return value.isoformat() if value is not None else None
+
+
+def _top_unresolved_searches(searches: list[dict[str, Any]], limit: int = 15) -> list[dict[str, Any]]:
+    clusters: list[dict[str, Any]] = []
+
+    for row in searches:
+        if bool(row.get("resolved")):
+            continue
+        query = _display_query(row.get("query"))
+        normalized_query = _normalize_unresolved_query(query)
+        if not query or not normalized_query:
+            continue
+
+        category = str(row.get("category") or "unknown")
+        searched_at = _parse_dt(row.get("searched_at"))
+        cluster = next(
+            (
+                item
+                for item in clusters
+                if item["category"] == category
+                and any(
+                    _obvious_query_variants(normalized_query, existing)
+                    for existing in item["normalized_queries"]
+                )
+            ),
+            None,
+        )
+        if cluster is None:
+            cluster = {
+                "category": category,
+                "normalized_queries": set(),
+                "variant_counts": Counter(),
+                "variant_labels": {},
+                "variant_last_seen": {},
+                "searches": 0,
+                "first_searched_at": searched_at,
+                "last_searched_at": searched_at,
+            }
+            clusters.append(cluster)
+
+        variant_key = query.casefold()
+        cluster["normalized_queries"].add(normalized_query)
+        cluster["variant_counts"][variant_key] += 1
+        cluster["variant_labels"].setdefault(variant_key, query)
+        if searched_at is not None:
+            cluster["variant_last_seen"][variant_key] = max(
+                searched_at,
+                cluster["variant_last_seen"].get(variant_key, searched_at),
+            )
+            first_seen = cluster["first_searched_at"]
+            last_seen = cluster["last_searched_at"]
+            cluster["first_searched_at"] = min(first_seen, searched_at) if first_seen else searched_at
+            cluster["last_searched_at"] = max(last_seen, searched_at) if last_seen else searched_at
+        cluster["searches"] += 1
+
+    rows: list[dict[str, Any]] = []
+    for cluster in clusters:
+        variants = sorted(
+            cluster["variant_counts"],
+            key=lambda key: (
+                cluster["variant_counts"][key],
+                cluster["variant_last_seen"].get(key, datetime.min.replace(tzinfo=UTC)),
+                cluster["variant_labels"][key],
+            ),
+            reverse=True,
+        )
+        representative = variants[0]
+        rows.append(
+            {
+                "category": cluster["category"],
+                "query": cluster["variant_labels"][representative],
+                "normalized_query": _normalize_unresolved_query(
+                    cluster["variant_labels"][representative]
+                ),
+                "searches": cluster["searches"],
+                "variants": [
+                    {
+                        "query": cluster["variant_labels"][key],
+                        "searches": cluster["variant_counts"][key],
+                    }
+                    for key in variants[:5]
+                ],
+                "first_searched_at": _iso_datetime(cluster["first_searched_at"]),
+                "last_searched_at": _iso_datetime(cluster["last_searched_at"]),
+            }
+        )
+
+    rows.sort(
+        key=lambda row: (
+            row["searches"],
+            _parse_dt(row.get("last_searched_at")) or datetime.min.replace(tzinfo=UTC),
+            row["query"],
+        ),
+        reverse=True,
+    )
+    return rows[: max(1, limit)]
+
+
 def analytics_digest(days: int = 30) -> dict[str, Any]:
     days = max(1, min(days, 365))
     searches, clicks = _records_for_days(days)
@@ -192,8 +347,10 @@ def analytics_digest(days: int = 30) -> dict[str, Any]:
     resolved_count = sum(1 for row in searches if bool(row.get("resolved")))
     with_results_count = sum(1 for row in searches if int(row.get("result_count") or 0) > 0)
     no_result_count = search_count - with_results_count
+    unresolved_count = sum(1 for row in searches if not bool(row.get("resolved")))
     us_only_count = sum(1 for row in searches if bool(row.get("us_only")))
     total_click_count = len(clicks)
+    top_unresolved_searches = _top_unresolved_searches(searches)
 
     category_searches: Counter[str] = Counter()
     category_no_results: Counter[str] = Counter()
@@ -330,6 +487,7 @@ def analytics_digest(days: int = 30) -> dict[str, Any]:
         f"Resolved catalog/ISBN searches: {resolved_count} ({_pct(resolved_count, search_count) or 0}%)",
         f"Searches with results: {with_results_count} ({_pct(with_results_count, search_count) or 0}%)",
         f"No-result searches: {no_result_count} ({_pct(no_result_count, search_count) or 0}%)",
+        f"Unresolved catalog/ISBN searches: {unresolved_count} ({_pct(unresolved_count, search_count) or 0}%)",
         f"Verified listing clicks: {click_count}",
         f"Verified search-to-click rate: {_pct(click_count, search_count) or 0}%",
         f"Verified clicks not linked to a recorded search: {historical_click_count}",
@@ -347,6 +505,12 @@ def analytics_digest(days: int = 30) -> dict[str, Any]:
             lines.append(
                 f"- {row['label']} ({row['category']}): {row['searches']} searches, {row['no_results']} no-results, {row['clicks']} clicks"
             )
+    if top_unresolved_searches:
+        lines.append("Top unresolved searches:")
+        for row in top_unresolved_searches[:10]:
+            lines.append(
+                f"- {row['query']} ({row['category']}): {row['searches']} unresolved searches"
+            )
     if provider_clicks:
         lines.append("Provider clicks: " + ", ".join(f"{name} {count}" for name, count in provider_clicks.most_common()))
 
@@ -357,6 +521,8 @@ def analytics_digest(days: int = 30) -> dict[str, Any]:
         "with_results_count": with_results_count,
         "no_result_count": no_result_count,
         "no_result_rate": _pct(no_result_count, search_count),
+        "unresolved_count": unresolved_count,
+        "unresolved_rate": _pct(unresolved_count, search_count),
         "us_only_count": us_only_count,
         "us_only_rate": _pct(us_only_count, search_count),
         "click_count": click_count,
@@ -367,9 +533,10 @@ def analytics_digest(days: int = 30) -> dict[str, Any]:
         "approximate_click_rate": _pct(click_count, search_count),
         "category_rows": category_rows,
         "top_searches": top_searches,
+        "top_unresolved_searches": top_unresolved_searches,
         "provider_shown_counts": dict(provider_shown.most_common()),
         "provider_click_counts": dict(provider_clicks.most_common()),
         "daily": [{"date": day, **daily[day]} for day in sorted(daily)],
         "summary_text": "\n".join(lines),
-        "privacy_note": "No IP addresses, accounts, cookies, or personal identifiers are stored by this analytics feature.",
+        "privacy_note": "No IP addresses, accounts, or cookies are stored. This admin-only report includes the search text users entered.",
     }

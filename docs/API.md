@@ -118,9 +118,12 @@ If `SCOUTLY_ADMIN_TOKEN` is set, include `?token=<token>`.
 
 ```text
 GET /api/analytics/summary
+GET /api/analytics/digest?days=30
 GET /api/analytics/clicks?limit=50
 GET /api/analytics/reports?limit=50
 ```
+
+The admin-only analytics digest includes `top_unresolved_searches`, which contains the actual public query text, category, grouped count, conservative query variants, and first/last timestamps for searches that did not resolve to a supported product or ISBN.
 
 ## Search with auctions
 

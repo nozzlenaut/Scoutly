@@ -55,6 +55,12 @@ Future tables:
 
 When `DATABASE_URL` is configured, Scoutly creates its operational tables automatically at API startup. The search QA workbench adds:
 
+### scoutly_search_events
+
+Public search analytics store the submitted query, selected category, resolved product identity when available, result/candidate/filter counts, providers shown, US-only state, source, and timestamp. They do not store IP addresses, accounts, cookies, or delivery ZIP codes.
+
+The admin analytics digest uses `resolved = false` to identify catalog requests PriceSift could not support. It reports the actual submitted search text over the selected 7/30/90-day window and conservatively groups casing, punctuation, and obvious typo variants. A resolved product with zero current listings remains a no-result search, not an unresolved catalog request.
+
 ### scoutly_qa_evaluations
 
 - id

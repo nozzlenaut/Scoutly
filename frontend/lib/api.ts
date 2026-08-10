@@ -311,6 +311,16 @@ export type AnalyticsTopSearch = {
   clicks: number;
 };
 
+export type AnalyticsUnresolvedSearch = {
+  category: string;
+  query: string;
+  normalized_query: string;
+  searches: number;
+  variants: Array<{ query: string; searches: number }>;
+  first_searched_at?: string | null;
+  last_searched_at?: string | null;
+};
+
 export type AnalyticsDigest = {
   days: number;
   search_count: number;
@@ -318,6 +328,8 @@ export type AnalyticsDigest = {
   with_results_count: number;
   no_result_count: number;
   no_result_rate: number | null;
+  unresolved_count: number;
+  unresolved_rate: number | null;
   us_only_count: number;
   us_only_rate: number | null;
   click_count: number;
@@ -328,6 +340,7 @@ export type AnalyticsDigest = {
   approximate_click_rate: number | null;
   category_rows: AnalyticsCategoryRow[];
   top_searches: AnalyticsTopSearch[];
+  top_unresolved_searches: AnalyticsUnresolvedSearch[];
   provider_shown_counts: Record<string, number>;
   provider_click_counts: Record<string, number>;
   daily: Array<{ date: string; searches: number; clicks: number; no_results: number }>;

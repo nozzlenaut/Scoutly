@@ -180,6 +180,91 @@ def test_light_analytics_digest_is_paste_ready_and_private(monkeypatch, tmp_path
     assert "No IP addresses" in digest["privacy_note"]
 
 
+def test_digest_surfaces_and_conservatively_groups_actual_unresolved_queries(monkeypatch, tmp_path):
+    from app.services.analytics_store import SearchEvent, analytics_digest, log_search_event
+
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
+
+    for query in ["Steam Deck OLED", "steam-deck oled", "Steam Deck OELD"]:
+        log_search_event(
+            SearchEvent(
+                category="consoles",
+                query=query,
+                product_id=None,
+                product_label=None,
+                resolved=False,
+                result_count=0,
+                provider_counts={},
+            )
+        )
+    log_search_event(
+        SearchEvent(
+            category="consoles",
+            query="Steam Deck LCD",
+            product_id=None,
+            product_label=None,
+            resolved=False,
+            result_count=0,
+            provider_counts={},
+        )
+    )
+    # A supported product with no current inventory is a no-result search, not
+    # an unresolved catalog request.
+    log_search_event(
+        SearchEvent(
+            category="cameras",
+            query="Sony A7 IV",
+            product_id="camera-sony-a7-iv-body",
+            product_label="Sony A7 IV Body",
+            resolved=True,
+            result_count=0,
+            provider_counts={},
+        )
+    )
+
+    digest = analytics_digest(30)
+
+    assert digest["unresolved_count"] == 4
+    assert digest["unresolved_rate"] == 80.0
+    assert len(digest["top_unresolved_searches"]) == 2
+    top = digest["top_unresolved_searches"][0]
+    assert top["category"] == "consoles"
+    assert top["searches"] == 3
+    assert {variant["query"] for variant in top["variants"]} == {
+        "Steam Deck OLED",
+        "steam-deck oled",
+        "Steam Deck OELD",
+    }
+    assert digest["top_unresolved_searches"][1]["query"] == "Steam Deck LCD"
+    assert "Top unresolved searches:" in digest["summary_text"]
+    assert "Steam Deck" in digest["summary_text"]
+
+
+def test_unresolved_query_grouping_keeps_nearby_model_numbers_separate():
+    from app.services.analytics_store import (
+        _normalize_unresolved_query,
+        _obvious_query_variants,
+    )
+
+    assert _obvious_query_variants(
+        _normalize_unresolved_query("Steam Deck OLED"),
+        _normalize_unresolved_query("Steam Deck OELD"),
+    ) is True
+    assert _obvious_query_variants(
+        _normalize_unresolved_query("Canon R6 II"),
+        _normalize_unresolved_query("Canon R6 III"),
+    ) is False
+    assert _obvious_query_variants(
+        _normalize_unresolved_query("RTX 5060"),
+        _normalize_unresolved_query("RTX 5070"),
+    ) is False
+    assert _obvious_query_variants(
+        _normalize_unresolved_query("Canon EOS R"),
+        _normalize_unresolved_query("Canon EOS RP"),
+    ) is False
+
+
 def test_light_analytics_digest_endpoint_requires_admin(monkeypatch, tmp_path):
     monkeypatch.delenv("DATABASE_URL", raising=False)
     monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))

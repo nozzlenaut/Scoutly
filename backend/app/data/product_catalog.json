@@ -42542,5 +42542,118 @@
       }
     },
     "active": true
+  },
+  {
+    "id": "console-valve-steam-deck-oled",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "Valve",
+    "model": "Steam Deck OLED",
+    "variant": null,
+    "aliases": [
+      "Steam Deck OLED",
+      "Valve Steam Deck OLED",
+      "Steam Deck OLED 512GB",
+      "Steam Deck OLED 1TB",
+      "Valve Steam Deck OLED 512GB",
+      "Valve Steam Deck OLED 1TB"
+    ],
+    "required_terms": [
+      "steam",
+      "deck",
+      "oled"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "untested"
+    ],
+    "metadata": {
+      "family": "Valve Steam Deck",
+      "model_scope": "oled",
+      "variants_grouped": true,
+      "variants": {
+        "storage": [
+          "512GB",
+          "1TB"
+        ]
+      }
+    },
+    "active": true
+  },
+  {
+    "id": "console-sony-playstation-vita-slim",
+    "category": "consoles",
+    "category_label": "Consoles",
+    "product_type": "game_console",
+    "brand": "Sony",
+    "model": "PlayStation Vita Slim",
+    "variant": null,
+    "aliases": [
+      "PlayStation Vita Slim",
+      "PS Vita Slim",
+      "Sony PS Vita Slim",
+      "PlayStation Vita 2000",
+      "PS Vita 2000",
+      "Vita 2000",
+      "PCH-2000",
+      "PCH-2001",
+      "PCH-2006",
+      "PCH2000",
+      "PCH2001",
+      "PCH2006"
+    ],
+    "required_terms": [
+      "vita"
+    ],
+    "excluded_terms": [
+      "account only",
+      "as is",
+      "as-is",
+      "battery only",
+      "box only",
+      "broken",
+      "case only",
+      "controller only",
+      "controllers only",
+      "dock only",
+      "for parts",
+      "not working",
+      "parts only",
+      "power supply",
+      "read description",
+      "repair",
+      "screen only",
+      "shell only",
+      "untested"
+    ],
+    "metadata": {
+      "family": "Sony PlayStation Vita",
+      "model_scope": "slim",
+      "variants_grouped": true,
+      "variants": {
+        "hardware_code": [
+          "PCH-2000 series"
+        ]
+      }
+    },
+    "active": true
   }
 ]
