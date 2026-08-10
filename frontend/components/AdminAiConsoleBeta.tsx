@@ -35,7 +35,8 @@ export function AdminAiConsoleBeta({ token }: Props) {
   }, [token]);
 
   async function toggle() {
-    if (!status || !status.api_key_configured || saving) return;
+    if (!status || saving) return;
+    if (!status.enabled && !status.api_key_configured) return;
     setSaving(true);
     setError(null);
     try {
@@ -49,11 +50,15 @@ export function AdminAiConsoleBeta({ token }: Props) {
 
   const stateLabel = loading
     ? "Loading"
-    : !status?.api_key_configured
-      ? "API key missing"
-      : status.enabled
-        ? "On"
-        : "Off";
+    : status?.enabled && !status.api_key_configured
+      ? "On, key missing"
+      : !status?.api_key_configured
+        ? "API key missing"
+        : status.enabled
+          ? "On"
+          : "Off";
+
+  const cannotEnable = Boolean(status && !status.enabled && !status.api_key_configured);
 
   return (
     <section className="mt-10 rounded-3xl border border-violet-300/20 bg-violet-300/[0.04] p-5">
@@ -86,7 +91,9 @@ export function AdminAiConsoleBeta({ token }: Props) {
 
           {!loading && status && !status.api_key_configured ? (
             <p className="mt-3 text-sm font-semibold text-amber-200">
-              Add OPENAI_API_KEY in Railway first. The switch stays disabled until the backend sees it.
+              {status.enabled
+                ? "OPENAI_API_KEY is missing, so AI calls are currently skipped. You can still switch the beta off here."
+                : "Add OPENAI_API_KEY in Railway first. The switch cannot be turned on until the backend sees it."}
             </p>
           ) : null}
 
@@ -98,7 +105,7 @@ export function AdminAiConsoleBeta({ token }: Props) {
           role="switch"
           aria-checked={Boolean(status?.enabled)}
           aria-label="Toggle AI console review beta"
-          disabled={loading || saving || !status?.api_key_configured}
+          disabled={loading || saving || cannotEnable}
           onClick={toggle}
           className={`relative h-12 w-24 shrink-0 rounded-full border transition ${
             status?.enabled
