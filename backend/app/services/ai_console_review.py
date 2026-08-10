@@ -11,6 +11,7 @@ import httpx
 from app.catalog.normalizer import compact_text
 from app.models.listing import Listing
 from app.models.product import Product
+from app.services.feature_settings import ai_console_review_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -40,14 +41,10 @@ class _AIReviewConfig:
     timeout_seconds: float
 
 
-def _truthy(value: str | None) -> bool:
-    return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
-
-
 def _review_config_from_env() -> _AIReviewConfig | None:
-    # Keep the beta opt-in. A production OPENAI_API_KEY used by some future
-    # feature should not silently start spending money on console searches.
-    if not _truthy(os.getenv("AI_CONSOLE_REVIEW_ENABLED")):
+    # The admin-persisted feature flag is the spending switch. Merely adding an
+    # OPENAI_API_KEY in Railway must not start making paid review calls.
+    if not ai_console_review_enabled():
         return None
 
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
