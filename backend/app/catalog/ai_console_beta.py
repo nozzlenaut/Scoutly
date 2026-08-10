@@ -40,7 +40,7 @@ AI_CONSOLE_BETA_PRODUCTS = (
             "N64",
             "N64 Console",
         ],
-        required_terms=[],
+        required_terms=["nintendo", "64"],
         excluded_terms=[
             *_BASE_EXCLUDED_TERMS,
             "cartridge only",
@@ -91,7 +91,7 @@ def _match_score(query: str, product: Product) -> float:
     normalized = normalize_text(query, strip_filler=False)
     compact = compact_text(query, strip_filler=False)
 
-    candidates = [product.display_name, product.model, *product.aliases]
+    candidates = [product.display_name, *product.aliases]
     for candidate in candidates:
         candidate_normalized = normalize_text(candidate, strip_filler=False)
         candidate_compact = compact_text(candidate, strip_filler=False)
