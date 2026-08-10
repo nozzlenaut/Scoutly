@@ -31,9 +31,12 @@ async def _apply_ai_console_beta_review(
     combined = [*results, *auction_results]
     review = await review_console_listings(combined, resolved_product.product)
     if not review.applied:
+        if review.skipped_reason not in {None, "not_target"}:
+            diagnostics.ai_review_skipped_reason = review.skipped_reason
         return results, auction_results
 
     diagnostics.ai_review_applied = True
+    diagnostics.ai_review_skipped_reason = None
     kept_object_ids = {id(listing) for listing in review.kept}
     reviewed_results = [listing for listing in results if id(listing) in kept_object_ids]
     reviewed_auctions = [listing for listing in auction_results if id(listing) in kept_object_ids]
