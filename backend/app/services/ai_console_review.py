@@ -11,6 +11,7 @@ import httpx
 from app.catalog.normalizer import compact_text
 from app.models.listing import Listing
 from app.models.product import Product
+from app.services.ai_console_rate_limit import reserve_ai_console_review_call
 from app.services.feature_settings import ai_console_review_enabled
 
 logger = logging.getLogger(__name__)
@@ -31,6 +32,7 @@ class AIConsoleReviewResult:
     kept: list[Listing]
     rejected: list[tuple[Listing, str]]
     applied: bool
+    skipped_reason: str | None = None
 
 
 @dataclass(frozen=True)
@@ -215,15 +217,40 @@ async def review_console_listings(
     product: Product | None,
 ) -> AIConsoleReviewResult:
     if not listings or not is_ai_console_review_target(product):
-        return AIConsoleReviewResult(kept=list(listings), rejected=[], applied=False)
+        return AIConsoleReviewResult(
+            kept=list(listings),
+            rejected=[],
+            applied=False,
+            skipped_reason="not_target",
+        )
 
     config = _review_config_from_env()
     if config is None or product is None:
-        return AIConsoleReviewResult(kept=list(listings), rejected=[], applied=False)
+        return AIConsoleReviewResult(
+            kept=list(listings),
+            rejected=[],
+            applied=False,
+            skipped_reason="disabled_or_unconfigured",
+        )
+
+    rate_limit = reserve_ai_console_review_call()
+    if not rate_limit.allowed:
+        logger.warning("AI console review skipped by %s", rate_limit.reason)
+        return AIConsoleReviewResult(
+            kept=list(listings),
+            rejected=[],
+            applied=False,
+            skipped_reason=rate_limit.reason,
+        )
 
     decisions = await _request_decisions(config, product, listings)
     if decisions is None:
-        return AIConsoleReviewResult(kept=list(listings), rejected=[], applied=False)
+        return AIConsoleReviewResult(
+            kept=list(listings),
+            rejected=[],
+            applied=False,
+            skipped_reason="provider_failure",
+        )
 
     kept: list[Listing] = []
     rejected: list[tuple[Listing, str]] = []
@@ -234,4 +261,9 @@ async def review_console_listings(
         else:
             rejected.append((listing, reason or "AI review rejected listing"))
 
-    return AIConsoleReviewResult(kept=kept, rejected=rejected, applied=True)
+    return AIConsoleReviewResult(
+        kept=kept,
+        rejected=rejected,
+        applied=True,
+        skipped_reason=None,
+    )
