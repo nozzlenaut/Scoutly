@@ -15,6 +15,8 @@ class SearchDiagnostics(BaseModel):
     auction_eligible: int = 0
     auction_duplicates_removed: int = 0
     auction_rejection_reasons: dict[str, int] = Field(default_factory=dict)
+    ai_review_applied: bool = False
+    ai_review_rejected: int = 0
 
 
 class PriceContext(BaseModel):
