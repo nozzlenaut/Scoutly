@@ -147,6 +147,7 @@ async def _request_decisions(
     request_payload = {
         "model": config.model,
         "store": False,
+        "reasoning": {"effort": "minimal"},
         "instructions": (
             "You are a strict used-console listing classifier for PriceSift. "
             "The candidates already passed deterministic filters. Keep a listing only when "
