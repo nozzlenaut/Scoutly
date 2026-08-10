@@ -185,13 +185,45 @@ async def _request_decisions(
             )
             response.raise_for_status()
             response_payload = response.json()
+    except httpx.HTTPStatusError as exc:
+        safe_body = exc.response.text[:1000].replace("\n", " ").replace("\r", " ")
+        logger.warning(
+            "AI console review HTTP failure; keeping deterministic results: status=%s body=%r",
+            exc.response.status_code,
+            safe_body,
+        )
+        return None
+    except httpx.TimeoutException as exc:
+        logger.warning(
+            "AI console review timeout; keeping deterministic results: type=%s timeout_seconds=%s",
+            type(exc).__name__,
+            config.timeout_seconds,
+        )
+        return None
+    except httpx.RequestError as exc:
+        logger.warning(
+            "AI console review request error; keeping deterministic results: type=%s message=%r",
+            type(exc).__name__,
+            str(exc),
+        )
+        return None
     except Exception as exc:
-        logger.warning("AI console review request failed; keeping deterministic results: %s", exc)
+        logger.warning(
+            "AI console review unexpected failure; keeping deterministic results: type=%s message=%r",
+            type(exc).__name__,
+            str(exc),
+        )
         return None
 
     output_text = _response_output_text(response_payload)
     if output_text is None:
-        logger.warning("AI console review returned no structured output; keeping deterministic results")
+        logger.warning(
+            "AI console review returned no structured output; keeping deterministic results: "
+            "status=%r error=%r incomplete_details=%r",
+            response_payload.get("status"),
+            response_payload.get("error"),
+            response_payload.get("incomplete_details"),
+        )
         return None
 
     try:
@@ -201,13 +233,23 @@ async def _request_decisions(
             int(row["index"]): (bool(row["keep"]), str(row["reason"]).strip())
             for row in rows
         }
-    except (KeyError, TypeError, ValueError, json.JSONDecodeError):
-        logger.warning("AI console review returned malformed output; keeping deterministic results")
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        logger.warning(
+            "AI console review returned malformed structured output; keeping deterministic results: "
+            "type=%s",
+            type(exc).__name__,
+        )
         return None
 
     expected_indexes = set(range(len(listings)))
     if set(decisions) != expected_indexes or len(rows) != len(listings):
-        logger.warning("AI console review omitted or duplicated decisions; keeping deterministic results")
+        logger.warning(
+            "AI console review omitted or duplicated decisions; keeping deterministic results: "
+            "expected=%s received=%s rows=%s",
+            len(listings),
+            len(decisions),
+            len(rows),
+        )
         return None
     return decisions
 
