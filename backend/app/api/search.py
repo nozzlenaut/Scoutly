@@ -33,12 +33,14 @@ async def _apply_ai_console_beta_review(
     if not review.applied:
         return results, auction_results
 
+    diagnostics.ai_review_applied = True
     kept_object_ids = {id(listing) for listing in review.kept}
     reviewed_results = [listing for listing in results if id(listing) in kept_object_ids]
     reviewed_auctions = [listing for listing in auction_results if id(listing) in kept_object_ids]
 
     fixed_rejected = len(results) - len(reviewed_results)
     auction_rejected = len(auction_results) - len(reviewed_auctions)
+    diagnostics.ai_review_rejected += fixed_rejected + auction_rejected
     if fixed_rejected:
         diagnostics.fixed_price_filtered += fixed_rejected
         diagnostics.fixed_price_eligible = max(
