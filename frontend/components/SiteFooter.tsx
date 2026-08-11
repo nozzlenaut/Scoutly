@@ -1,6 +1,12 @@
 import Link from "next/link";
 
-const PRICESIFT_VERSION = "0.6.47";
+const PRICESIFT_VERSION = "0.6.48";
+
+const linkClasses =
+  "text-cyan-200 hover:text-cyan-100 [.pricesift-home_&]:text-ps-accent-hover [.pricesift-home_&]:hover:text-ps-text-primary [.pricesift-home_&]:hover:underline [.pricesift-results_&]:text-ps-accent-hover [.pricesift-results_&]:hover:text-ps-text-primary [.pricesift-results_&]:hover:underline [.pricesift-public_&]:text-ps-accent-hover [.pricesift-public_&]:hover:text-ps-text-primary [.pricesift-public_&]:hover:underline";
+
+const reuseLinkClasses =
+  "text-emerald-200 hover:text-emerald-100 [.pricesift-home_&]:text-ps-success [.pricesift-home_&]:hover:text-ps-text-primary [.pricesift-home_&]:hover:underline [.pricesift-results_&]:text-ps-success [.pricesift-results_&]:hover:text-ps-text-primary [.pricesift-results_&]:hover:underline [.pricesift-public_&]:text-emerald-800 [.pricesift-public_&]:hover:text-emerald-950 [.pricesift-public_&]:hover:underline";
 
 export function SiteFooter() {
   return (
@@ -17,24 +23,13 @@ export function SiteFooter() {
         </div>
 
         <div className="flex flex-wrap gap-x-4 gap-y-2">
-          <Link href="/cameras" className="text-cyan-200 hover:text-cyan-100 [.pricesift-home_&]:text-ps-accent-hover [.pricesift-home_&]:hover:text-ps-text-primary [.pricesift-home_&]:hover:underline [.pricesift-results_&]:text-ps-accent-hover [.pricesift-results_&]:hover:text-ps-text-primary [.pricesift-results_&]:hover:underline">
-            Cameras
-          </Link>
-          <Link href="/lenses" className="text-cyan-200 hover:text-cyan-100 [.pricesift-home_&]:text-ps-accent-hover [.pricesift-home_&]:hover:text-ps-text-primary [.pricesift-home_&]:hover:underline [.pricesift-results_&]:text-ps-accent-hover [.pricesift-results_&]:hover:text-ps-text-primary [.pricesift-results_&]:hover:underline">
-            Lenses
-          </Link>
-          <Link href="/used" className="text-cyan-200 hover:text-cyan-100 [.pricesift-home_&]:text-ps-accent-hover [.pricesift-home_&]:hover:text-ps-text-primary [.pricesift-home_&]:hover:underline [.pricesift-results_&]:text-ps-accent-hover [.pricesift-results_&]:hover:text-ps-text-primary [.pricesift-results_&]:hover:underline">
-            Used price guides
-          </Link>
-          <Link href="/reuse" className="text-emerald-200 hover:text-emerald-100 [.pricesift-home_&]:text-ps-success [.pricesift-home_&]:hover:text-ps-text-primary [.pricesift-home_&]:hover:underline [.pricesift-results_&]:text-ps-success [.pricesift-results_&]:hover:text-ps-text-primary [.pricesift-results_&]:hover:underline">
-            Why buy used?
-          </Link>
-          <Link href="/feedback" className="text-cyan-200 hover:text-cyan-100 [.pricesift-home_&]:text-ps-accent-hover [.pricesift-home_&]:hover:text-ps-text-primary [.pricesift-home_&]:hover:underline [.pricesift-results_&]:text-ps-accent-hover [.pricesift-results_&]:hover:text-ps-text-primary [.pricesift-results_&]:hover:underline">
-            Beta feedback
-          </Link>
-          <Link href="/disclosure" className="text-cyan-200 hover:text-cyan-100 [.pricesift-home_&]:text-ps-accent-hover [.pricesift-home_&]:hover:text-ps-text-primary [.pricesift-home_&]:hover:underline [.pricesift-results_&]:text-ps-accent-hover [.pricesift-results_&]:hover:text-ps-text-primary [.pricesift-results_&]:hover:underline">
-            Affiliate disclosure
-          </Link>
+          <Link href="/cameras" className={linkClasses}>Cameras</Link>
+          <Link href="/lenses" className={linkClasses}>Lenses</Link>
+          <Link href="/used" className={linkClasses}>Used price guides</Link>
+          <Link href="/buying-guides" className={linkClasses}>Buying guides</Link>
+          <Link href="/reuse" className={reuseLinkClasses}>Repair &amp; Reuse</Link>
+          <Link href="/feedback" className={linkClasses}>Beta feedback</Link>
+          <Link href="/disclosure" className={linkClasses}>Affiliate disclosure</Link>
         </div>
       </div>
     </footer>
