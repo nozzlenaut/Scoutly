@@ -32,9 +32,20 @@ export default async function PublicLensesPage() {
           <p className="text-sm uppercase tracking-[0.25em] text-ps-accent-hover">Photography beta</p>
           <h1 className="mt-2 text-4xl font-black sm:text-5xl">Find used lenses currently at KEH</h1>
           <p className="mt-4 max-w-4xl text-base leading-7 text-ps-text-secondary">
-            Browse structured KEH inventory by the details that define compatibility. Public lens results are KEH-only for now;
-            eBay lens listings remain disabled while PriceSift privately tests their inconsistent titles, mounts, and accessory listings.
+            Browse structured KEH inventory by the details that define compatibility. Public lens results are KEH-only for now; eBay lens listings remain disabled while PriceSift privately tests their inconsistent titles, mounts, and accessory listings.
           </p>
+          <div className="mt-5 max-w-4xl rounded-2xl border border-ps-border bg-ps-accent-soft p-5">
+            <p className="font-bold text-ps-text-primary">Checking a used lens?</p>
+            <p className="mt-1 text-sm leading-6 text-ps-text-secondary">
+              A little internal dust is not the same thing as fungus, and cosmetic wear is not the same thing as damaged glass or mechanics.
+            </p>
+            <Link
+              href="/buying-guides/used-lenses"
+              className="mt-3 inline-flex font-bold text-ps-accent-hover hover:text-ps-text-primary hover:underline"
+            >
+              Read the used lens buying guide →
+            </Link>
+          </div>
         </div>
 
         {initialData ? (

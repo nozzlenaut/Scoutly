@@ -32,8 +32,20 @@ export default async function CamerasPage() {
           <p className="text-sm uppercase tracking-[0.25em] text-ps-accent-hover">Current used-camera inventory</p>
           <h1 className="mt-2 max-w-5xl text-4xl font-black sm:text-5xl">Camera models currently available at KEH</h1>
           <p className="mt-4 max-w-4xl text-base leading-7 text-ps-text-secondary">
-            KEH’s standardized feed is grouped into exact camera models. Models confidently matched to PriceSift’s tuned catalog can compare eBay and KEH. Everything else remains KEH-only instead of being sent through an unsafe broad marketplace search.
+            KEH’s standardized feed is grouped into exact camera models. Models confidently matched to PriceSift’s tuned catalog can compare eBay and KEH; additional KEH models stay KEH-only instead of being sent through a broad marketplace search.
           </p>
+          <div className="mt-5 max-w-4xl rounded-2xl border border-ps-border bg-ps-accent-soft p-5">
+            <p className="font-bold text-ps-text-primary">Buying used?</p>
+            <p className="mt-1 text-sm leading-6 text-ps-text-secondary">
+              Shutter count, normal cosmetic wear, sensor damage, battery condition, and vague listing language do not all deserve the same level of panic.
+            </p>
+            <Link
+              href="/buying-guides/used-cameras"
+              className="mt-3 inline-flex font-bold text-ps-accent-hover hover:text-ps-text-primary hover:underline"
+            >
+              Read the used camera buying guide →
+            </Link>
+          </div>
         </section>
 
         {data ? (
