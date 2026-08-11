@@ -16,16 +16,16 @@ export function SharePageButton({
   variant?: "blue" | "green";
 }) {
   const [status, setStatus] = useState<ShareStatus>("idle");
-  const timerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
     return () => {
-      if (timerRef.current) window.clearTimeout(timerRef.current);
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     };
   }, []);
 
   function resetLater() {
-    if (timerRef.current) window.clearTimeout(timerRef.current);
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(() => setStatus("idle"), 2400);
   }
 
