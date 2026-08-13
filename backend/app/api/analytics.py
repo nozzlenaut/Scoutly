@@ -1,8 +1,8 @@
-
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from app.services.admin_auth import require_admin_token as _require_admin_token
+from app.services.analytics_forensics import analytics_forensics
 from app.services.analytics_store import analytics_digest
 from app.services.beta_feedback_store import list_beta_feedback
 from app.services.feature_settings import (
@@ -66,7 +66,19 @@ def get_analytics_digest(
     token: str | None = Query(None),
 ) -> dict:
     _require_admin_token(token)
-    return analytics_digest(days)
+    digest = analytics_digest(days)
+    forensics = analytics_forensics(days)
+    digest["forensics"] = forensics
+    digest["summary_text"] = (
+        digest["summary_text"]
+        + "\nForensic checks:"
+        + f"\n- Rapid repeat searches within {forensics['rapid_repeat_window_seconds']}s: "
+        + f"{forensics['rapid_repeat_count']} ({forensics['rapid_repeat_rate'] or 0}%)"
+        + f"\n- Busiest minute: {forensics['busiest_minute_searches']} searches"
+        + f"\n- Minutes with 10+ searches: {forensics['minutes_with_10_or_more_searches']}"
+        + f"\n- Minutes with 20+ searches: {forensics['minutes_with_20_or_more_searches']}"
+    )
+    return digest
 
 
 @router.get("/analytics/goodreads")
