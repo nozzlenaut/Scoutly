@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AmazonFallbackCard } from "@/components/AmazonFallbackCard";
 import { AuctionResults } from "@/components/AuctionResults";
@@ -14,6 +15,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { buildEbaySearchUrl, buildOutboundUrl, searchDeals, searchPublicBooksByIsbn } from "@/lib/api";
 import { getCategoryById, getSearchCategoryById } from "@/lib/categoryCatalog";
 import { lookupOpenLibraryAvailability } from "@/lib/openLibrary";
+
+const ANALYTICS_OPT_OUT_COOKIE = "pricesift_analytics_opt_out";
 
 function PageShell({ children }: { children: ReactNode }) {
   return (
@@ -93,6 +96,7 @@ export default async function SearchPage({
   const rawCategory = (params.category || "").trim();
   const rawQuery = (params.q || "").trim();
   const usOnly = params.us_only === "1" || params.us_only === "true";
+  const analyticsEnabled = (await cookies()).get(ANALYTICS_OPT_OUT_COOKIE)?.value !== "1";
   const knownCategory = getCategoryById(rawCategory);
   const category = getSearchCategoryById(rawCategory);
 
@@ -153,7 +157,7 @@ export default async function SearchPage({
 
   if (category.id === "books") {
     const [bookData, openLibrary] = await Promise.all([
-      searchPublicBooksByIsbn(rawQuery, 35, { usOnly, trackAnalytics: true }),
+      searchPublicBooksByIsbn(rawQuery, 35, { usOnly, trackAnalytics: analyticsEnabled }),
       lookupOpenLibraryAvailability(rawQuery),
     ]);
     return (
@@ -179,7 +183,7 @@ export default async function SearchPage({
     includeAuctions: false,
     auctionHours: 24,
     usOnly,
-    trackAnalytics: true,
+    trackAnalytics: analyticsEnabled,
   });
   const resolved = data.resolved_product;
   const hasKehResults = data.results.some((result) => result.provider.toLowerCase() === "keh");

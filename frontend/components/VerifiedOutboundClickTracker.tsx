@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { analyticsOptedOut } from "@/lib/analyticsOptOut";
 
 function outboundClickEndpoint(anchor: HTMLAnchorElement): string | null {
   try {
@@ -19,6 +20,8 @@ function outboundClickEndpoint(anchor: HTMLAnchorElement): string | null {
 }
 
 function recordVerifiedClick(endpoint: string): void {
+  if (analyticsOptedOut()) return;
+
   void fetch(endpoint, {
     method: "POST",
     mode: "cors",
@@ -41,6 +44,7 @@ function recordVerifiedClick(endpoint: string): void {
 export function VerifiedOutboundClickTracker() {
   useEffect(() => {
     function record(event: MouseEvent) {
+      if (analyticsOptedOut()) return;
       if (!event.isTrusted || event.defaultPrevented) return;
       if (event.type === "click" && event.button !== 0) return;
       if (event.type === "auxclick" && event.button !== 1) return;
