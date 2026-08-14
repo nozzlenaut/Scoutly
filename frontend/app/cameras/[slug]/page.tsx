@@ -5,6 +5,7 @@ import { AmazonFallbackCard } from "@/components/AmazonFallbackCard";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
 import { SiteFooter } from "@/components/SiteFooter";
 import { buildOutboundUrl, getPublicKehCameraModel, type KehCameraModel } from "@/lib/api";
+import { findIndexedCameraProduct } from "@/lib/indexedProducts";
 
 export const dynamic = "force-dynamic";
 
@@ -17,15 +18,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   try {
     const model = await getPublicKehCameraModel(slug);
+    const indexedProduct = findIndexedCameraProduct(model.catalog_product_label, model.model_name);
     const providerText = model.provider_scope === "ebay_keh" ? "eBay and KEH" : "KEH";
+    const canonical = indexedProduct ? `/used/${indexedProduct.slug}` : `/cameras/${model.slug}`;
     return {
-      title: `Used ${model.model_name} prices`,
+      title: `Used ${model.model_name} inventory at KEH`,
       description: `See current used ${model.model_name} inventory and prices from ${providerText} through PriceSift.`,
-      alternates: { canonical: `/cameras/${model.slug}` },
+      alternates: { canonical },
+      robots: { index: false, follow: true },
       openGraph: {
-        title: `Used ${model.model_name} prices | PriceSift`,
+        title: `Used ${model.model_name} inventory | PriceSift`,
         description: `${model.listing_count} current KEH listings from ${money(model.lowest_price, model.currency)}.`,
-        url: `/cameras/${model.slug}`,
+        url: canonical,
         images: model.image_url ? [{ url: model.image_url }] : undefined,
       },
     };
@@ -46,6 +50,7 @@ export default async function CameraModelPage({ params }: { params: Promise<{ sl
     notFound();
   }
 
+  const indexedProduct = findIndexedCameraProduct(model.catalog_product_label, model.model_name);
   const searchQuery = model.catalog_product_label || model.model_name;
   const searchUrl = `/search?category=cameras&q=${encodeURIComponent(searchQuery)}`;
   const isCatalogModel = model.provider_scope === "ebay_keh";
@@ -74,6 +79,20 @@ export default async function CameraModelPage({ params }: { params: Promise<{ sl
                 ? "This camera confidently matches PriceSift’s tuned catalog, so its full search can compare filtered eBay listings with current KEH inventory."
                 : "This model comes directly from KEH’s standardized current inventory. It remains KEH-only until PriceSift has a confident catalog identity and safe eBay matching rules."}
             </p>
+            {indexedProduct ? (
+              <div className="mt-5 rounded-2xl border border-ps-border bg-ps-accent-soft p-4">
+                <p className="font-bold text-ps-text-primary">PriceSift has a curated buying page for this exact model.</p>
+                <p className="mt-1 text-sm leading-6 text-ps-text-secondary">
+                  It combines current filtered listings, price context, common marketplace traps, and model-specific used-buying checks.
+                </p>
+                <Link
+                  href={`/used/${indexedProduct.slug}`}
+                  className="mt-3 inline-flex font-bold text-ps-accent-hover hover:text-ps-text-primary hover:underline"
+                >
+                  Open the used {indexedProduct.title} guide →
+                </Link>
+              </div>
+            ) : null}
             <div className="mt-5 flex flex-wrap gap-3 text-sm">
               <span className="rounded-full bg-ps-accent-soft px-4 py-2 text-ps-text-secondary">{model.listing_count} current KEH listings</span>
               <span className="rounded-full bg-emerald-50 px-4 py-2 font-bold text-ps-success">from {money(model.lowest_price, model.currency)}</span>
@@ -82,8 +101,8 @@ export default async function CameraModelPage({ params }: { params: Promise<{ sl
               </span>
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href={searchUrl} className="rounded-2xl bg-ps-accent-strong px-5 py-3 font-bold text-white hover:bg-ps-accent-hover">
-                {isCatalogModel ? "Compare eBay + KEH" : "Open PriceSift results"}
+              <Link href={indexedProduct ? `/used/${indexedProduct.slug}` : searchUrl} className="rounded-2xl bg-ps-accent-strong px-5 py-3 font-bold text-white hover:bg-ps-accent-hover">
+                {indexedProduct ? "Open curated used guide" : isCatalogModel ? "Compare eBay + KEH" : "Open PriceSift results"}
               </Link>
               <ShareSearchButton label={model.model_name} bestPrice={model.lowest_price} theme="light" />
             </div>

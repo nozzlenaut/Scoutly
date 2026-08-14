@@ -4,9 +4,9 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { buyingGuides } from "@/lib/buyingGuides";
 
 export const metadata: Metadata = {
-  title: "Used buying guides",
+  title: "Used Buying Guides & Listing Red Flags",
   description:
-    "Practical PriceSift buying guides for cameras, lenses, GPUs, RAM, CPUs, game consoles, books, and LEGO.",
+    "Practical PriceSift buying guides for cameras, lenses, GPUs, RAM, CPUs, game consoles, books, LEGO, and common used-listing red flags.",
   alternates: { canonical: "/buying-guides" },
   robots: { index: true, follow: true },
   openGraph: {
@@ -52,6 +52,20 @@ export default function BuyingGuidesPage() {
             </p>
           </header>
 
+          <Link
+            href="/buying-guides/used-listing-red-flags"
+            className="mt-9 block rounded-3xl border border-ps-border bg-ps-accent-soft p-6 transition hover:border-ps-border-strong"
+          >
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-ps-accent-hover">Marketplace language decoder</p>
+            <h2 className="mt-2 text-2xl font-black tracking-tight">Used listing red flags</h2>
+            <p className="mt-3 text-base leading-7 text-ps-text-secondary">
+              What “untested,” “powers on,” “as-is,” “for parts,” box-only, accessory-only, incomplete, stock-photo, and vague-model listings really tell you.
+            </p>
+            <span className="mt-4 inline-block text-sm font-bold text-ps-accent-hover underline decoration-ps-border-strong underline-offset-4">
+              Read the red-flags guide →
+            </span>
+          </Link>
+
           <section className="mt-10 border-t border-ps-border">
             {buyingGuides.map((guide) => (
               <article key={guide.slug} className="border-b border-ps-border py-7 sm:py-8">
@@ -77,6 +91,19 @@ export default function BuyingGuidesPage() {
                 </Link>
               </article>
             ))}
+          </section>
+
+          <section className="mt-12 grid gap-4 sm:grid-cols-2">
+            <Link href="/used" className="rounded-2xl border border-ps-border bg-ps-surface p-5 hover:border-ps-border-strong hover:bg-ps-accent-soft">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-ps-accent-hover">Exact models</p>
+              <h2 className="mt-2 text-xl font-black">Curated used price guides</h2>
+              <p className="mt-2 text-sm leading-6 text-ps-text-secondary">Current filtered listings, price context, and model-specific checks for manually approved products.</p>
+            </Link>
+            <Link href="/used/market" className="rounded-2xl border border-ps-border bg-ps-surface p-5 hover:border-ps-border-strong hover:bg-ps-accent-soft">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-ps-success">PriceSift data</p>
+              <h2 className="mt-2 text-xl font-black">Used market snapshot</h2>
+              <p className="mt-2 text-sm leading-6 text-ps-text-secondary">A small data-driven view of current prices and recent PriceSift price history.</p>
+            </Link>
           </section>
 
           <section className="mt-12 border-t border-emerald-200 pt-8">

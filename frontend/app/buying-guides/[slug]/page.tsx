@@ -8,8 +8,35 @@ import {
   getBuyingGuide,
   type GuideSection,
 } from "@/lib/buyingGuides";
+import { getIndexedProduct } from "@/lib/indexedProducts";
 
 export const dynamicParams = false;
+
+const featuredUsedByGuide: Record<string, string[]> = {
+  "used-cameras": [
+    "sony-a7-iii",
+    "canon-eos-r6",
+    "canon-eos-5ds-r",
+    "canon-eos-1d-x-mark-iii",
+    "panasonic-lumix-g100",
+  ],
+  "used-gpus": [
+    "nvidia-rtx-3060-12gb",
+    "nvidia-rtx-3070",
+    "nvidia-rtx-4060",
+    "nvidia-rtx-4070",
+    "nvidia-rtx-a4000-16gb",
+  ],
+  "used-game-consoles": [
+    "playstation-5",
+    "playstation-5-slim",
+    "xbox-series-x",
+    "xbox-series-s",
+    "nintendo-switch",
+    "nintendo-switch-2",
+  ],
+  "used-lego": ["lego-75192-millennium-falcon"],
+};
 
 export function generateStaticParams() {
   return buyingGuides.map((guide) => ({ slug: guide.slug }));
@@ -122,9 +149,43 @@ export default async function BuyingGuidePage({
   const related = guide.relatedSlugs
     .map((relatedSlug) => getBuyingGuide(relatedSlug))
     .filter((item) => item !== null);
+  const featuredUsed = (featuredUsedByGuide[guide.slug] || [])
+    .map((productSlug) => getIndexedProduct(productSlug))
+    .filter((item) => item !== undefined);
+  const pageUrl = `https://www.pricesift.app/buying-guides/${guide.slug}`;
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "PriceSift",
+        item: "https://www.pricesift.app/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Buying guides",
+        item: "https://www.pricesift.app/buying-guides",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: guide.categoryLabel,
+        item: pageUrl,
+      },
+    ],
+  };
 
   return (
     <main className="pricesift-public min-h-screen bg-ps-canvas px-4 py-7 text-ps-text-primary sm:px-6 sm:py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+        }}
+      />
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Link href="/" className="text-2xl font-black tracking-tight text-ps-text-primary">
@@ -192,6 +253,28 @@ export default async function BuyingGuidePage({
             <GuideSectionContent key={section.title} section={section} />
           ))}
 
+          {featuredUsed.length ? (
+            <section className="mt-12 border-t border-ps-border pt-8">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-ps-accent-hover">Model-specific examples</p>
+              <h2 className="mt-2 text-2xl font-black tracking-tight">Current used price guides</h2>
+              <p className="mt-3 text-sm leading-6 text-ps-text-secondary">
+                These manually approved pages apply the broader buying checks to exact products, then add current filtered listings, recent price context, and model-specific marketplace traps.
+              </p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {featuredUsed.map((product) => (
+                  <Link
+                    key={product.slug}
+                    href={`/used/${product.slug}`}
+                    className="rounded-2xl border border-ps-border bg-ps-control p-4 transition hover:border-ps-border-strong hover:bg-ps-accent-soft"
+                  >
+                    <span className="font-bold text-ps-text-primary">Used {product.title}</span>
+                    <span className="mt-1 block text-sm leading-5 text-ps-text-secondary">Current prices & buying checks →</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
           <section className="mt-12 border-t border-ps-border pt-8">
             <h2 className="text-2xl font-black tracking-tight">How PriceSift fits in</h2>
             <p className="mt-4 text-base leading-7 text-ps-text-secondary sm:text-[17px] sm:leading-8">
@@ -200,6 +283,12 @@ export default async function BuyingGuidePage({
             <p className="mt-3 text-base leading-7 text-ps-text-secondary sm:text-[17px] sm:leading-8">
               You still make the final call on condition and value. The goal is simply to give you fewer bad listings to inspect first.
             </p>
+            <Link
+              href="/buying-guides/used-listing-red-flags"
+              className="mt-4 inline-flex font-bold text-ps-accent-hover underline decoration-ps-border-strong underline-offset-4 hover:text-ps-text-primary"
+            >
+              Decode common used-listing red flags →
+            </Link>
           </section>
 
           <section className="mt-12 border-t border-ps-border pt-8">

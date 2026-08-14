@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { KehCameraCatalogResponse } from "@/lib/api";
+import { findIndexedCameraProduct } from "@/lib/indexedProducts";
 
 function money(value?: number | null, currency = "USD"): string {
   if (value === null || value === undefined) return "Price unavailable";
@@ -86,32 +87,36 @@ export function PublicKehCameraDirectory({ data, theme = "dark" }: { data: KehCa
 
       {visibleModels.length ? (
         <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-label="Current KEH camera models">
-          {visibleModels.map((model) => (
-            <Link
-              key={model.model_key}
-              href={`/cameras/${model.slug}`}
-              className={`group rounded-3xl border p-5 transition ${light ? "border-ps-border bg-ps-surface hover:border-ps-border-strong hover:bg-ps-accent-soft" : "border-white/10 bg-white/[0.04] hover:border-cyan-200/40 hover:bg-white/[0.07]"}`}
-            >
-              <div className="flex gap-4">
-                {model.image_url ? (
-                  <img src={model.image_url} alt="" className="h-24 w-24 shrink-0 rounded-2xl bg-white object-contain p-1" />
-                ) : (
-                  <div className={`flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl text-xs ${light ? "bg-ps-control text-ps-neutral" : "bg-white/5 text-slate-500"}`}>No image</div>
-                )}
-                <div className="min-w-0">
-                  <p className={`text-xs font-bold uppercase tracking-[0.16em] ${light ? "text-ps-neutral" : "text-slate-500"}`}>{model.brand}</p>
-                  <h2 className={`mt-1 font-bold ${light ? "text-ps-text-primary group-hover:text-ps-accent-hover" : "text-white group-hover:text-cyan-100"}`}>{model.model_name}</h2>
-                  <p className={`mt-2 text-sm font-bold ${light ? "text-ps-success" : "text-emerald-200"}`}>from {money(model.lowest_price, model.currency)}</p>
+          {visibleModels.map((model) => {
+            const indexedProduct = findIndexedCameraProduct(model.catalog_product_label, model.model_name);
+            const href = indexedProduct ? `/used/${indexedProduct.slug}` : `/cameras/${model.slug}`;
+            return (
+              <Link
+                key={model.model_key}
+                href={href}
+                className={`group rounded-3xl border p-5 transition ${light ? "border-ps-border bg-ps-surface hover:border-ps-border-strong hover:bg-ps-accent-soft" : "border-white/10 bg-white/[0.04] hover:border-cyan-200/40 hover:bg-white/[0.07]"}`}
+              >
+                <div className="flex gap-4">
+                  {model.image_url ? (
+                    <img src={model.image_url} alt="" className="h-24 w-24 shrink-0 rounded-2xl bg-white object-contain p-1" />
+                  ) : (
+                    <div className={`flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl text-xs ${light ? "bg-ps-control text-ps-neutral" : "bg-white/5 text-slate-500"}`}>No image</div>
+                  )}
+                  <div className="min-w-0">
+                    <p className={`text-xs font-bold uppercase tracking-[0.16em] ${light ? "text-ps-neutral" : "text-slate-500"}`}>{model.brand}</p>
+                    <h2 className={`mt-1 font-bold ${light ? "text-ps-text-primary group-hover:text-ps-accent-hover" : "text-white group-hover:text-cyan-100"}`}>{model.model_name}</h2>
+                    <p className={`mt-2 text-sm font-bold ${light ? "text-ps-success" : "text-emerald-200"}`}>from {money(model.lowest_price, model.currency)}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs">
-                <span className={`rounded-full px-3 py-1 ${light ? "bg-ps-accent-soft text-ps-text-secondary" : "bg-white/10 text-slate-300"}`}>{model.listing_count} at KEH</span>
-                <span className={`rounded-full px-3 py-1 font-bold ${model.provider_scope === "ebay_keh" ? light ? "bg-ps-accent-soft text-ps-accent-hover" : "bg-cyan-200/15 text-cyan-100" : light ? "bg-amber-50 text-ps-warning" : "bg-amber-200/15 text-amber-100"}`}>
-                  {model.provider_scope === "ebay_keh" ? "eBay + KEH" : "KEH only"}
-                </span>
-              </div>
-            </Link>
-          ))}
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <span className={`rounded-full px-3 py-1 ${light ? "bg-ps-accent-soft text-ps-text-secondary" : "bg-white/10 text-slate-300"}`}>{model.listing_count} at KEH</span>
+                  <span className={`rounded-full px-3 py-1 font-bold ${model.provider_scope === "ebay_keh" ? light ? "bg-ps-accent-soft text-ps-accent-hover" : "bg-cyan-200/15 text-cyan-100" : light ? "bg-amber-50 text-ps-warning" : "bg-amber-200/15 text-amber-100"}`}>
+                    {indexedProduct ? "Curated PriceSift page" : model.provider_scope === "ebay_keh" ? "eBay + KEH" : "KEH only"}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
         </section>
       ) : (
         <div className={`mt-6 rounded-3xl border p-6 ${light ? "border-ps-warning/40 bg-amber-50 text-ps-text-primary" : "border-amber-300/20 bg-amber-300/10 text-amber-100"}`}>
