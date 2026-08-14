@@ -21,13 +21,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const indexedProduct = findIndexedCameraProduct(model.catalog_product_label, model.model_name);
     const providerText = model.provider_scope === "ebay_keh" ? "eBay and KEH" : "KEH";
     const canonical = indexedProduct ? `/used/${indexedProduct.slug}` : `/cameras/${model.slug}`;
+    const title = indexedProduct
+      ? `Used ${model.model_name} inventory at KEH`
+      : `Used ${model.model_name} prices at KEH`;
     return {
-      title: `Used ${model.model_name} inventory at KEH`,
+      title,
       description: `See current used ${model.model_name} inventory and prices from ${providerText} through PriceSift.`,
       alternates: { canonical },
-      robots: { index: false, follow: true },
+      robots: indexedProduct
+        ? { index: false, follow: true }
+        : { index: true, follow: true },
       openGraph: {
-        title: `Used ${model.model_name} inventory | PriceSift`,
+        title: `${title} | PriceSift`,
         description: `${model.listing_count} current KEH listings from ${money(model.lowest_price, model.currency)}.`,
         url: canonical,
         images: model.image_url ? [{ url: model.image_url }] : undefined,
