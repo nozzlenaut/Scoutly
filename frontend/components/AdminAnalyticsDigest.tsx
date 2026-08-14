@@ -2,14 +2,32 @@
 
 import { useState } from "react";
 import type { AnalyticsDigest } from "@/lib/api";
+import { indexedProducts } from "@/lib/indexedProducts";
 
 type Props = {
   digest: AnalyticsDigest;
 };
 
+function normalizeLabel(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\bbody\b/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
 export function AdminAnalyticsDigest({ digest }: Props) {
   const [copyStatus, setCopyStatus] = useState<"idle" | "summary" | "json" | "error">("idle");
   const unresolvedSearches = digest.top_unresolved_searches || [];
+  const indexedKeys = new Set(
+    indexedProducts.flatMap((product) => [
+      `${product.category}:${normalizeLabel(product.title)}`,
+      `${product.category}:${normalizeLabel(product.query)}`,
+    ]),
+  );
+  const seoCandidates = digest.top_searches
+    .filter((row) => !indexedKeys.has(`${row.category}:${normalizeLabel(row.label)}`))
+    .slice(0, 10);
 
   async function copy(value: string, nextStatus: "summary" | "json") {
     try {
@@ -128,6 +146,54 @@ export function AdminAnalyticsDigest({ digest }: Props) {
             {unresolvedSearches.length === 0 ? (
               <p className="text-slate-500">No unresolved public searches in this period.</p>
             ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/[0.04] p-4">
+          <h3 className="font-bold text-emerald-100">SEO page candidates</h3>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            Frequently searched resolved products that do not currently have a manually curated /used page. This is a shortlist only; approval should still depend on clean product resolution, useful inventory, and enough model-specific value to avoid thin pages.
+          </p>
+          <div className="mt-3 space-y-2 text-sm">
+            {seoCandidates.map((row, index) => (
+              <div key={`${row.category}-${row.product_id || row.label}-${index}`} className="border-b border-white/5 pb-2">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-semibold text-emerald-100">{row.label}</p>
+                  <span className="shrink-0 rounded-full bg-emerald-300/10 px-2 py-0.5 text-xs font-bold text-emerald-200">
+                    {row.searches} searches
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-slate-500">
+                  {row.category} · {row.no_results} empty · {row.clicks} clicks{row.product_id ? ` · ${row.product_id}` : ""}
+                </p>
+              </div>
+            ))}
+            {seoCandidates.length === 0 ? (
+              <p className="text-slate-500">No obvious resolved-product candidates in the current top-search window.</p>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-violet-300/20 bg-violet-300/[0.04] p-4">
+          <h3 className="font-bold text-violet-100">Catalog demand candidates</h3>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            Unresolved demand is not an SEO page yet. Repeated queries here are candidates for catalog support first; only after PriceSift can identify and filter the product safely should it become a curated landing page.
+          </p>
+          <div className="mt-3 space-y-2 text-sm">
+            {unresolvedSearches.slice(0, 8).map((row, index) => (
+              <div key={`seo-unresolved-${row.category}-${row.normalized_query}-${index}`} className="border-b border-white/5 pb-2">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-semibold text-violet-100">{row.query}</p>
+                  <span className="shrink-0 rounded-full bg-violet-300/10 px-2 py-0.5 text-xs font-bold text-violet-200">
+                    {row.searches}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-slate-500">{row.category} · catalog support needed first</p>
+              </div>
+            ))}
+            {unresolvedSearches.length === 0 ? <p className="text-slate-500">No unresolved demand candidates right now.</p> : null}
           </div>
         </div>
       </div>
