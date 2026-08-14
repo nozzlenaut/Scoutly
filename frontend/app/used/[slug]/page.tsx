@@ -5,7 +5,11 @@ import { DeliveryResultsGrid } from "@/components/DeliveryResultsGrid";
 import { ManualResourcesPanel } from "@/components/ManualResourcesPanel";
 import { PriceContextPanel } from "@/components/PriceContextPanel";
 import { SiteFooter } from "@/components/SiteFooter";
-import { getIndexedProduct, indexedProducts } from "@/lib/indexedProducts";
+import {
+  getBuyingGuideHref,
+  getIndexedProduct,
+  indexedProducts,
+} from "@/lib/indexedProducts";
 import { getIndexedSearchResults } from "@/lib/indexedSearch";
 
 export const revalidate = 1800;
@@ -23,15 +27,23 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = getIndexedProduct(slug);
   if (!product) return {};
+
+  const description = `${product.description} See current filtered listings, price context, common listing traps, and model-specific used-buying checks.`;
   return {
-    title: `Used ${product.title} prices`,
-    description: product.description,
+    title: `Used ${product.title}: Current Prices & What to Check`,
+    description,
     alternates: { canonical: `/used/${product.slug}` },
     robots: { index: true, follow: true },
     openGraph: {
-      title: `Used ${product.title} prices | PriceSift`,
-      description: product.description,
+      title: `Used ${product.title}: Current Prices & What to Check | PriceSift`,
+      description,
       url: `/used/${product.slug}`,
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title: `Used ${product.title}: Current Prices & What to Check | PriceSift`,
+      description,
     },
   };
 }
@@ -59,50 +71,102 @@ export default async function IndexedProductPage({
     category: product.category,
     q: product.query,
   });
+  const guideHref = getBuyingGuideHref(product.category);
+  const pageUrl = `https://www.pricesift.app/used/${product.slug}`;
+  const prices = results
+    .map((listing) => listing.total_price)
+    .filter((value) => Number.isFinite(value) && value >= 0);
 
-  const structuredData =
-    results.length > 0
+  const productNode = {
+    "@type": "Product",
+    "@id": `${pageUrl}#product`,
+    name: product.title,
+    brand: {
+      "@type": "Brand",
+      name: product.brand,
+    },
+    description: product.description,
+    url: pageUrl,
+    mainEntityOfPage: pageUrl,
+    ...(prices.length > 0
       ? {
-          "@context": "https://schema.org",
-          "@type": "ItemList",
-          name: `Used ${product.title} listings`,
-          itemListElement: results.map((listing, index) => ({
-            "@type": "ListItem",
-            position: index + 1,
-            item: {
-              "@type": "Product",
-              name: listing.title,
-              url: listing.url,
-              image: listing.image_url || undefined,
-              offers: {
-                "@type": "Offer",
-                price: listing.total_price,
-                priceCurrency: "USD",
-                itemCondition: listing.condition,
-                url: listing.url,
-              },
-            },
-          })),
+          offers: {
+            "@type": "AggregateOffer",
+            lowPrice: Math.min(...prices),
+            highPrice: Math.max(...prices),
+            offerCount: prices.length,
+            priceCurrency: "USD",
+            itemCondition: "https://schema.org/UsedCondition",
+          },
         }
-      : null;
+      : {}),
+  };
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      productNode,
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${pageUrl}#breadcrumb`,
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "PriceSift",
+            item: "https://www.pricesift.app/",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Used price guides",
+            item: "https://www.pricesift.app/used",
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: product.title,
+            item: pageUrl,
+          },
+        ],
+      },
+    ],
+  };
 
   return (
     <main className="pricesift-public min-h-screen px-6 py-10 text-ps-text-primary">
-      {structuredData ? (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
-          }}
-        />
-      ) : null}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+        }}
+      />
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <nav aria-label="Breadcrumb" className="text-sm text-ps-text-secondary">
+          <ol className="flex flex-wrap items-center gap-2">
+            <li>
+              <Link href="/" className="hover:text-ps-text-primary hover:underline">
+                Home
+              </Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li>
+              <Link href="/used" className="hover:text-ps-text-primary hover:underline">
+                Used price guides
+              </Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li aria-current="page" className="font-semibold text-ps-text-primary">
+              {product.title}
+            </li>
+          </ol>
+        </nav>
+
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/used"
             className="text-sm text-ps-accent-hover hover:text-ps-text-primary hover:underline"
           >
-            ← Used price guides
+            ← All used price guides
           </Link>
           <Link
             href={`/search?${searchParams.toString()}`}
@@ -161,6 +225,36 @@ export default async function IndexedProductPage({
             productId={resolved?.product.id}
             theme="light"
           />
+
+          <section className="mt-8 rounded-2xl border border-ps-border bg-ps-accent-soft p-5 sm:p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-ps-accent-hover">
+              Used-buying check
+            </p>
+            <h2 className="mt-2 text-2xl font-black">Is a used {product.title} worth considering?</h2>
+            <p className="mt-4 max-w-4xl text-sm leading-7 text-ps-text-secondary sm:text-base">
+              {product.buyingSummary}
+            </p>
+            <h3 className="mt-6 text-lg font-bold">What to check before buying</h3>
+            <ul className="mt-3 space-y-2 text-sm leading-6 text-ps-text-secondary sm:text-base sm:leading-7">
+              {product.buyingChecks.map((check) => (
+                <li key={check}>• {check}</li>
+              ))}
+            </ul>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href={guideHref}
+                className="rounded-xl border border-ps-border bg-ps-surface px-4 py-2 text-sm font-bold text-ps-accent-hover hover:border-ps-border-strong hover:text-ps-text-primary"
+              >
+                Read the full {product.category === "consoles" ? "console" : product.category === "lego" ? "LEGO" : product.category.slice(0, -1)} buying guide
+              </Link>
+              <Link
+                href="/buying-guides/used-listing-red-flags"
+                className="rounded-xl border border-ps-border bg-ps-surface px-4 py-2 text-sm font-bold text-ps-accent-hover hover:border-ps-border-strong hover:text-ps-text-primary"
+              >
+                Used-listing red flags
+              </Link>
+            </div>
+          </section>
 
           <div className="mt-8 grid gap-5 lg:grid-cols-2">
             <section className="rounded-2xl border border-ps-border bg-ps-control p-5">
