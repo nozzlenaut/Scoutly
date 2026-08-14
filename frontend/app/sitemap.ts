@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
+import { getPublicKehCameraCatalog } from "@/lib/api";
 import { buyingGuides } from "@/lib/buyingGuides";
-import { indexedProducts } from "@/lib/indexedProducts";
+import { findIndexedCameraProduct, indexedProducts } from "@/lib/indexedProducts";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.pricesift.app";
-  return [
+  const routes: MetadataRoute.Sitemap = [
     { url: baseUrl },
     { url: `${baseUrl}/cameras` },
     { url: `${baseUrl}/lenses` },
@@ -22,4 +23,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${baseUrl}/used/${product.slug}`,
     })),
   ];
+
+  try {
+    const cameraData = await getPublicKehCameraCatalog({ limit: 1000 });
+    routes.push(
+      ...cameraData.models
+        .filter(
+          (model) =>
+            !findIndexedCameraProduct(
+              model.catalog_product_label,
+              model.model_name,
+            ),
+        )
+        .map((model) => ({
+          url: `${baseUrl}/cameras/${model.slug}`,
+        })),
+    );
+  } catch {
+    // Keep stable sitemap routes available during a feed sync or backend outage.
+  }
+
+  return routes;
 }
