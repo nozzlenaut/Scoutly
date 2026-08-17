@@ -58,10 +58,10 @@ jobs:
           set -euo pipefail
           file="out/a770-price-spike-short.mp4"
           test -s "$file"
-          width=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 "$file")
-          height=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=p=0 "$file")
-          audio=$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of csv=p=0 "$file")
-          duration=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$file")
+          width=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of default=noprint_wrappers=1:nokey=1 "$file" | tr -cd '0-9')
+          height=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of default=noprint_wrappers=1:nokey=1 "$file" | tr -cd '0-9')
+          audio=$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$file" | tr -d '\r\n, ')
+          duration=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$file" | tr -cd '0-9.')
           echo "render: ${width}x${height}, audio=${audio}, duration=${duration}s"
           test "$width" = "1080"
           test "$height" = "1920"
