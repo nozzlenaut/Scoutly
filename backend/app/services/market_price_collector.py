@@ -15,6 +15,51 @@ from app.services.qa_store import load_qa_cases
 logger = logging.getLogger(__name__)
 
 DEFAULT_TRACKED_CATEGORIES = ("consoles", "gpus", "cpus")
+# GPU QA cases are intentionally sparse because GPU matching is primarily backed
+# by gpu_catalog.json. Seed a small, useful used-market set explicitly so the
+# automatic tracker does not depend on unrelated QA coverage.
+DEFAULT_TRACKED_SEEDS: tuple[dict[str, str], ...] = (
+    {
+        "id": "market-gpu-rtx-3060-12gb",
+        "category": "gpus",
+        "query": "RTX 3060 12GB",
+        "expected_product_id": "gpu-nvidia-rtx-3060-12gb",
+        "expected_label": "NVIDIA GeForce RTX 3060 12GB",
+        "priority": "high",
+    },
+    {
+        "id": "market-gpu-rtx-3070-8gb",
+        "category": "gpus",
+        "query": "RTX 3070 8GB",
+        "expected_product_id": "gpu-nvidia-rtx-3070-8gb",
+        "expected_label": "NVIDIA GeForce RTX 3070 8GB",
+        "priority": "high",
+    },
+    {
+        "id": "market-gpu-rtx-3080-10gb",
+        "category": "gpus",
+        "query": "RTX 3080 10GB",
+        "expected_product_id": "gpu-nvidia-rtx-3080-10gb",
+        "expected_label": "NVIDIA GeForce RTX 3080 10GB",
+        "priority": "high",
+    },
+    {
+        "id": "market-gpu-rtx-4060-8gb",
+        "category": "gpus",
+        "query": "RTX 4060 8GB",
+        "expected_product_id": "gpu-nvidia-rtx-4060-8gb",
+        "expected_label": "NVIDIA GeForce RTX 4060 8GB",
+        "priority": "high",
+    },
+    {
+        "id": "market-gpu-rtx-4070-12gb",
+        "category": "gpus",
+        "query": "RTX 4070 12GB",
+        "expected_product_id": "gpu-nvidia-rtx-4070-12gb",
+        "expected_label": "NVIDIA GeForce RTX 4070 12GB",
+        "priority": "high",
+    },
+)
 DEFAULT_BATCH_SIZE = 5
 DEFAULT_INTERVAL_SECONDS = 60 * 60
 DEFAULT_MIN_AGE_HOURS = 20
@@ -65,14 +110,17 @@ def price_tracking_enabled() -> bool:
 
 
 def tracked_price_cases(cases: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
-    """Return one high-priority QA query per tracked market product.
+    """Return one curated query per tracked market product.
 
-    Reusing the curated QA registry keeps the scheduler on exact products whose
-    matching/filtering behavior is already covered by PriceSift's test surface.
-    The default market intentionally starts narrow: consoles, GPUs, and CPUs.
+    High-priority QA cases provide exact products already exercised by PriceSift's
+    regression suite. A small GPU seed list fills the intentional gap in GPU QA
+    coverage while still resolving through the same exact-product catalog.
     """
 
-    source_cases = load_qa_cases() if cases is None else cases
+    if cases is None:
+        source_cases = [*load_qa_cases(), *DEFAULT_TRACKED_SEEDS]
+    else:
+        source_cases = cases
     categories = set(tracked_categories())
     unique: dict[str, dict[str, Any]] = {}
 
