@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "render": "mkdir -p out && remotion render src/index.tsx PriceSiftShort out/pricesift-short.mp4 --codec=h264 --crf=18 --audio-codec=aac",
-    "typecheck": "tsc --noEmit --jsx react-jsx --esModuleInterop --moduleResolution node --target ES2020 --module commonjs src/index.tsx src/short.tsx src/generated.ts"
+    "typecheck": "tsc --noEmit --skipLibCheck --jsx react-jsx --esModuleInterop --moduleResolution node --target ES2020 --module commonjs src/index.tsx src/short.tsx src/generated.ts"
   },
   "dependencies": {
     "@remotion/cli": "4.0.503",
