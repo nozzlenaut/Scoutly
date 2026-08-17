@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from app.services.admin_auth import require_admin_token as _require_admin_token
 from app.providers.ebay import ebay_config_from_env
 from app.services import search_service
+from app.services.market_signals import market_signals
 from app.services.price_store import build_price_context, price_overview
 from app.services.qa_store import load_qa_cases
 
@@ -27,6 +28,17 @@ def get_price_overview(
 ) -> dict:
     _require_admin_token(token)
     return price_overview(days=days, limit=limit)
+
+
+@router.get("/prices/signals")
+def get_market_signals(
+    token: str | None = Query(default=None),
+    days: int = Query(default=30, ge=3, le=365),
+    limit: int = Query(default=25, ge=1, le=100),
+    category: str | None = Query(default=None, max_length=80),
+) -> dict:
+    _require_admin_token(token)
+    return market_signals(days=days, limit=limit, category=category)
 
 
 @router.get("/prices/{product_id}")
