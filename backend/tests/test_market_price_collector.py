@@ -65,6 +65,15 @@ def test_default_registry_covers_each_tracked_market_category(monkeypatch):
     assert set(collector.DEFAULT_TRACKED_CATEGORIES) <= categories
 
 
+def test_default_gpu_seeds_resolve_to_expected_products():
+    for seed in collector.DEFAULT_TRACKED_SEEDS:
+        resolved = collector.resolve_discoverable_product(
+            seed["query"], seed["category"]
+        )
+        assert resolved is not None, seed["query"]
+        assert resolved.product.id == seed["expected_product_id"]
+
+
 def test_tracked_price_categories_can_be_overridden(monkeypatch):
     monkeypatch.setenv("SCOUTLY_PRICE_TRACKING_CATEGORIES", "cameras, consoles")
     cases = [
