@@ -204,9 +204,11 @@ def build_market_signals_from_snapshots(
 ) -> dict[str, Any]:
     normalized_category = (category or "").strip().lower()
     grouped: dict[str, list[dict[str, Any]]] = {}
+    scoped_snapshot_count = 0
     for snapshot in snapshots:
         if normalized_category and str(snapshot.get("category") or "").strip().lower() != normalized_category:
             continue
+        scoped_snapshot_count += 1
         product_id = str(snapshot.get("product_id") or "").strip()
         if product_id:
             grouped.setdefault(product_id, []).append(snapshot)
@@ -231,7 +233,7 @@ def build_market_signals_from_snapshots(
     return {
         "window_days": days,
         "category": normalized_category or None,
-        "snapshot_count": len(snapshots),
+        "snapshot_count": scoped_snapshot_count,
         "product_count": len(grouped),
         "ready_product_count": ready_product_count,
         "building_product_count": max(0, len(grouped) - ready_product_count),
