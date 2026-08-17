@@ -26,8 +26,6 @@ env:
   PRICESIFT_BASE_URL: ${{ secrets.PRICESIFT_BASE_URL }}
   PRICESIFT_ADMIN_TOKEN: ${{ secrets.PRICESIFT_ADMIN_TOKEN }}
   BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
-  BUFFER_ORGANIZATION_ID: ${{ secrets.BUFFER_ORGANIZATION_ID }}
-  BUFFER_YOUTUBE_CHANNEL_ID: ${{ secrets.BUFFER_YOUTUBE_CHANNEL_ID }}
   R2_ACCESS_KEY_ID: ${{ secrets.PRICESIFT_R2_ACCESS_KEY_ID }}
   R2_SECRET_ACCESS_KEY: ${{ secrets.PRICESIFT_R2_SECRET_ACCESS_KEY }}
   R2_ENDPOINT: ${{ secrets.PRICESIFT_R2_ENDPOINT }}
@@ -61,7 +59,7 @@ jobs:
                 exit 0
               fi
             fi
-            required=(PRICESIFT_BASE_URL PRICESIFT_ADMIN_TOKEN BUFFER_API_KEY BUFFER_ORGANIZATION_ID BUFFER_YOUTUBE_CHANNEL_ID R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_ENDPOINT R2_BUCKET R2_PUBLIC_BASE_URL)
+            required=(PRICESIFT_BASE_URL PRICESIFT_ADMIN_TOKEN BUFFER_API_KEY R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_ENDPOINT R2_BUCKET R2_PUBLIC_BASE_URL)
             missing=()
             for name in "${required[@]}"; do
               if [[ -z "${!name:-}" ]]; then missing+=("$name"); fi
@@ -201,6 +199,7 @@ jobs:
           path: |
             video-generator/work/decision.json
             video-generator/work/story.json
+            video-generator/work/buffer-target.json
             video-generator/work/buffer-receipt.json
           if-no-files-found: error
           retention-days: 30
