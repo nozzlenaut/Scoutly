@@ -1,9 +1,10 @@
 {
   "name": "pricesift-video-generator",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
-    "render:a770": "mkdir -p out && remotion render src/index.tsx A770Short out/a770-price-spike-short.mp4 --codec=h264 --crf=18 --audio-codec=aac"
+    "render": "mkdir -p out && remotion render src/index.tsx PriceSiftShort out/pricesift-short.mp4 --codec=h264 --crf=18 --audio-codec=aac",
+    "typecheck": "tsc --noEmit --jsx react-jsx --esModuleInterop --moduleResolution node --target ES2020 --module commonjs src/index.tsx src/short.tsx src/generated.ts"
   },
   "dependencies": {
     "@remotion/cli": "4.0.503",
