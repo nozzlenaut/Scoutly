@@ -7,7 +7,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-from buffer_client import recent_pricesift_history
+from buffer_client import discover_youtube_target, recent_pricesift_history
 from build_story import build_story
 from story_selector import select_story
 
@@ -40,17 +40,20 @@ def main() -> None:
             "PRICESIFT_BASE_URL": os.environ.get("PRICESIFT_BASE_URL"),
             "PRICESIFT_ADMIN_TOKEN": os.environ.get("PRICESIFT_ADMIN_TOKEN"),
             "BUFFER_API_KEY": os.environ.get("BUFFER_API_KEY"),
-            "BUFFER_ORGANIZATION_ID": os.environ.get("BUFFER_ORGANIZATION_ID"),
-            "BUFFER_YOUTUBE_CHANNEL_ID": os.environ.get("BUFFER_YOUTUBE_CHANNEL_ID"),
         }
         missing = [name for name, value in required.items() if not value]
         if missing:
             raise RuntimeError(f"Missing live pipeline configuration: {', '.join(missing)}")
         signals = fetch_pricesift_signals(required["PRICESIFT_BASE_URL"], required["PRICESIFT_ADMIN_TOKEN"])
+        organization_id, channel_id = discover_youtube_target(required["BUFFER_API_KEY"])
+        (work / "buffer-target.json").write_text(
+            json.dumps({"organization_id": organization_id, "channel_id": channel_id}, indent=2),
+            encoding="utf-8",
+        )
         history = recent_pricesift_history(
             api_key=required["BUFFER_API_KEY"],
-            organization_id=required["BUFFER_ORGANIZATION_ID"],
-            channel_id=required["BUFFER_YOUTUBE_CHANNEL_ID"],
+            organization_id=organization_id,
+            channel_id=channel_id,
             signals=signals,
         )
 
