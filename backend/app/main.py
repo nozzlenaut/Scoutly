@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -23,6 +24,7 @@ from app.api.search_audit import router as search_audit_router
 from app.services.database import database_health, initialize_database
 from app.services.data_migrations import apply_data_migrations
 from app.services.admin_auth import AdminAuthorizationMiddleware
+from app.services.market_price_collector import price_tracking_enabled, run_tracked_price_collector
 from app.version import APP_VERSION
 
 
@@ -30,7 +32,20 @@ from app.version import APP_VERSION
 async def lifespan(_: FastAPI):
     initialize_database()
     apply_data_migrations()
-    yield
+
+    price_tracking_task: asyncio.Task[None] | None = None
+    if price_tracking_enabled():
+        price_tracking_task = asyncio.create_task(run_tracked_price_collector())
+
+    try:
+        yield
+    finally:
+        if price_tracking_task is not None:
+            price_tracking_task.cancel()
+            try:
+                await price_tracking_task
+            except asyncio.CancelledError:
+                pass
 
 
 app = FastAPI(title="PriceSift API", version=APP_VERSION, lifespan=lifespan)
