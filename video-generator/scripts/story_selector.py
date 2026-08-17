@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from zoneinfo import ZoneInfo
 
 PRODUCT_COOLDOWN_DAYS = 30
 STORY_NOVELTY_DAYS = 14
 CATEGORY_RECENCY_DAYS = 7
 MIN_SELECTION_SCORE = 30.0
+EASTERN = ZoneInfo("America/Detroit")
 
 
 def parse_time(value: Any) -> datetime | None:
@@ -75,11 +77,11 @@ def select_story(
     sent_7d = _recent(history, status="sent", after=now - timedelta(days=CATEGORY_RECENCY_DAYS))
     pending = [item for item in history if str(item.get("status") or "") in {"draft", "scheduled", "sending", "needs_approval"}]
 
-    # Never create two PriceSift drafts in one local calendar day.
-    today = now.date()
+    # Never create two PriceSift drafts in one Eastern calendar day.
+    today = now.astimezone(EASTERN).date()
     for item in history:
         created = parse_time(item.get("created_at"))
-        if created is not None and created.date() == today and item.get("pricesift_generated"):
+        if created is not None and created.astimezone(EASTERN).date() == today and item.get("pricesift_generated"):
             return None
 
     last_product = str(sent_30d[0].get("product_id") or "") if sent_30d else ""
