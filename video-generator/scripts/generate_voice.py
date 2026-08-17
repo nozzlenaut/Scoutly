@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import soundfile as sf
@@ -89,7 +90,7 @@ def main() -> None:
         "  audio: string;",
         "};",
         "",
-        "export const generatedScenes: GeneratedScene[] = " + repr(rows).replace("'", '"') + ";",
+        "export const generatedScenes: GeneratedScene[] = " + json.dumps(rows, ensure_ascii=False) + ";",
         "",
         "export const totalFrames = generatedScenes.reduce((sum, scene) => sum + scene.frames, 0);",
         "",
