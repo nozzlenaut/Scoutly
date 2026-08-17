@@ -8,8 +8,8 @@ from typing import Any
 BUFFER_API_URL = "https://api.buffer.com"
 
 
-def graphql(api_key: str, query: str, variables: dict[str, Any]) -> dict[str, Any]:
-    body = json.dumps({"query": query, "variables": variables}).encode("utf-8")
+def graphql(api_key: str, query: str, variables: dict[str, Any] | None = None) -> dict[str, Any]:
+    body = json.dumps({"query": query, "variables": variables or {}}).encode("utf-8")
     request = urllib.request.Request(
         BUFFER_API_URL,
         data=body,
@@ -25,6 +25,70 @@ def graphql(api_key: str, query: str, variables: dict[str, Any]) -> dict[str, An
     if payload.get("errors"):
         raise RuntimeError(f"Buffer GraphQL error: {payload['errors']}")
     return payload.get("data") or {}
+
+
+def discover_youtube_target(api_key: str, *, preferred_name: str = "PriceSift") -> tuple[str, str]:
+    organizations_data = graphql(
+        api_key,
+        """
+        query PriceSiftOrganizations {
+          account { organizations { id name } }
+        }
+        """,
+    )
+    organizations = ((organizations_data.get("account") or {}).get("organizations") or [])
+    if not organizations:
+        raise RuntimeError("Buffer account has no organizations")
+
+    youtube: list[dict[str, Any]] = []
+    for organization in organizations:
+        organization_id = str(organization.get("id") or "")
+        if not organization_id:
+            continue
+        channels_data = graphql(
+            api_key,
+            """
+            query PriceSiftChannels($organizationId: OrganizationId!) {
+              channels(input: { organizationId: $organizationId }) {
+                id
+                name
+                displayName
+                service
+                isDisconnected
+                isLocked
+              }
+            }
+            """,
+            {"organizationId": organization_id},
+        )
+        for channel in channels_data.get("channels") or []:
+            if str(channel.get("service") or "").lower() != "youtube":
+                continue
+            if channel.get("isDisconnected") or channel.get("isLocked"):
+                continue
+            youtube.append({**channel, "organization_id": organization_id})
+
+    if not youtube:
+        raise RuntimeError("Buffer has no connected, usable YouTube channel")
+
+    preferred = preferred_name.casefold()
+    named = [
+        channel
+        for channel in youtube
+        if preferred in str(channel.get("name") or "").casefold()
+        or preferred in str(channel.get("displayName") or "").casefold()
+    ]
+    if len(named) == 1:
+        target = named[0]
+    elif len(youtube) == 1:
+        target = youtube[0]
+    else:
+        labels = [str(channel.get("displayName") or channel.get("name") or channel.get("id")) for channel in youtube]
+        raise RuntimeError(
+            "Buffer has multiple YouTube channels and none uniquely matches PriceSift: " + ", ".join(labels)
+        )
+
+    return str(target["organization_id"]), str(target["id"])
 
 
 def _story_from_title(title: str) -> str | None:
