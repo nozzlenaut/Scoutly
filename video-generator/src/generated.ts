@@ -3,6 +3,8 @@ export type GeneratedScene = {
   headline: string;
   subhead: string;
   narration: string;
+  visual: string;
+  values: Record<string, string | number | null>;
   frames: number;
   audio: string;
 };
