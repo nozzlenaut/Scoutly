@@ -100,6 +100,7 @@ def test_category_filter_only_scores_requested_market():
     result = build_market_signals_from_snapshots(snapshots, category="gpus")
 
     assert result["category"] == "gpus"
+    assert result["snapshot_count"] == 3
     assert result["product_count"] == 1
     assert [signal["product_id"] for signal in result["signals"]] == ["gpu-one"]
 
