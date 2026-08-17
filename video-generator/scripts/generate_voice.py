@@ -10,45 +10,6 @@ FPS = 30
 SPEED = 1.25
 VOICE = "af_heart"
 
-SCENES = [
-    {
-        "eyebrow": "PRICESIFT MARKET ALERT",
-        "headline": "A770 USED PRICES\nGOT WEIRD",
-        "subhead": "Intel Arc A770 16GB",
-        "narration": "PriceSift just flagged something weird with the Intel Arc [A](/ˈA/) seven seventy, sixteen gigabyte.",
-    },
-    {
-        "eyebrow": "CLEAN USED MEDIAN",
-        "headline": "$345.96  →  $420",
-        "subhead": "+21.4%",
-        "narration": "Its clean used median jumped from about three hundred forty-six dollars to four hundred twenty. That's up twenty-one point four percent.",
-    },
-    {
-        "eyebrow": "BUT HERE'S THE WEIRD PART",
-        "headline": "$299.99",
-        "subhead": "best clean listing",
-        "narration": "But here's the part that matters. The cheapest clean listing is still just two hundred ninety-nine dollars and ninety-nine cents.",
-    },
-    {
-        "eyebrow": "NOT A ONE-LISTING FLUKE",
-        "headline": "17 CLEAN LISTINGS",
-        "subhead": "currently observed",
-        "narration": "And this isn't one random listing. PriceSift currently sees seventeen clean [A](/ˈA/) seven seventy listings.",
-    },
-    {
-        "eyebrow": "WHAT THE DATA ACTUALLY SAYS",
-        "headline": "THE MEDIAN MOVED.\nTHE FLOOR DIDN'T.",
-        "subhead": "higher typical asks, cheaper inventory remains",
-        "narration": "So I wouldn't say this suddenly became a four hundred twenty dollar card. The typical asking price moved up, while cheaper inventory is still sitting underneath it.",
-    },
-    {
-        "eyebrow": "BUYER TAKEAWAY",
-        "headline": "SHOP THE LISTINGS,\nNOT THE MEDIAN.",
-        "subhead": "PriceSift tracks the clean ones.",
-        "narration": "If you're buying one used, shop the listings, not the median. PriceSift tracks the clean ones so you don't have to sort through the junk.",
-    },
-]
-
 
 def synthesize_one(pipeline: KPipeline, text: str, destination: Path) -> float:
     chunks = []
@@ -69,15 +30,21 @@ def main() -> None:
     audio_dir = project / "public" / "audio"
     audio_dir.mkdir(parents=True, exist_ok=True)
     generated = project / "src" / "generated.ts"
-    pipeline = KPipeline(lang_code="a")
+    story_path = project / "work" / "story.json"
+    story = json.loads(story_path.read_text(encoding="utf-8"))
+    scenes = story.get("scenes") or []
+    if not scenes:
+        raise RuntimeError("story.json contains no scenes")
 
+    pipeline = KPipeline(lang_code="a")
     rows = []
-    for index, scene in enumerate(SCENES):
+    for index, scene in enumerate(scenes):
         path = audio_dir / f"scene-{index}.wav"
-        duration_seconds = synthesize_one(pipeline, scene["narration"], path)
-        # A tiny visual tail prevents abrupt cuts without creating noticeable dead air.
+        duration_seconds = synthesize_one(pipeline, str(scene.get("tts") or scene["narration"]), path)
         frames = max(1, round((duration_seconds + 0.08) * FPS))
-        rows.append({**scene, "frames": frames, "audio": f"audio/scene-{index}.wav"})
+        row = {key: value for key, value in scene.items() if key != "tts"}
+        row.update({"frames": frames, "audio": f"audio/scene-{index}.wav"})
+        rows.append(row)
         print(f"scene {index}: {duration_seconds:.2f}s -> {frames} frames")
 
     lines = [
@@ -86,6 +53,8 @@ def main() -> None:
         "  headline: string;",
         "  subhead: string;",
         "  narration: string;",
+        "  visual: string;",
+        "  values: Record<string, string | number | null>;",
         "  frames: number;",
         "  audio: string;",
         "};",
