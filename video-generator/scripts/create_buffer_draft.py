@@ -3,19 +3,21 @@ from __future__ import annotations
 import json
 import os
 import sys
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from buffer_client import graphql
 
+EASTERN = ZoneInfo("America/Detroit")
+
 
 def next_noon_eastern() -> str:
-    now = __import__("datetime").datetime.now(ZoneInfo("America/Detroit"))
+    now = datetime.now(EASTERN)
     candidate = now.replace(hour=12, minute=0, second=0, microsecond=0)
     if now.hour >= 11:
         candidate += timedelta(days=1)
-    return candidate.isoformat()
+    return candidate.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
 def main() -> None:
@@ -24,9 +26,10 @@ def main() -> None:
     public_video_url = sys.argv[1]
     project = Path(__file__).resolve().parents[1]
     story = json.loads((project / "work" / "story.json").read_text(encoding="utf-8"))
+    target = json.loads((project / "work" / "buffer-target.json").read_text(encoding="utf-8"))
 
     api_key = os.environ["BUFFER_API_KEY"]
-    channel_id = os.environ["BUFFER_YOUTUBE_CHANNEL_ID"]
+    channel_id = target["channel_id"]
     due_at = next_noon_eastern()
 
     query = """
