@@ -7,7 +7,7 @@ import soundfile as sf
 from kokoro import KPipeline
 
 FPS = 30
-SPEED = 1.08
+SPEED = 1.40
 VOICE = "af_heart"
 
 SCENES = [
@@ -15,7 +15,7 @@ SCENES = [
         "eyebrow": "PRICESIFT MARKET ALERT",
         "headline": "A770 USED PRICES\nGOT WEIRD",
         "subhead": "Intel Arc A770 16GB",
-        "narration": "PriceSift just flagged something weird with the Intel Arc A seven seventy, sixteen gigabyte.",
+        "narration": "PriceSift just flagged something weird with the Intel Arc aye seven seventy, sixteen gigabyte.",
     },
     {
         "eyebrow": "CLEAN USED MEDIAN",
@@ -33,7 +33,7 @@ SCENES = [
         "eyebrow": "NOT A ONE-LISTING FLUKE",
         "headline": "17 CLEAN LISTINGS",
         "subhead": "currently observed",
-        "narration": "And this isn't one random listing. PriceSift currently sees seventeen clean A seven seventy listings.",
+        "narration": "And this isn't one random listing. PriceSift currently sees seventeen clean aye seven seventy listings.",
     },
     {
         "eyebrow": "WHAT THE DATA ACTUALLY SAYS",
