@@ -56,6 +56,15 @@ def test_tracked_price_cases_filters_to_high_priority_market_products(monkeypatc
     ]
 
 
+def test_default_registry_covers_each_tracked_market_category(monkeypatch):
+    monkeypatch.delenv("SCOUTLY_PRICE_TRACKING_CATEGORIES", raising=False)
+
+    tracked = collector.tracked_price_cases()
+    categories = {str(case.get("category") or "") for case in tracked}
+
+    assert set(collector.DEFAULT_TRACKED_CATEGORIES) <= categories
+
+
 def test_tracked_price_categories_can_be_overridden(monkeypatch):
     monkeypatch.setenv("SCOUTLY_PRICE_TRACKING_CATEGORIES", "cameras, consoles")
     cases = [
