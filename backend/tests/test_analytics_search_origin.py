@@ -48,4 +48,5 @@ def test_seo_page_search_origin_is_separate_from_demand(monkeypatch, tmp_path):
     assert top["searches"] == 1
     assert top["seo_page_searches"] == 1
     assert top["demand_searches"] == 0
+    assert "Demand searches excluding tracked SEO-page launches: 0" in payload["summary_text"]
     assert "source tagging starts with this release" in payload["summary_text"]
