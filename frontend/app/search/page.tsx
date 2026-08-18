@@ -12,11 +12,19 @@ import { SearchTransitionGuard } from "@/components/SearchTransitionGuard";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
 import { DeliveryResultsGrid } from "@/components/DeliveryResultsGrid";
 import { SiteFooter } from "@/components/SiteFooter";
-import { buildEbaySearchUrl, buildOutboundUrl, searchDeals, searchPublicBooksByIsbn } from "@/lib/api";
+import { buildEbaySearchUrl, buildOutboundUrl, searchPublicBooksByIsbn } from "@/lib/api";
 import { getCategoryById, getSearchCategoryById } from "@/lib/categoryCatalog";
 import { lookupOpenLibraryAvailability } from "@/lib/openLibrary";
+import { searchDealsWithSource } from "@/lib/trackedSearch";
 
 const ANALYTICS_OPT_OUT_COOKIE = "pricesift_analytics_opt_out";
+
+type SearchPageParams = {
+  q?: string;
+  category?: string;
+  us_only?: string;
+  source?: string;
+};
 
 function PageShell({ children }: { children: ReactNode }) {
   return (
@@ -43,7 +51,7 @@ function PageShell({ children }: { children: ReactNode }) {
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string; us_only?: string }>;
+  searchParams: Promise<SearchPageParams>;
 }): Promise<Metadata> {
   const params = await searchParams;
   const category = getSearchCategoryById(params.category);
@@ -90,12 +98,13 @@ export async function generateMetadata({
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string; us_only?: string }>;
+  searchParams: Promise<SearchPageParams>;
 }) {
   const params = await searchParams;
   const rawCategory = (params.category || "").trim();
   const rawQuery = (params.q || "").trim();
   const usOnly = params.us_only === "1" || params.us_only === "true";
+  const analyticsSource = params.source === "seo_page" ? "seo_page" : "public";
   const analyticsEnabled = (await cookies()).get(ANALYTICS_OPT_OUT_COOKIE)?.value !== "1";
   const knownCategory = getCategoryById(rawCategory);
   const category = getSearchCategoryById(rawCategory);
@@ -179,11 +188,12 @@ export default async function SearchPage({
     );
   }
 
-  const data = await searchDeals(rawQuery, category.id, "ebay", {
+  const data = await searchDealsWithSource(rawQuery, category.id, "ebay", {
     includeAuctions: false,
     auctionHours: 24,
     usOnly,
     trackAnalytics: analyticsEnabled,
+    analyticsSource,
   });
   const resolved = data.resolved_product;
   const hasKehResults = data.results.some((result) => result.provider.toLowerCase() === "keh");

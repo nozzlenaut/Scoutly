@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/SiteFooter";
-import { indexedProducts } from "@/lib/indexedProducts";
+import { allIndexedProducts } from "@/lib/allIndexedProducts";
 
 export const metadata: Metadata = {
   title: "Used Product Price Guides & Buying Checks",
@@ -46,7 +46,7 @@ export default function UsedProductGuidesPage() {
           </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {indexedProducts.map((product) => (
+            {allIndexedProducts.map((product) => (
               <Link
                 key={product.slug}
                 href={`/used/${product.slug}`}
