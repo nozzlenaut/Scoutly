@@ -103,6 +103,8 @@ def demand_camera_products() -> list[Product]:
                 "Lumix G9",
                 "Panasonic DC-G9",
                 "Panasonic DCG9",
+                "Panasonic Lumix DC-G9",
+                "Lumix DC-G9",
                 "Panasonic Lumix G9 Mirrorless MFT Body, Black",
             ],
             required_terms=["panasonic", "g9"],
