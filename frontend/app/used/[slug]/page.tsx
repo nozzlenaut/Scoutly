@@ -6,17 +6,17 @@ import { ManualResourcesPanel } from "@/components/ManualResourcesPanel";
 import { PriceContextPanel } from "@/components/PriceContextPanel";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
-  getBuyingGuideHref,
-  getIndexedProduct,
-  indexedProducts,
-} from "@/lib/indexedProducts";
+  allIndexedProducts,
+  getAllIndexedProduct,
+} from "@/lib/allIndexedProducts";
+import { getBuyingGuideHref } from "@/lib/indexedProducts";
 import { getIndexedSearchResults } from "@/lib/indexedSearch";
 
 export const revalidate = 1800;
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return indexedProducts.map((product) => ({ slug: product.slug }));
+  return allIndexedProducts.map((product) => ({ slug: product.slug }));
 }
 
 export async function generateMetadata({
@@ -25,7 +25,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = getIndexedProduct(slug);
+  const product = getAllIndexedProduct(slug);
   if (!product) return {};
 
   const description = `${product.description} See current filtered listings, price context, common listing traps, and model-specific used-buying checks.`;
@@ -54,14 +54,14 @@ export default async function IndexedProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = getIndexedProduct(slug);
+  const product = getAllIndexedProduct(slug);
   if (!product) notFound();
 
   const data = await getIndexedSearchResults(product.query, product.category);
   const resolved = data?.resolved_product;
   const results = data?.results || [];
   const checkedAt = new Date().toISOString();
-  const related = indexedProducts
+  const related = allIndexedProducts
     .filter(
       (item) =>
         item.category === product.category && item.slug !== product.slug,
@@ -70,6 +70,7 @@ export default async function IndexedProductPage({
   const searchParams = new URLSearchParams({
     category: product.category,
     q: product.query,
+    source: "seo_page",
   });
   const guideHref = getBuyingGuideHref(product.category);
   const pageUrl = `https://www.pricesift.app/used/${product.slug}`;
@@ -170,6 +171,7 @@ export default async function IndexedProductPage({
           </Link>
           <Link
             href={`/search?${searchParams.toString()}`}
+            rel="nofollow"
             className="text-sm text-ps-accent-hover hover:text-ps-text-primary hover:underline"
           >
             Run live PriceSift search →
