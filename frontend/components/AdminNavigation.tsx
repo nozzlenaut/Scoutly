@@ -70,6 +70,9 @@ export function AdminNavigation() {
             <Link href="/admin/keh/lenses" className={itemClass}>
               KEH lens lab
             </Link>
+            <Link href="/admin/prices#video-candidates" className={itemClass}>
+              Top 5 video candidates
+            </Link>
             <Link href="/admin/prices" className={itemClass}>
               Price history
             </Link>

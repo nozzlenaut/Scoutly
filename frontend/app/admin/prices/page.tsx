@@ -43,8 +43,8 @@ export default async function PriceHistoryPage({ searchParams }: { searchParams:
         </div>
         <div className="mt-8">
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">PriceSift admin</p>
-          <h1 className="mt-2 text-4xl font-black">Price history</h1>
-          <p className="mt-3 max-w-4xl text-slate-400">Six-hour snapshots from clean, eligible Buy It Now listings. Empty snapshots are retained too, so availability history does not get rewritten into fake optimism.</p>
+          <h1 className="mt-2 text-4xl font-black">Price history + video candidates</h1>
+          <p className="mt-3 max-w-4xl text-slate-400">Six-hour snapshots from clean, eligible Buy It Now listings power price history and a simple ranked list of subjects that may be worth turning into a Short. PriceSift only picks candidates here; video production happens outside this repo.</p>
         </div>
         <AdminPriceDashboard initialOverview={overview} token={ADMIN_BROWSER_SESSION} />
         <SiteFooter />
