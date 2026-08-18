@@ -177,7 +177,8 @@ def _enrich_demand_analytics(digest: dict[str, Any], days: int) -> None:
 
 def _build_summary_text(digest: dict[str, Any]) -> str:
     search_count = int(digest.get("search_count") or 0)
-    demand_search_count = int(digest.get("demand_search_count") or search_count)
+    demand_value = digest.get("demand_search_count")
+    demand_search_count = search_count if demand_value is None else int(demand_value)
     resolved_count = int(digest.get("resolved_count") or 0)
     with_results_count = int(digest.get("with_results_count") or 0)
     no_result_count = int(digest.get("no_result_count") or 0)
