@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { PopularBookSeoPage, popularBookRevalidate } from "@/components/PopularBookSeoPage";
+import { PopularBookSeoPage } from "@/components/PopularBookSeoPage";
 import { getPopularBook } from "@/lib/popularBooks";
 
 const book = getPopularBook("harry-potter-sorcerers-stone")!;
-export const revalidate = popularBookRevalidate;
+export const revalidate = 1800;
 export const metadata: Metadata = {
   title: "Used Harry Potter and the Sorcerer's Stone: Prices & Exact Edition",
   description: book.description,
