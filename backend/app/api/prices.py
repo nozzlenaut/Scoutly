@@ -5,6 +5,7 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from app.catalog.retro_consoles import retro_console_price_cases
 from app.services.admin_auth import require_admin_token as _require_admin_token
 from app.providers.ebay import ebay_config_from_env
 from app.services import search_service
@@ -63,7 +64,7 @@ async def collect_qa_price_batch(
         for item in overview.get("products", [])
     }
 
-    cases = load_qa_cases()
+    cases = [*load_qa_cases(), *retro_console_price_cases()]
     if payload.category:
         cases = [case for case in cases if case.get("category") == payload.category]
 
