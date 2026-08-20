@@ -24,6 +24,11 @@ _AI_BETA_PRODUCT_IDS = {
     "console-builder-nintendo-switch-2",
     "console-builder-nintendo-64",
     "console-builder-nintendo-wii",
+    "console-sony-playstation-2",
+    "console-sony-playstation-3",
+    "console-microsoft-xbox-360",
+    "console-nintendo-gamecube",
+    "console-nintendo-wii",
 }
 
 
@@ -76,6 +81,8 @@ def is_ai_console_review_target(product: Product | None) -> bool:
     if product is None or product.category != "consoles":
         return False
     if product.id in _AI_BETA_PRODUCT_IDS:
+        return True
+    if bool(product.metadata.get("ai_listing_review")):
         return True
 
     family = str(product.metadata.get("family") or "").lower()
