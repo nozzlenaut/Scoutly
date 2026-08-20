@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { PopularBookSeoPage, popularBookRevalidate } from "@/components/PopularBookSeoPage";
+import { PopularBookSeoPage } from "@/components/PopularBookSeoPage";
 import { getPopularBook } from "@/lib/popularBooks";
 
 const book = getPopularBook("dungeon-crawler-carl")!;
-export const revalidate = popularBookRevalidate;
+export const revalidate = 1800;
 export const metadata: Metadata = {
   title: "Used Dungeon Crawler Carl: Prices & Exact Edition",
   description: book.description,
