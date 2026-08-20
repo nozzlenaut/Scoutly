@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeliveryResultsGrid } from "@/components/DeliveryResultsGrid";
 import { ManualResourcesPanel } from "@/components/ManualResourcesPanel";
+import { PopularBookSeoPage } from "@/components/PopularBookSeoPage";
 import { PriceContextPanel } from "@/components/PriceContextPanel";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
@@ -11,12 +12,16 @@ import {
 } from "@/lib/allIndexedProducts";
 import { getBuyingGuideHref } from "@/lib/indexedProducts";
 import { getIndexedSearchResults } from "@/lib/indexedSearch";
+import { getPopularBook, popularBooks } from "@/lib/popularBooks";
 
 export const revalidate = 1800;
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return allIndexedProducts.map((product) => ({ slug: product.slug }));
+  return [
+    ...allIndexedProducts.map((product) => ({ slug: product.slug })),
+    ...popularBooks.map((book) => ({ slug: book.slug })),
+  ];
 }
 
 export async function generateMetadata({
@@ -25,6 +30,27 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const book = getPopularBook(slug);
+  if (book) {
+    return {
+      title: `Used ${book.title}: Prices & Exact Edition`,
+      description: book.description,
+      alternates: { canonical: `/used/${book.slug}` },
+      robots: { index: true, follow: true },
+      openGraph: {
+        title: `Used ${book.title}: Prices & Exact Edition | PriceSift`,
+        description: book.description,
+        url: `/used/${book.slug}`,
+        type: "website",
+      },
+      twitter: {
+        card: "summary",
+        title: `Used ${book.title}: Prices & Exact Edition | PriceSift`,
+        description: book.description,
+      },
+    };
+  }
+
   const product = getAllIndexedProduct(slug);
   if (!product) return {};
 
@@ -54,6 +80,9 @@ export default async function IndexedProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const book = getPopularBook(slug);
+  if (book) return <PopularBookSeoPage book={book} />;
+
   const product = getAllIndexedProduct(slug);
   if (!product) notFound();
 
