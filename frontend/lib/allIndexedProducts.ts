@@ -3,11 +3,13 @@ import {
   indexedProducts,
   type IndexedProduct,
 } from "@/lib/indexedProducts";
+import { indexedConsoleExtras } from "@/lib/indexedConsoleExtras";
 import { indexedProductExtras } from "@/lib/indexedProductExtras";
 
 export const allIndexedProducts: IndexedProduct[] = [
   ...indexedProducts,
   ...indexedProductExtras,
+  ...indexedConsoleExtras,
 ];
 
 export function getAllIndexedProduct(slug: string): IndexedProduct | undefined {
