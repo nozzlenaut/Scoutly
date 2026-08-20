@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { getPublicKehCameraCatalog } from "@/lib/api";
 import { allIndexedProducts, findAllIndexedCameraProduct } from "@/lib/allIndexedProducts";
 import { buyingGuides } from "@/lib/buyingGuides";
+import { popularBooks } from "@/lib/popularBooks";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.pricesift.app";
@@ -11,6 +12,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/lenses` },
     { url: `${baseUrl}/used` },
     { url: `${baseUrl}/used/market` },
+    { url: `${baseUrl}/used/retro-game-consoles` },
+    { url: `${baseUrl}/used/current-game-consoles` },
+    { url: `${baseUrl}/used/popular-books` },
     { url: `${baseUrl}/buying-guides` },
     { url: `${baseUrl}/buying-guides/used-listing-red-flags` },
     { url: `${baseUrl}/reuse` },
@@ -21,6 +25,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
     ...allIndexedProducts.map((product) => ({
       url: `${baseUrl}/used/${product.slug}`,
+    })),
+    ...popularBooks.map((book) => ({
+      url: `${baseUrl}/used/${book.slug}`,
     })),
   ];
 

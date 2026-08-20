@@ -12,6 +12,7 @@ from functools import lru_cache
 
 from app.catalog import catalog_core as _core
 from app.catalog.demand_cameras import demand_camera_products
+from app.catalog.retro_consoles import retro_console_products
 
 
 _base_load_products = getattr(
@@ -24,7 +25,11 @@ _core._pricesift_base_load_products = _base_load_products
 
 @lru_cache(maxsize=1)
 def _pricesift_load_products():
-    return [*_base_load_products(), *demand_camera_products()]
+    return [
+        *_base_load_products(),
+        *demand_camera_products(),
+        *retro_console_products(),
+    ]
 
 
 # Core functions such as match_product() resolve load_products from their own

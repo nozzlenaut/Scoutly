@@ -57,7 +57,7 @@ def test_qa_endpoints_require_token_and_save(monkeypatch, tmp_path):
     cases = client.get("/api/qa/cases", params={"token": "secret"})
     assert cases.status_code == 200
     assert cases.json()["summary"]["total_cases"] >= 30
-    assert cases.json()["summary"]["category_counts"]["consoles"]["untested"] == 16
+    assert cases.json()["summary"]["category_counts"]["consoles"]["untested"] == 21
     assert cases.json()["summary"]["category_counts"]["lego"]["untested"] == 20
     assert cases.json()["summary"]["category_counts"]["cpus"]["untested"] == 16
     assert cases.json()["summary"]["category_counts"]["ram"]["untested"] == 12

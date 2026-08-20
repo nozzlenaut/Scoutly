@@ -5,7 +5,7 @@ import { allIndexedProducts } from "@/lib/allIndexedProducts";
 
 export const metadata: Metadata = {
   title: "Used Product Price Guides & Buying Checks",
-  description: "Cleaner current used listings, recent price context, and model-specific buying guidance for exact cameras, consoles, graphics cards, and LEGO sets.",
+  description: "Cleaner current used listings, recent price context, and buying guidance for exact cameras, consoles, graphics cards, LEGO sets, and selected popular books.",
   alternates: { canonical: "/used" },
   robots: { index: true, follow: true },
 };
@@ -22,7 +22,25 @@ export default function UsedProductGuidesPage() {
             Each page uses PriceSift’s normal exact-item matching and listing filters, then adds recent price context, common listing traps, and model-specific used-buying checks. These are manually approved products, not thousands of thin pages generated from random searches.
           </p>
 
-          <div className="mt-7 grid gap-4 md:grid-cols-2">
+          <div className="mt-7 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Link href="/used/retro-game-consoles" className="rounded-2xl border border-ps-border bg-ps-accent-soft p-5 transition hover:border-ps-border-strong">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-ps-accent-hover">Console hub</p>
+              <h2 className="mt-2 text-xl font-black">Retro & previous-generation consoles</h2>
+              <p className="mt-2 text-sm leading-6 text-ps-text-secondary">Older PlayStation, Xbox, and Nintendo systems, kept separate from current generation hardware.</p>
+            </Link>
+            <Link href="/used/current-game-consoles" className="rounded-2xl border border-ps-border bg-ps-accent-soft p-5 transition hover:border-ps-border-strong">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-ps-accent-hover">Console hub</p>
+              <h2 className="mt-2 text-xl font-black">Current-generation consoles</h2>
+              <p className="mt-2 text-sm leading-6 text-ps-text-secondary">PS5-family, Xbox Series, and Switch 2 price-guide pages in one place.</p>
+            </Link>
+            <Link href="/used/popular-books" className="rounded-2xl border border-ps-border bg-ps-accent-soft p-5 transition hover:border-ps-border-strong">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-ps-accent-hover">Book hub</p>
+              <h2 className="mt-2 text-xl font-black">Popular used books</h2>
+              <p className="mt-2 text-sm leading-6 text-ps-text-secondary">A rotating set of popular titles with permanent exact-edition pages.</p>
+            </Link>
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
             <Link
               href="/used/market"
               className="rounded-2xl border border-ps-success/40 bg-emerald-50 p-5 transition hover:border-ps-success"
