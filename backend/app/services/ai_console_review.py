@@ -29,6 +29,10 @@ _AI_BETA_PRODUCT_IDS = {
     "console-microsoft-xbox-360",
     "console-nintendo-gamecube",
     "console-nintendo-wii",
+    "console-playstation-4",
+    "console-xbox-one-s",
+    "console-xbox-one-x",
+    "console-nintendo-switch",
 }
 
 
