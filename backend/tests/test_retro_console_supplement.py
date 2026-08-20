@@ -21,13 +21,17 @@ def test_retro_console_queries_resolve_to_stable_products():
         assert _resolve(query).id == product_id
 
 
-def test_retro_console_products_use_ai_listing_review():
+def test_retro_hub_console_products_use_ai_listing_review():
     for query in [
         "Sony PlayStation 2",
         "Sony PlayStation 3",
+        "PlayStation 4",
         "Xbox 360",
+        "Xbox One S",
+        "Xbox One X",
         "Nintendo GameCube",
         "Nintendo Wii",
+        "Nintendo Switch",
     ]:
         assert is_ai_console_review_target(_resolve(query)) is True
 
