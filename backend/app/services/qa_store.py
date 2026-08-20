@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+from app.catalog.retro_consoles import retro_console_price_cases
 from app.services.database import database_configured, database_connection
 
 logger = logging.getLogger(__name__)
@@ -62,7 +63,7 @@ def _serialize_record(record: dict[str, Any]) -> dict[str, Any]:
 
 
 def load_qa_cases() -> list[dict[str, Any]]:
-    cases = _read_json_list(_cases_path())
+    cases = [*_read_json_list(_cases_path()), *retro_console_price_cases()]
     return [case for case in cases if case.get("id") and case.get("query") and case.get("category")]
 
 
