@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AmazonFallbackCard } from "@/components/AmazonFallbackCard";
+import { FilterTransparencyPanel } from "@/components/FilterTransparencyPanel";
+import { PriceContextPanel } from "@/components/PriceContextPanel";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
 import { SiteFooter } from "@/components/SiteFooter";
 import { buildOutboundUrl, getPublicKehCameraModel, type KehCameraModel } from "@/lib/api";
 import { findIndexedCameraProduct } from "@/lib/indexedProducts";
+import { getIndexedSearchResults } from "@/lib/indexedSearch";
 
 export const dynamic = "force-dynamic";
 
@@ -19,21 +22,28 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   try {
     const model = await getPublicKehCameraModel(slug);
     const indexedProduct = findIndexedCameraProduct(model.catalog_product_label, model.model_name);
-    const providerText = model.provider_scope === "ebay_keh" ? "eBay and KEH" : "KEH";
+    const isCatalogModel = model.provider_scope === "ebay_keh";
     const canonical = indexedProduct ? `/used/${indexedProduct.slug}` : `/cameras/${model.slug}`;
     const title = indexedProduct
       ? `Used ${model.model_name} inventory at KEH`
-      : `Used ${model.model_name} prices at KEH`;
+      : isCatalogModel
+        ? `Used ${model.model_name}: Filtered Prices & Listings`
+        : `Used ${model.model_name} prices at KEH`;
+    const description = indexedProduct
+      ? `See current used ${model.model_name} inventory and prices from eBay and KEH through PriceSift.`
+      : isCatalogModel
+        ? `PriceSift checks current used ${model.model_name} marketplace candidates, filters obvious bad matches when detectable, and compares cleaner eBay options with current KEH inventory.`
+        : `See current used ${model.model_name} inventory and prices from KEH through PriceSift.`;
     return {
       title,
-      description: `See current used ${model.model_name} inventory and prices from ${providerText} through PriceSift.`,
+      description,
       alternates: { canonical },
       robots: indexedProduct
         ? { index: false, follow: true }
         : { index: true, follow: true },
       openGraph: {
         title: `${title} | PriceSift`,
-        description: `${model.listing_count} current KEH listings from ${money(model.lowest_price, model.currency)}.`,
+        description,
         url: canonical,
         images: model.image_url ? [{ url: model.image_url }] : undefined,
       },
@@ -59,6 +69,10 @@ export default async function CameraModelPage({ params }: { params: Promise<{ sl
   const searchQuery = model.catalog_product_label || model.model_name;
   const searchUrl = `/search?category=cameras&q=${encodeURIComponent(searchQuery)}`;
   const isCatalogModel = model.provider_scope === "ebay_keh";
+  const searchData = isCatalogModel && !indexedProduct
+    ? await getIndexedSearchResults(searchQuery, "cameras")
+    : null;
+  const searchResults = searchData?.results || [];
 
   return (
     <main className="pricesift-public min-h-screen px-4 py-8 text-ps-text-primary sm:px-6 sm:py-10">
@@ -81,7 +95,7 @@ export default async function CameraModelPage({ params }: { params: Promise<{ sl
             <h1 className="mt-2 text-4xl font-black sm:text-5xl">{model.model_name}</h1>
             <p className="mt-4 max-w-3xl text-base leading-7 text-ps-text-secondary">
               {isCatalogModel
-                ? "This camera confidently matches PriceSift’s tuned catalog, so its full search can compare filtered eBay listings with current KEH inventory."
+                ? "PriceSift checks this exact model against current marketplace candidates, filters obvious bad matches when detectable, and compares the surviving eBay options with current KEH inventory."
                 : "This model comes directly from KEH’s standardized current inventory. It remains KEH-only until PriceSift has a confident catalog identity and safe eBay matching rules."}
             </p>
             {indexedProduct ? (
@@ -113,6 +127,18 @@ export default async function CameraModelPage({ params }: { params: Promise<{ sl
             </div>
           </div>
         </section>
+
+        {searchData ? (
+          <section className="mt-9" aria-label="Filtered marketplace snapshot">
+            <p className="text-sm uppercase tracking-[0.22em] text-ps-neutral">Filtered marketplace snapshot</p>
+            <h2 className="mt-2 text-2xl font-black">What the current used market looks like after filtering</h2>
+            <PriceContextPanel context={searchData.price_context} theme="light" />
+            <FilterTransparencyPanel
+              diagnostics={searchData.diagnostics}
+              resultCount={searchResults.length}
+            />
+          </section>
+        ) : null}
 
         <section className="mt-9">
           <p className="text-sm uppercase tracking-[0.22em] text-ps-neutral">Current specialty-retailer inventory</p>
