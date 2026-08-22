@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeliveryResultsGrid } from "@/components/DeliveryResultsGrid";
+import { FilterTransparencyPanel } from "@/components/FilterTransparencyPanel";
 import { ManualResourcesPanel } from "@/components/ManualResourcesPanel";
 import { PopularBookSeoPage } from "@/components/PopularBookSeoPage";
 import { PriceContextPanel } from "@/components/PriceContextPanel";
@@ -54,21 +55,21 @@ export async function generateMetadata({
   const product = getAllIndexedProduct(slug);
   if (!product) return {};
 
-  const description = `${product.description} See current filtered listings, price context, common listing traps, and model-specific used-buying checks.`;
+  const description = `${product.description} PriceSift checks current marketplace candidates, filters bad matches when detectable, and shows cleaner used options with price context and rejection counts.`;
   return {
-    title: `Used ${product.title}: Current Prices & What to Check`,
+    title: `Used ${product.title}: Filtered Listings & Prices`,
     description,
     alternates: { canonical: `/used/${product.slug}` },
     robots: { index: true, follow: true },
     openGraph: {
-      title: `Used ${product.title}: Current Prices & What to Check | PriceSift`,
+      title: `Used ${product.title}: Filtered Listings & Prices | PriceSift`,
       description,
       url: `/used/${product.slug}`,
       type: "website",
     },
     twitter: {
       card: "summary",
-      title: `Used ${product.title}: Current Prices & What to Check | PriceSift`,
+      title: `Used ${product.title}: Filtered Listings & Prices | PriceSift`,
       description,
     },
   };
@@ -225,7 +226,15 @@ export default async function IndexedProductPage({
             ET
           </p>
 
-          {data ? <PriceContextPanel context={data.price_context} theme="light" /> : null}
+          {data ? (
+            <>
+              <PriceContextPanel context={data.price_context} theme="light" />
+              <FilterTransparencyPanel
+                diagnostics={data.diagnostics}
+                resultCount={results.length}
+              />
+            </>
+          ) : null}
 
           {results.length > 0 ? (
             <DeliveryResultsGrid
@@ -304,6 +313,8 @@ export default async function IndexedProductPage({
                 marketplace candidates, removes obvious wrong-model,
                 accessory-only, incomplete, broken, and misleading listings
                 when detectable, and shows no more than three cleaner options.
+                The live counts above expose that filtering instead of asking
+                you to take the claim on faith.
               </p>
               <Link
                 href="/reuse"

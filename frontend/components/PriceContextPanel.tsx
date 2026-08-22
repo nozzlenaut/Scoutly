@@ -52,7 +52,7 @@ export function PriceContextPanel({ context, theme = "dark" }: { context: PriceC
           <p className={metricDetailClasses}>
             {context.current_eligible_count > 0
               ? `${money(context.current_low_price)}–${money(context.current_high_price)} delivered`
-              : "Scoutly filtered the current marketplace sample safely."}
+              : "PriceSift filtered the current marketplace sample safely."}
           </p>
         </div>
 
@@ -69,7 +69,7 @@ export function PriceContextPanel({ context, theme = "dark" }: { context: PriceC
             <>
               <p className={light ? "mt-2 text-lg font-bold text-ps-text-primary" : "mt-2 text-lg font-bold text-slate-200"}>Building price history</p>
               <p className={metricDetailClasses}>
-                {historyProgress}/3 inventory snapshots collected. Scoutly waits for enough observations before calling a range typical.
+                {historyProgress}/3 inventory snapshots collected. PriceSift waits for enough observations before calling a range typical.
               </p>
             </>
           )}
