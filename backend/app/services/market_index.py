@@ -130,14 +130,17 @@ def build_market_index(
 
     categories: list[dict[str, Any]] = []
     for category, rows in sorted(category_models.items()):
-        changes = [float(row["percent_change"]) for row in rows]
-        median_change = round(float(median(changes)), 1)
+        changes = [
+            ((float(row["latest_median_price"]) - float(row["baseline_median_price"])) / float(row["baseline_median_price"])) * 100
+            for row in rows
+        ]
+        median_change = float(median(changes))
         enough_models = len(rows) >= min_category_models
         categories.append(
             {
                 "category": category,
                 "model_count": len(rows),
-                "median_percent_change": median_change if enough_models else None,
+                "median_percent_change": round(median_change, 1) if enough_models else None,
                 "index_value": round(100 + median_change, 1) if enough_models else None,
                 "first_observed_at": min(str(row["first_observed_at"]) for row in rows),
                 "last_observed_at": max(str(row["last_observed_at"]) for row in rows),
