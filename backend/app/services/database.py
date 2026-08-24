@@ -117,6 +117,9 @@ def initialize_database() -> bool:
             product_id TEXT,
             query TEXT,
             title TEXT,
+            listing_price DOUBLE PRECISION,
+            currency TEXT,
+            source_page TEXT,
             link_key TEXT,
             ebay_item_id TEXT,
             affiliate_campaign_present BOOLEAN NOT NULL DEFAULT FALSE,
@@ -124,6 +127,18 @@ def initialize_database() -> bool:
             url TEXT NOT NULL,
             tracked_url TEXT NOT NULL
         )
+        """,
+        """
+        ALTER TABLE scoutly_outbound_clicks
+        ADD COLUMN IF NOT EXISTS listing_price DOUBLE PRECISION
+        """,
+        """
+        ALTER TABLE scoutly_outbound_clicks
+        ADD COLUMN IF NOT EXISTS currency TEXT
+        """,
+        """
+        ALTER TABLE scoutly_outbound_clicks
+        ADD COLUMN IF NOT EXISTS source_page TEXT
         """,
         """
         CREATE INDEX IF NOT EXISTS scoutly_outbound_clicks_recent

@@ -14,6 +14,18 @@ function joinReasons(reasons?: string[]): string {
   return reasons.join(", ");
 }
 
+function formatClickPrice(value?: number | null, currency = "USD"): string {
+  if (value === undefined || value === null) return "—";
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+    }).format(value);
+  } catch {
+    return `$${value.toFixed(2)}`;
+  }
+}
+
 function AdminGate({ invalid = false }: { invalid?: boolean }) {
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
@@ -177,14 +189,18 @@ export default async function AdminPage({
           title="Recent clicks"
         >
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left text-sm">
+            <table className="w-full min-w-[1500px] text-left text-sm">
               <thead className="text-slate-500">
                 <tr>
                   <th className="py-2 pr-4">Time (ET)</th>
+                  <th className="py-2 pr-4">Provider</th>
                   <th className="py-2 pr-4">Category</th>
                   <th className="py-2 pr-4">Query</th>
                   <th className="py-2 pr-4">Title</th>
+                  <th className="py-2 pr-4">Item price</th>
+                  <th className="py-2 pr-4">PriceSift page</th>
                   <th className="py-2 pr-4">Affiliate</th>
+                  <th className="py-2 pr-4">Click reference</th>
                   <th className="py-2 pr-4">Item ID</th>
                 </tr>
               </thead>
@@ -192,15 +208,23 @@ export default async function AdminPage({
                 {clicks.map((click, index) => (
                   <tr key={`${click.clicked_at}-${click.ebay_item_id}-${index}`}>
                     <td className="py-3 pr-4 text-slate-400">{formatAdminDate(click.clicked_at)}</td>
+                    <td className="py-3 pr-4">{click.provider || "—"}</td>
                     <td className="py-3 pr-4">{click.category || "—"}</td>
                     <td className="py-3 pr-4">{click.query || "—"}</td>
                     <td className="py-3 pr-4">{click.title || "—"}</td>
+                    <td className="py-3 pr-4 font-semibold text-emerald-200">
+                      {formatClickPrice(click.listing_price, click.currency || "USD")}
+                    </td>
+                    <td className="max-w-xs truncate py-3 pr-4 font-mono text-xs text-cyan-100" title={click.source_page || undefined}>
+                      {click.source_page || "—"}
+                    </td>
                     <td className="py-3 pr-4">{click.affiliate_campaign_present ? "Yes" : "No"}</td>
+                    <td className="py-3 pr-4 font-mono text-xs">{click.affiliate_reference || "—"}</td>
                     <td className="py-3 pr-4">{click.ebay_item_id || "—"}</td>
                   </tr>
                 ))}
                 {clicks.length === 0 ? (
-                  <tr><td className="py-4 text-slate-500" colSpan={6}>No clicks logged yet.</td></tr>
+                  <tr><td className="py-4 text-slate-500" colSpan={10}>No clicks logged yet.</td></tr>
                 ) : null}
               </tbody>
             </table>

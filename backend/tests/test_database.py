@@ -27,6 +27,27 @@ def test_admin_is_closed_when_token_not_configured(monkeypatch):
     assert response.status_code == 503
 
 
+def test_database_initialization_migrates_click_context_columns(monkeypatch):
+    statements: list[str] = []
+
+    class FakeConnection:
+        def execute(self, sql, _params=None):
+            statements.append(sql)
+
+    @contextmanager
+    def fake_connection():
+        yield FakeConnection()
+
+    monkeypatch.setattr(database, "database_configured", lambda: True)
+    monkeypatch.setattr(database, "database_connection", fake_connection)
+
+    assert database.initialize_database() is True
+    normalized = "\n".join(" ".join(statement.split()) for statement in statements)
+    assert "ADD COLUMN IF NOT EXISTS listing_price DOUBLE PRECISION" in normalized
+    assert "ADD COLUMN IF NOT EXISTS currency TEXT" in normalized
+    assert "ADD COLUMN IF NOT EXISTS source_page TEXT" in normalized
+
+
 def test_filtered_listing_database_writes_are_batched(monkeypatch):
     batches: list[list[tuple]] = []
     connection_calls = 0

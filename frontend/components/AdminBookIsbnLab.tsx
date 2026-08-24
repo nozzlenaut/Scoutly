@@ -18,6 +18,8 @@ function ResultCard({ result, isbn, rank }: { result: SearchResult; isbn: string
     category: "books",
     provider: result.provider,
     title: result.title,
+    price: result.price,
+    currency: "USD",
   });
 
   return (

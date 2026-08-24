@@ -368,6 +368,9 @@ export type ClickRecord = {
   product_id?: string | null;
   query?: string | null;
   title?: string | null;
+  listing_price?: number | null;
+  currency?: string | null;
+  source_page?: string | null;
   ebay_item_id?: string | null;
   affiliate_campaign_present?: boolean;
   affiliate_reference?: string | null;
@@ -734,6 +737,8 @@ export function buildOutboundUrl(
     productId?: string;
     provider?: string;
     title?: string;
+    price?: number | null;
+    currency?: string;
   } = {},
 ): string {
   const params = new URLSearchParams({ url });
@@ -742,6 +747,10 @@ export function buildOutboundUrl(
   if (metadata.productId) params.set("product_id", metadata.productId);
   if (metadata.provider) params.set("provider", metadata.provider);
   if (metadata.title) params.set("title", metadata.title);
+  if (metadata.price !== undefined && metadata.price !== null) {
+    params.set("price", String(metadata.price));
+  }
+  if (metadata.currency) params.set("currency", metadata.currency);
 
   return `${baseUrl}/api/out?${params.toString()}`;
 }

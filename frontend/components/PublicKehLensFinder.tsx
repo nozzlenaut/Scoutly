@@ -322,6 +322,8 @@ export function PublicKehLensFinder({ initialData }: { initialData: KehLensBuild
                           category: "lenses",
                           provider: "KEH",
                           title: listing.title,
+                          price: listing.price,
+                          currency: listing.currency,
                         });
                         return (
                           <article key={listing.aw_product_id} className="rounded-2xl border border-ps-border bg-ps-control p-4">

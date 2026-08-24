@@ -196,6 +196,8 @@ export function exactListingOutboundUrl(
     productId: `goodreads:${batchId}:${isbn}`,
     provider: result.provider,
     title: result.title,
+    price: result.price,
+    currency: "USD",
   });
 }
 

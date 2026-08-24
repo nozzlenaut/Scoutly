@@ -291,6 +291,9 @@ def log_outbound_click(
     product_id: str | None = None,
     query: str | None = None,
     title: str | None = None,
+    listing_price: float | None = None,
+    currency: str | None = None,
+    source_page: str | None = None,
 ) -> None:
     now = _now()
     tracked_parts = urlsplit(tracked_url)
@@ -310,10 +313,15 @@ def log_outbound_click(
         "product_id": product_id,
         "query": query,
         "title": title,
+        "listing_price": listing_price,
+        "currency": currency,
+        "source_page": source_page,
         "link_key": _normalized_link_key(tracked_url),
         "ebay_item_id": ebay_item_id_from_url(tracked_url),
         "affiliate_campaign_present": affiliate_tracked,
-        "affiliate_reference": (params.get("customid") or [amazon_tag])[0],
+        "affiliate_reference": (
+            params.get("clickref") or params.get("customid") or [amazon_tag]
+        )[0],
         "url": url,
         "tracked_url": tracked_url,
     }
@@ -324,9 +332,10 @@ def log_outbound_click(
                 """
                 INSERT INTO scoutly_outbound_clicks (
                     clicked_at, provider, category, product_id, query, title,
+                    listing_price, currency, source_page,
                     link_key, ebay_item_id, affiliate_campaign_present,
                     affiliate_reference, url, tracked_url
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     now,
@@ -335,6 +344,9 @@ def log_outbound_click(
                     product_id,
                     query,
                     title,
+                    listing_price,
+                    currency,
+                    source_page,
                     record["link_key"],
                     record["ebay_item_id"],
                     record["affiliate_campaign_present"],
@@ -374,6 +386,7 @@ def recent_outbound_clicks(limit: int = 50) -> list[dict[str, Any]]:
             rows = connection.execute(
                 """
                 SELECT clicked_at, provider, category, product_id, query, title,
+                       listing_price, currency, source_page,
                        link_key, ebay_item_id, affiliate_campaign_present,
                        affiliate_reference, url, tracked_url
                 FROM scoutly_outbound_clicks
@@ -617,6 +630,7 @@ def analytics_summary() -> dict[str, Any]:
                 latest = connection.execute(
                     """
                     SELECT clicked_at, provider, category, product_id, query, title,
+                           listing_price, currency, source_page,
                            link_key, ebay_item_id, affiliate_campaign_present,
                            affiliate_reference, url, tracked_url
                     FROM scoutly_outbound_clicks ORDER BY clicked_at DESC LIMIT 1

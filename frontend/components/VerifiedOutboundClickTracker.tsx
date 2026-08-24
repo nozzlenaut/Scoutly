@@ -3,6 +3,13 @@
 import { useEffect } from "react";
 import { analyticsOptedOut } from "@/lib/analyticsOptOut";
 
+function createClickReference(): string {
+  const randomValues = new Uint32Array(2);
+  crypto.getRandomValues(randomValues);
+  const randomPart = Array.from(randomValues, (value) => value.toString(36)).join("");
+  return `ps${Date.now().toString(36)}${randomPart}`.slice(0, 50);
+}
+
 function outboundClickEndpoint(anchor: HTMLAnchorElement): string | null {
   try {
     const redirectUrl = new URL(anchor.href, window.location.href);
@@ -12,6 +19,34 @@ function outboundClickEndpoint(anchor: HTMLAnchorElement): string | null {
       return null;
     }
 
+    redirectUrl.searchParams.set(
+      "source_page",
+      `${window.location.pathname}${window.location.search}`,
+    );
+
+    const destination = redirectUrl.searchParams.get("url");
+    if (!destination) return null;
+    const destinationUrl = new URL(destination);
+    const hostname = destinationUrl.hostname.toLowerCase();
+    const supportsPerClickReference =
+      hostname === "awin1.com"
+      || hostname.endsWith(".awin1.com")
+      || hostname === "ebay.com"
+      || hostname.endsWith(".ebay.com");
+    if (supportsPerClickReference) {
+      redirectUrl.searchParams.set("click_ref", createClickReference());
+    }
+
+    // The browser follows this exact URL after the capture listener returns,
+    // while the POST below records the same click reference and page context.
+    // Restore the rendered link on the next task so a later context-menu open
+    // cannot accidentally reuse this click's reference.
+    const originalHref = anchor.href;
+    const navigationUrl = redirectUrl.toString();
+    anchor.href = navigationUrl;
+    window.setTimeout(() => {
+      if (anchor.href === navigationUrl) anchor.href = originalHref;
+    }, 0);
     redirectUrl.pathname = "/api/out/click";
     return redirectUrl.toString();
   } catch {

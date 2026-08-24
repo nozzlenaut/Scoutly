@@ -95,6 +95,8 @@ export function ResultCard({
     productId,
     provider: result.provider,
     title: result.title,
+    price: result.price,
+    currency: "USD",
   });
   const light = theme === "light";
   const cardClasses = light

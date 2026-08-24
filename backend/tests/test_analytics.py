@@ -17,6 +17,9 @@ def test_analytics_summary_and_clicks(monkeypatch, tmp_path):
         product_id="gpu-nvidia-tesla-p100-16gb",
         query="Tesla P100",
         title="NVIDIA Tesla P100 16GB",
+        listing_price=249.99,
+        currency="USD",
+        source_page="/used/nvidia-tesla-p100-16gb",
     )
 
     summary = client.get("/api/analytics/summary", params={"token": "secret"})
@@ -27,6 +30,9 @@ def test_analytics_summary_and_clicks(monkeypatch, tmp_path):
     assert summary.json()["affiliate_clicks"] == 1
     assert clicks.status_code == 200
     assert clicks.json()["clicks"][0]["query"] == "Tesla P100"
+    assert clicks.json()["clicks"][0]["listing_price"] == 249.99
+    assert clicks.json()["clicks"][0]["currency"] == "USD"
+    assert clicks.json()["clicks"][0]["source_page"] == "/used/nvidia-tesla-p100-16gb"
 
 
 def test_analytics_reports_and_optional_token(monkeypatch, tmp_path):

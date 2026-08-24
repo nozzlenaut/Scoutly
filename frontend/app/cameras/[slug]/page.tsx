@@ -151,6 +151,8 @@ export default async function CameraModelPage({ params }: { params: Promise<{ sl
                 productId: model.catalog_product_id || undefined,
                 provider: "KEH",
                 title: listing.title,
+                price: listing.price,
+                currency: listing.currency,
               });
               return (
                 <article key={listing.aw_product_id} className="rounded-3xl border border-ps-border bg-ps-surface p-5">
