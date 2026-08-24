@@ -642,9 +642,12 @@ def keh_overview(limit: int = 200) -> dict[str, Any]:
     }
 
 
+def _normalize_slug(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+
+
 def _slugify(value: str) -> str:
-    slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
-    return slug[:140] or "keh-camera"
+    return _normalize_slug(value)[:140] or "keh-camera"
 
 
 def _all_active_camera_inventory() -> list[dict[str, Any]]:
@@ -812,7 +815,10 @@ def keh_camera_catalog(*, query: str | None = None, limit: int = 500) -> dict[st
 
 
 def keh_camera_model(slug: str) -> dict[str, Any] | None:
-    cleaned_slug = _slugify(slug)
+    # KEH-native models append an eight-character identity hash after the
+    # length-limited base slug. Preserve that suffix when resolving detail
+    # pages; running the full generated slug through _slugify() dropped it.
+    cleaned_slug = _normalize_slug(slug)
     for model in _camera_model_groups():
         if model.get("slug") == cleaned_slug:
             return _public_camera_model(model)
@@ -820,7 +826,7 @@ def keh_camera_model(slug: str) -> dict[str, Any] | None:
 
 
 def _keh_camera_model_group(slug: str) -> dict[str, Any] | None:
-    cleaned_slug = _slugify(slug)
+    cleaned_slug = _normalize_slug(slug)
     return next(
         (model for model in _camera_model_groups() if model.get("slug") == cleaned_slug),
         None,

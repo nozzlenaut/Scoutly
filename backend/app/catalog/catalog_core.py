@@ -1249,6 +1249,37 @@ def _lego_missing_is_explicitly_negated(title: str) -> bool:
 def _looks_like_lego_completeness_issue(title: str) -> bool:
     normalized = normalize_text(title, strip_filler=False)
 
+    # Marketplace titles regularly misspell decisive condition words. Catch a
+    # one-character edit or adjacent transposition of "incomplete" so a typo
+    # such as "INCOMPELTE" cannot outrank a genuinely complete set.
+    def resembles_incomplete(token: str) -> bool:
+        target = "incomplete"
+        if token == target:
+            return True
+        if len(token) == len(target):
+            for index in range(len(token) - 1):
+                swapped = token[:index] + token[index + 1] + token[index] + token[index + 2 :]
+                if swapped == target:
+                    return True
+        if abs(len(token) - len(target)) > 1:
+            return False
+        previous = list(range(len(target) + 1))
+        for index, char in enumerate(token, start=1):
+            current = [index]
+            for target_index, target_char in enumerate(target, start=1):
+                current.append(
+                    min(
+                        current[-1] + 1,
+                        previous[target_index] + 1,
+                        previous[target_index - 1] + (char != target_char),
+                    )
+                )
+            previous = current
+        return previous[-1] <= 1
+
+    if any(resembles_incomplete(token) for token in normalized.split()):
+        return True
+
     if re.search(r"\b(?:near|nearly|almost|mostly)\s+complete\b", normalized):
         return True
 

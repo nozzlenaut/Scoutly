@@ -1055,6 +1055,18 @@ def test_lego_complete_set_search_rejects_partial_components_and_percentages():
     ) is True
 
 
+def test_lego_rejects_common_incomplete_typos():
+    falcon = match_product("LEGO Star Wars Millennium Falcon 75192", category="lego")
+    assert falcon is not None
+
+    for title in (
+        "LEGO Star Wars Millennium Falcon 75192 INCOMPELTE",
+        "LEGO Star Wars Millennium Falcon 75192 INCOMPLETE",
+        "LEGO Star Wars Millennium Falcon 75192 INCOMLETE",
+    ):
+        assert listing_matches_product(title, falcon.product) is False
+
+
 def test_lego_query_with_unknown_reissue_number_does_not_resolve_older_set():
     assert match_product("LEGO NASA Apollo Saturn V 92176", category="lego") is None
     original = match_product("LEGO NASA Apollo Saturn V 21309", category="lego")

@@ -146,6 +146,27 @@ def test_keh_native_camera_models_group_grades_and_remain_keh_only(monkeypatch, 
     assert resolved.product.metadata["keh_model_slug"] == model["slug"]
 
 
+def test_long_keh_native_slug_resolves_with_identity_suffix(monkeypatch, tmp_path):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("KEH_PUBLIC_RESULTS", "true")
+    sync_keh_feed(
+        feed_rows=[
+            _unknown_camera_row(
+                product_name=(
+                    "Contoso Professional Full Frame Digital Cinema Camera With "
+                    "Interchangeable Lens Mount Power Adapter Battery Charger "
+                    "Remote Handle LCD Monitor Hood USB Cable Body - EX - Excellent | Used"
+                ),
+            ),
+        ]
+    )
+
+    model = keh_camera_catalog()["models"][0]
+    assert len(model["slug"]) > 140
+    assert keh_camera_model(model["slug"]) is not None
+
+
 def test_keh_only_camera_search_never_calls_ebay(monkeypatch, tmp_path):
     class FailIfCalledProvider:
         async def search(self, *_args, **_kwargs):
