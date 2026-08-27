@@ -55,21 +55,28 @@ export async function generateMetadata({
   const product = getAllIndexedProduct(slug);
   if (!product) return {};
 
-  const description = `${product.description} PriceSift checks current marketplace candidates, filters bad matches when detectable, and shows cleaner used options with price context and rejection counts.`;
+  const isCanonR10 = product.slug === "canon-eos-r10";
+  const title = isCanonR10
+    ? "Used Canon EOS R10 Prices & Listings"
+    : `Used ${product.title}: Filtered Listings & Prices`;
+  const description = isCanonR10
+    ? "See current used Canon EOS R10 prices, cleaner marketplace listings, and a practical buying checklist for the R10 camera body."
+    : `${product.description} PriceSift checks current marketplace candidates, filters bad matches when detectable, and shows cleaner used options with price context and rejection counts.`;
+
   return {
-    title: `Used ${product.title}: Filtered Listings & Prices`,
+    title,
     description,
     alternates: { canonical: `/used/${product.slug}` },
     robots: { index: true, follow: true },
     openGraph: {
-      title: `Used ${product.title}: Filtered Listings & Prices | PriceSift`,
+      title: `${title} | PriceSift`,
       description,
       url: `/used/${product.slug}`,
       type: "website",
     },
     twitter: {
       card: "summary",
-      title: `Used ${product.title}: Filtered Listings & Prices | PriceSift`,
+      title: `${title} | PriceSift`,
       description,
     },
   };
@@ -107,6 +114,9 @@ export default async function IndexedProductPage({
   const prices = results
     .map((listing) => listing.total_price)
     .filter((value) => Number.isFinite(value) && value >= 0);
+  const intro = product.slug === "canon-eos-r10"
+    ? "See current used Canon EOS R10 prices and cleaner marketplace listings for the exact R10 camera body. PriceSift filters obvious wrong-model, accessory-only, broken, and misleading matches when detectable, then adds price context and a practical used-buying checklist."
+    : product.description;
 
   const productNode = {
     "@type": "Product",
@@ -216,7 +226,7 @@ export default async function IndexedProductPage({
             Used {product.title}
           </h1>
           <p className="mt-5 max-w-3xl text-lg leading-8 text-ps-text-secondary">
-            {product.description}
+            {intro}
           </p>
           <p className="mt-3 text-xs text-ps-neutral">
             Last checked{" "}
