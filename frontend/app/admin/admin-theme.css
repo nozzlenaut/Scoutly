@@ -1,0 +1,52 @@
+.pricesift-admin main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) {
+  background:
+    radial-gradient(circle at top, rgba(95, 168, 211, 0.16), transparent 34rem),
+    linear-gradient(180deg, #f2f7fc 0%, #fbf8f1 44%, #fbf8f1 100%) !important;
+  color: #10233a !important;
+}
+
+.pricesift-admin main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public)
+  [class*="border-white/10"][class*="bg-white/"],
+.pricesift-admin main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public)
+  [class*="border-white/10"][class*="bg-slate-950/"],
+.pricesift-admin main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public)
+  [class*="border-white/15"][class*="bg-white/"],
+.pricesift-admin main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public)
+  [class*="border-white/20"][class*="bg-white/"] {
+  border-color: #c9dce8 !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  box-shadow:
+    0 14px 34px rgba(16, 35, 58, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+}
+
+.pricesift-admin main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) input,
+.pricesift-admin main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) select,
+.pricesift-admin main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) textarea {
+  background-color: #ffffff !important;
+  border-color: #c9dce8 !important;
+  color: #10233a !important;
+}
+
+.pricesift-admin main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) input::placeholder,
+.pricesift-admin main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) textarea::placeholder {
+  color: #718398 !important;
+}
+
+.pricesift-admin main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public)
+  [class*="border-emerald-"][class*="bg-emerald-"] {
+  background-color: rgba(24, 121, 78, 0.07) !important;
+  border-color: rgba(24, 121, 78, 0.2) !important;
+}
+
+.pricesift-admin main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public)
+  [class*="border-cyan-"][class*="bg-cyan-"] {
+  background-color: rgba(95, 168, 211, 0.08) !important;
+  border-color: rgba(95, 168, 211, 0.25) !important;
+}
+
+.pricesift-admin main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public)
+  [class*="border-amber-"][class*="bg-amber-"] {
+  background-color: rgba(138, 90, 0, 0.07) !important;
+  border-color: rgba(138, 90, 0, 0.2) !important;
+}
