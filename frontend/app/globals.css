@@ -141,6 +141,110 @@ main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) [class*
   background-color: rgba(154, 52, 18, 0.12) !important;
 }
 
+/* Admin now shares the public site's light canvas without rewriting every lab. */
+.pricesift-admin {
+  background: #fbf8f1;
+  color: #10233a;
+  color-scheme: light;
+}
+
+.pricesift-admin main {
+  background:
+    radial-gradient(circle at top, rgba(95, 168, 211, 0.16), transparent 34rem),
+    linear-gradient(180deg, #f2f7fc 0%, #fbf8f1 44%, #fbf8f1 100%) !important;
+  color: #10233a !important;
+}
+
+.pricesift-admin [class*="bg-slate-950"],
+.pricesift-admin [class*="bg-white/"],
+.pricesift-admin [class*="bg-slate-950/"] {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+}
+
+.pricesift-admin [class*="border-white/"] {
+  border-color: #c9dce8 !important;
+}
+
+.pricesift-admin .text-white,
+.pricesift-admin .text-slate-100,
+.pricesift-admin .text-slate-200,
+.pricesift-admin .text-slate-300 {
+  color: #10233a !important;
+}
+
+.pricesift-admin .text-slate-400 {
+  color: #405a73 !important;
+}
+
+.pricesift-admin .text-slate-500,
+.pricesift-admin .text-slate-600 {
+  color: #61758a !important;
+}
+
+.pricesift-admin .text-cyan-100,
+.pricesift-admin .text-cyan-200,
+.pricesift-admin .text-cyan-300,
+.pricesift-admin [class*="text-cyan-100/"] {
+  color: #346f91 !important;
+}
+
+.pricesift-admin .text-emerald-100,
+.pricesift-admin .text-emerald-200,
+.pricesift-admin .text-emerald-300 {
+  color: #18794e !important;
+}
+
+.pricesift-admin .text-amber-100,
+.pricesift-admin .text-amber-200,
+.pricesift-admin .text-amber-300 {
+  color: #8a5a00 !important;
+}
+
+.pricesift-admin .text-sky-100,
+.pricesift-admin .text-sky-200,
+.pricesift-admin .text-sky-300 {
+  color: #236f9d !important;
+}
+
+.pricesift-admin .text-violet-100,
+.pricesift-admin .text-violet-200,
+.pricesift-admin .text-violet-300 {
+  color: #6d4aa5 !important;
+}
+
+.pricesift-admin .text-fuchsia-100,
+.pricesift-admin .text-fuchsia-200,
+.pricesift-admin .text-fuchsia-300 {
+  color: #9b3d74 !important;
+}
+
+.pricesift-admin input,
+.pricesift-admin select,
+.pricesift-admin textarea {
+  background-color: #ffffff !important;
+  border-color: #c9dce8 !important;
+  color: #10233a !important;
+}
+
+.pricesift-admin input::placeholder,
+.pricesift-admin textarea::placeholder {
+  color: #718398 !important;
+}
+
+.pricesift-admin input:focus,
+.pricesift-admin select:focus,
+.pricesift-admin textarea:focus {
+  border-color: #5fa8d3 !important;
+  box-shadow: 0 0 0 3px rgba(95, 168, 211, 0.16);
+}
+
+.pricesift-admin nav {
+  border-color: #c9dce8 !important;
+  background-color: rgba(251, 248, 241, 0.96) !important;
+  color: #10233a !important;
+  box-shadow: 0 8px 24px rgba(16, 35, 58, 0.08) !important;
+}
+
 main a,
 footer a {
   text-underline-offset: 0.2em;
