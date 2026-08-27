@@ -26,6 +26,22 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
       - name: Typecheck frontend
-        run: npx tsc --noEmit
+        id: typecheck
+        continue-on-error: true
+        run: |
+          set +e
+          npx tsc --noEmit > ../typecheck.log 2>&1
+          status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit $status
+      - name: Upload typecheck log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: typecheck-log
+          path: typecheck.log
+      - name: Fail on typecheck error
+        if: steps.typecheck.outputs.status != '0'
+        run: exit 1
       - name: Lint frontend
         run: npm run lint
