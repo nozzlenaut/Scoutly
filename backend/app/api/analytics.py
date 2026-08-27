@@ -125,6 +125,115 @@ def _seo_page_origin_rows(days: int) -> list[dict[str, Any]]:
     return rows
 
 
+def _last_24h_search_rows() -> list[dict[str, Any]]:
+    cutoff = _now() - timedelta(hours=24)
+    raw_rows: list[dict[str, Any]] = []
+
+    if database_configured():
+        try:
+            with database_connection() as connection:
+                rows = connection.execute(
+                    """
+                    SELECT searched_at, category, query, product_id, product_label,
+                           resolved, result_count, us_only, source
+                    FROM scoutly_search_events
+                    WHERE searched_at >= %s
+                    ORDER BY searched_at ASC
+                    """,
+                    (cutoff,),
+                ).fetchall()
+            raw_rows = [dict(row) for row in rows]
+        except Exception:
+            raw_rows = []
+
+    if not raw_rows:
+        raw_rows = [
+            row
+            for row in _read_events()
+            if (_parse_dt(row.get("searched_at")) or cutoff) >= cutoff
+        ]
+
+    return raw_rows
+
+
+def _enrich_last_24h(digest: dict[str, Any]) -> None:
+    rows = _last_24h_search_rows()
+    category_counts: dict[str, int] = defaultdict(int)
+    category_seo_counts: dict[str, int] = defaultdict(int)
+    query_counts: dict[tuple[str, str], int] = defaultdict(int)
+    query_seo_counts: dict[tuple[str, str], int] = defaultdict(int)
+    unresolved_counts: dict[tuple[str, str], int] = defaultdict(int)
+
+    seo_count = 0
+    resolved_count = 0
+    with_results_count = 0
+    unresolved_count = 0
+    us_only_count = 0
+
+    for row in rows:
+        category = str(row.get("category") or "unknown")
+        query = str(row.get("query") or "").strip()
+        label = str(row.get("product_label") or query or "Unknown search").strip()
+        normalized_label = _normalize_unresolved_query(label)
+        normalized_query = _normalize_unresolved_query(query)
+        is_seo = row.get("source") == "origin:seo_page"
+        is_resolved = bool(row.get("resolved"))
+        has_results = int(row.get("result_count") or 0) > 0
+
+        category_counts[category] += 1
+        if is_seo:
+            seo_count += 1
+            category_seo_counts[category] += 1
+        if is_resolved:
+            resolved_count += 1
+        else:
+            unresolved_count += 1
+            if normalized_query:
+                unresolved_counts[(category, normalized_query)] += 1
+        if has_results:
+            with_results_count += 1
+        if bool(row.get("us_only")):
+            us_only_count += 1
+
+        if normalized_label:
+            key = (category, normalized_label)
+            query_counts[key] += 1
+            if is_seo:
+                query_seo_counts[key] += 1
+
+    digest["last_24h_search_count"] = len(rows)
+    digest["last_24h_demand_search_count"] = max(0, len(rows) - seo_count)
+    digest["last_24h_seo_page_search_count"] = seo_count
+    digest["last_24h_resolved_count"] = resolved_count
+    digest["last_24h_with_results_count"] = with_results_count
+    digest["last_24h_no_result_count"] = len(rows) - with_results_count
+    digest["last_24h_unresolved_count"] = unresolved_count
+    digest["last_24h_us_only_count"] = us_only_count
+
+    for row in digest.get("category_rows", []):
+        category = str(row.get("category") or "unknown")
+        recent_total = category_counts.get(category, 0)
+        recent_seo = category_seo_counts.get(category, 0)
+        row["last_24h_searches"] = recent_total
+        row["last_24h_demand_searches"] = max(0, recent_total - recent_seo)
+        row["last_24h_seo_page_searches"] = recent_seo
+
+    for row in digest.get("top_searches", []):
+        category = str(row.get("category") or "unknown")
+        normalized = _normalize_unresolved_query(row.get("label"))
+        key = (category, normalized)
+        recent_total = query_counts.get(key, 0)
+        recent_seo = query_seo_counts.get(key, 0)
+        row["last_24h_searches"] = recent_total
+        row["last_24h_demand_searches"] = max(0, recent_total - recent_seo)
+        row["last_24h_seo_page_searches"] = recent_seo
+
+    for row in digest.get("top_unresolved_searches", []):
+        category = str(row.get("category") or "unknown")
+        normalized = str(row.get("normalized_query") or "")
+        row["last_24h_searches"] = unresolved_counts.get((category, normalized), 0)
+
+
 def _enrich_demand_analytics(digest: dict[str, Any], days: int) -> None:
     seo_rows = _seo_page_origin_rows(days)
     seo_lookup = {
@@ -187,10 +296,11 @@ def _build_summary_text(digest: dict[str, Any]) -> str:
     historical_click_count = int(digest.get("historical_click_count") or 0)
     us_only_count = int(digest.get("us_only_count") or 0)
     seo_page_search_count = int(digest.get("seo_page_search_count") or 0)
+    last_24h_search_count = int(digest.get("last_24h_search_count") or 0)
 
     lines = [
         f"PriceSift analytics — last {digest['days']} days",
-        f"Searches: {search_count}",
+        f"Searches: {search_count} (+{last_24h_search_count} last 24h)",
         f"Demand searches excluding tracked SEO-page launches: {demand_search_count}",
         f"Tracked SEO-page search launches: {seo_page_search_count}",
         f"Resolved catalog/ISBN searches: {resolved_count} ({_pct(resolved_count, search_count) or 0}%)",
@@ -264,6 +374,7 @@ def get_analytics_digest(
     _require_admin_token(token)
     digest = analytics_digest(days)
     _enrich_demand_analytics(digest, days)
+    _enrich_last_24h(digest)
     digest["summary_text"] = _build_summary_text(digest)
     forensics = analytics_forensics(days)
     digest["forensics"] = forensics
