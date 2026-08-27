@@ -40,15 +40,25 @@ export default function UsedProductGuidesPage() {
             </Link>
           </div>
 
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
+          <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Link
+              href="/used/noise"
+              className="rounded-2xl border border-ps-success/40 bg-emerald-50 p-5 transition hover:border-ps-success"
+            >
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-ps-success">PriceSift filtering data</p>
+              <h2 className="mt-2 text-xl font-black">Used Marketplace Noise Index</h2>
+              <p className="mt-2 text-sm leading-6 text-ps-text-secondary">
+                See how many marketplace candidates PriceSift filters as wrong models, broken items, accessories, risky listings, and other low-confidence matches.
+              </p>
+            </Link>
             <Link
               href="/used/market"
               className="rounded-2xl border border-ps-success/40 bg-emerald-50 p-5 transition hover:border-ps-success"
             >
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-ps-success">PriceSift data</p>
-              <h2 className="mt-2 text-xl font-black">Used market snapshot</h2>
+              <h2 className="mt-2 text-xl font-black">Used Market Index</h2>
               <p className="mt-2 text-sm leading-6 text-ps-text-secondary">
-                Compare current filtered prices with recent PriceSift price history for a small set of representative products.
+                Compare smoothed model baselines with current PriceSift price history and see which markets are moving.
               </p>
             </Link>
             <Link
