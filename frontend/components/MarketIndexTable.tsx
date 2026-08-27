@@ -16,7 +16,8 @@ const categoryLabels: Record<string, string> = {
   lego: "LEGO",
 };
 
-function money(value: number): string {
+function money(value: number | null): string {
+  if (value === null) return "—";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -24,18 +25,20 @@ function money(value: number): string {
   }).format(value);
 }
 
-function signedPercent(value: number): string {
+function signedPercent(value: number | null): string {
+  if (value === null) return "—";
   if (Math.abs(value) < 0.05) return "0.0%";
   return `${value > 0 ? "+" : ""}${value.toFixed(1)}%`;
 }
 
-function directionClass(value: number): string {
+function directionClass(value: number | null): string {
+  if (value === null) return "text-ps-neutral";
   if (value > 0.05) return "text-rose-700";
   if (value < -0.05) return "text-emerald-700";
   return "text-ps-text-secondary";
 }
 
-function sortValue(row: MarketIndexRow, key: SortKey): string | number {
+function sortValue(row: MarketIndexRow, key: SortKey): string | number | null {
   return row[key];
 }
 
@@ -54,6 +57,12 @@ export function MarketIndexTable({ rows }: { rows: MarketIndexRow[] }) {
     return [...filtered].sort((left, right) => {
       const leftValue = sortValue(left, sortKey);
       const rightValue = sortValue(right, sortKey);
+      if (leftValue === null && rightValue === null) {
+        return left.product_label.localeCompare(right.product_label);
+      }
+      if (leftValue === null) return 1;
+      if (rightValue === null) return -1;
+
       let comparison = 0;
       if (typeof leftValue === "number" && typeof rightValue === "number") {
         comparison = leftValue - rightValue;
@@ -94,7 +103,7 @@ export function MarketIndexTable({ rows }: { rows: MarketIndexRow[] }) {
   if (rows.length === 0) {
     return (
       <div className="mt-6 rounded-3xl border border-ps-border bg-ps-surface p-6 text-ps-text-secondary">
-        Price history is still building. Models appear here after at least two usable observations spanning a full day.
+        Price history is still building. Models appear here after PriceSift stores usable marketplace observations.
       </div>
     );
   }
@@ -103,7 +112,7 @@ export function MarketIndexTable({ rows }: { rows: MarketIndexRow[] }) {
     <div className="mt-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-ps-text-secondary">
-          {visibleRows.length} comparable model{visibleRows.length === 1 ? "" : "s"}. Tap any column heading to sort.
+          {visibleRows.length} tracked model{visibleRows.length === 1 ? "" : "s"}. Tap any column heading to sort.
         </p>
         <label className="flex items-center gap-2 text-sm font-semibold text-ps-text-secondary">
           Category
@@ -121,38 +130,51 @@ export function MarketIndexTable({ rows }: { rows: MarketIndexRow[] }) {
       </div>
 
       <div className="overflow-x-auto rounded-3xl border border-ps-border bg-ps-surface">
-        <table className="min-w-[900px] w-full border-collapse text-left text-sm">
+        <table className="min-w-[960px] w-full border-collapse text-left text-sm">
           <thead className="bg-ps-accent-soft text-xs uppercase tracking-[0.12em] text-ps-neutral">
             <tr>
               <th className="px-5 py-4">{header("Model", "product_label")}</th>
               <th className="px-5 py-4">{header("Category", "category")}</th>
-              <th className="px-5 py-4 text-right">{header("Latest median", "latest_median_price")}</th>
+              <th className="px-5 py-4 text-right">{header("Current median", "latest_median_price")}</th>
               <th className="px-5 py-4 text-right">{header("Change", "percent_change")}</th>
               <th className="px-5 py-4 text-right">{header("History", "history_days")}</th>
-              <th className="px-5 py-4 text-right">{header("Snapshots", "snapshot_count")}</th>
+              <th className="px-5 py-4 text-right">{header("Qualifying snapshots", "snapshot_count")}</th>
             </tr>
           </thead>
           <tbody>
-            {visibleRows.map((row) => (
-              <tr key={row.product_id} className="border-t border-ps-border align-middle">
-                <td className="px-5 py-4">
-                  <Link href={row.href} className="font-bold text-ps-text-primary hover:text-ps-accent-hover hover:underline">
-                    {row.product_label}
-                  </Link>
-                  <p className="mt-1 text-xs text-ps-neutral">Started at {money(row.baseline_median_price)}</p>
-                </td>
-                <td className="px-5 py-4 text-ps-text-secondary">{categoryLabels[row.category] || row.category}</td>
-                <td className="px-5 py-4 text-right font-semibold text-ps-text-primary">{money(row.latest_median_price)}</td>
-                <td className={`px-5 py-4 text-right font-black ${directionClass(row.percent_change)}`}>{signedPercent(row.percent_change)}</td>
-                <td className="px-5 py-4 text-right text-ps-text-secondary">{row.history_days.toFixed(1)}d</td>
-                <td className="px-5 py-4 text-right text-ps-text-secondary">{row.snapshot_count}</td>
-              </tr>
-            ))}
+            {visibleRows.map((row) => {
+              const comparable = row.status === "comparable";
+              return (
+                <tr key={row.product_id} className="border-t border-ps-border align-middle">
+                  <td className="px-5 py-4">
+                    <Link href={row.href} className="font-bold text-ps-text-primary hover:text-ps-accent-hover hover:underline">
+                      {row.product_label}
+                    </Link>
+                    {comparable ? (
+                      <p className="mt-1 text-xs text-ps-neutral">Smoothed baseline {money(row.baseline_median_price)}</p>
+                    ) : (
+                      <p className="mt-1 max-w-sm text-xs leading-5 text-ps-neutral">
+                        {row.status === "stale" ? "History is stale." : "Insufficient history."} {row.insufficient_reason || "More qualifying snapshots are needed."}
+                      </p>
+                    )}
+                  </td>
+                  <td className="px-5 py-4 text-ps-text-secondary">{categoryLabels[row.category] || row.category}</td>
+                  <td className="px-5 py-4 text-right font-semibold text-ps-text-primary">
+                    {comparable ? money(row.latest_median_price) : "Insufficient history"}
+                  </td>
+                  <td className={`px-5 py-4 text-right font-black ${directionClass(row.percent_change)}`}>
+                    {signedPercent(row.percent_change)}
+                  </td>
+                  <td className="px-5 py-4 text-right text-ps-text-secondary">{row.history_days.toFixed(1)}d</td>
+                  <td className="px-5 py-4 text-right text-ps-text-secondary">{row.snapshot_count}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
       <p className="mt-3 text-xs leading-5 text-ps-neutral">
-        A price increase is shown in red and a decrease in green from a buyer’s perspective. Model links open a curated PriceSift page when one exists; otherwise they open a filtered search for that model.
+        A price increase is shown in red and a decrease in green from a buyer’s perspective. Models without five qualifying snapshots spanning at least 24 hours stay visible as insufficient history instead of publishing a shaky percentage move.
       </p>
     </div>
   );

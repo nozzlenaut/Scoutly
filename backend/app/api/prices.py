@@ -10,6 +10,7 @@ from app.providers.ebay import ebay_config_from_env
 from app.services import search_service
 from app.services.market_index import build_market_index
 from app.services.market_signals import market_signals
+from app.services.noise_index import build_noise_index
 from app.services.price_store import build_price_context, price_overview
 from app.services.qa_store import load_qa_cases
 
@@ -45,6 +46,11 @@ def get_market_signals(
 @router.get("/prices/market-index")
 def get_public_market_index() -> dict:
     return build_market_index()
+
+
+@router.get("/prices/noise-index")
+def get_public_noise_index() -> dict:
+    return build_noise_index()
 
 
 @router.get("/prices/{product_id}")

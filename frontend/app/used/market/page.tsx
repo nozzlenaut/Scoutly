@@ -82,7 +82,7 @@ function IndexCard({ category }: { category: MarketIndexCategory }) {
         </>
       )}
       <p className="mt-4 text-sm text-ps-text-secondary">
-        {category.model_count} comparable model{category.model_count === 1 ? "" : "s"}
+        {category.model_count} comparable of {category.tracked_model_count} tracked model{category.tracked_model_count === 1 ? "" : "s"}
       </p>
     </article>
   );
@@ -142,13 +142,16 @@ export default async function UsedMarketPage() {
             <Link href="/#search" className="rounded-xl bg-ps-accent-strong px-5 py-3 text-sm font-bold text-white hover:bg-ps-accent-hover">
               Search current used listings
             </Link>
+            <Link href="/used/noise" className="rounded-xl border border-ps-border bg-ps-surface px-5 py-3 text-sm font-bold text-ps-accent-hover hover:border-ps-border-strong">
+              See marketplace noise index
+            </Link>
             <Link href="/used" className="rounded-xl border border-ps-border bg-ps-surface px-5 py-3 text-sm font-bold text-ps-accent-hover hover:border-ps-border-strong">
               Browse individual price guides
             </Link>
           </div>
           {data ? (
             <p className="mt-5 text-xs text-ps-neutral">
-              {data.comparable_model_count} comparable models from {data.tracked_snapshot_count} stored price snapshots. Updated {new Date(data.generated_at).toLocaleString("en-US", { timeZone: "America/Detroit" })} ET.
+              {data.comparable_model_count} comparable of {data.tracked_model_count} tracked models from {data.tracked_snapshot_count} stored price snapshots. Updated {new Date(data.generated_at).toLocaleString("en-US", { timeZone: "America/Detroit" })} ET.
             </p>
           ) : null}
         </header>
@@ -161,7 +164,7 @@ export default async function UsedMarketPage() {
                 <h2 id="category-indexes-heading" className="mt-2 text-3xl font-black">Category indexes</h2>
               </div>
               <p className="max-w-xl text-sm leading-6 text-ps-text-secondary">
-                100 is the starting observation for each model. A 94.0 index means the median tracked model is 6% cheaper than when its usable history began.
+                100 represents each model’s smoothed starting baseline, built from the median of its first five qualifying snapshot medians rather than one possibly-wonky first observation.
               </p>
             </div>
             <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -181,7 +184,7 @@ export default async function UsedMarketPage() {
           <p className="text-sm uppercase tracking-[0.22em] text-ps-neutral">Drill into the data</p>
           <h2 id="models-heading" className="mt-2 text-3xl font-black">Tracked models</h2>
           <p className="mt-3 max-w-4xl text-base leading-7 text-ps-text-secondary">
-            No hand-picked winners or losers. This is the comparable model table. Sort it however you want, then open the model you actually care about.
+            Models stay visible while history is building, but PriceSift does not publish a percentage move until the sample rules below are satisfied.
           </p>
           <MarketIndexTable rows={rows} />
         </section>
@@ -193,7 +196,7 @@ export default async function UsedMarketPage() {
               {data?.methodology || "PriceSift uses stored qualifying price-history snapshots and waits for enough repeat observations before calculating market movement."}
             </p>
             <p className="mt-3 text-xs leading-5 text-ps-neutral">
-              Models can enter tracking on different dates, so this is a used-market direction gauge, not a fixed-basket investment index or a claim about every transaction in the market.
+              Raw stored history is not rewritten when these reliability rules change. The index is a derived view over the original observations.
             </p>
           </div>
           <div className="rounded-3xl border border-ps-border bg-ps-surface p-6 sm:p-8">

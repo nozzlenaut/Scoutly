@@ -18,6 +18,21 @@ import { getPopularBook, popularBooks } from "@/lib/popularBooks";
 export const revalidate = 1800;
 export const dynamicParams = false;
 
+const targetedUsedTitles: Record<string, string> = {
+  "canon-eos-r10": "Used Canon EOS R10 Price: Median & Filtered Listings",
+  "canon-eos-m50-mark-ii": "Used Canon EOS M50 Mark II Price: Median & Filtered Listings",
+};
+
+const targetedUsedDescriptions: Record<string, string> = {
+  "canon-eos-r10": "See the current median used Canon EOS R10 price, filtered marketplace listings, price history, and model-specific buying checks from PriceSift.",
+  "canon-eos-m50-mark-ii": "See the current median used Canon EOS M50 Mark II price, filtered marketplace listings, price history, and model-specific buying checks from PriceSift.",
+};
+
+const cameraInventoryHrefs: Record<string, string> = {
+  "canon-eos-r10": "/cameras/canon-eos-r10-body",
+  "canon-eos-m50-mark-ii": "/cameras/canon-eos-m50-mark-ii-body",
+};
+
 export function generateStaticParams() {
   return [
     ...allIndexedProducts.map((product) => ({ slug: product.slug })),
@@ -55,13 +70,9 @@ export async function generateMetadata({
   const product = getAllIndexedProduct(slug);
   if (!product) return {};
 
-  const isCanonR10 = product.slug === "canon-eos-r10";
-  const title = isCanonR10
-    ? "Used Canon EOS R10 Prices & Listings"
-    : `Used ${product.title}: Filtered Listings & Prices`;
-  const description = isCanonR10
-    ? "See current used Canon EOS R10 prices, cleaner marketplace listings, and a practical buying checklist for the R10 camera body."
-    : `${product.description} PriceSift checks current marketplace candidates, filters bad matches when detectable, and shows cleaner used options with price context and rejection counts.`;
+  const title = targetedUsedTitles[product.slug] || `Used ${product.title}: Filtered Listings & Prices`;
+  const description = targetedUsedDescriptions[product.slug]
+    || `${product.description} PriceSift checks current marketplace candidates, filters bad matches when detectable, and shows cleaner used options with price context and rejection counts.`;
 
   return {
     title,
@@ -111,6 +122,7 @@ export default async function IndexedProductPage({
   });
   const guideHref = getBuyingGuideHref(product.category);
   const pageUrl = `https://www.pricesift.app/used/${product.slug}`;
+  const liveInventoryHref = cameraInventoryHrefs[product.slug];
   const prices = results
     .map((listing) => listing.total_price)
     .filter((value) => Number.isFinite(value) && value >= 0);
@@ -209,13 +221,23 @@ export default async function IndexedProductPage({
           >
             ← All used price guides
           </Link>
-          <Link
-            href={`/search?${searchParams.toString()}`}
-            rel="nofollow"
-            className="text-sm text-ps-accent-hover hover:text-ps-text-primary hover:underline"
-          >
-            Run live PriceSift search →
-          </Link>
+          <div className="flex flex-wrap gap-4">
+            {liveInventoryHref ? (
+              <Link
+                href={liveInventoryHref}
+                className="text-sm font-semibold text-ps-accent-hover hover:text-ps-text-primary hover:underline"
+              >
+                Current KEH inventory →
+              </Link>
+            ) : null}
+            <Link
+              href={`/search?${searchParams.toString()}`}
+              rel="nofollow"
+              className="text-sm text-ps-accent-hover hover:text-ps-text-primary hover:underline"
+            >
+              Run live PriceSift search →
+            </Link>
+          </div>
         </div>
 
         <section className="mt-8 rounded-[2rem] border border-ps-border bg-ps-surface p-6 sm:p-9">

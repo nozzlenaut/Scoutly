@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getPublicKehCameraCatalog } from "@/lib/api";
-import { allIndexedProducts, findAllIndexedCameraProduct } from "@/lib/allIndexedProducts";
+import { allIndexedProducts } from "@/lib/allIndexedProducts";
 import { buyingGuides } from "@/lib/buyingGuides";
 import { popularBooks } from "@/lib/popularBooks";
 
@@ -12,6 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/lenses` },
     { url: `${baseUrl}/used` },
     { url: `${baseUrl}/used/market` },
+    { url: `${baseUrl}/used/noise` },
     { url: `${baseUrl}/used/retro-game-consoles` },
     { url: `${baseUrl}/used/current-game-consoles` },
     { url: `${baseUrl}/used/popular-books` },
@@ -34,17 +35,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const cameraData = await getPublicKehCameraCatalog({ limit: 1000 });
     routes.push(
-      ...cameraData.models
-        .filter(
-          (model) =>
-            !findAllIndexedCameraProduct(
-              model.catalog_product_label,
-              model.model_name,
-            ),
-        )
-        .map((model) => ({
-          url: `${baseUrl}/cameras/${model.slug}`,
-        })),
+      ...cameraData.models.map((model) => ({
+        url: `${baseUrl}/cameras/${model.slug}`,
+      })),
     );
   } catch {
     // Keep stable sitemap routes available during a feed sync or backend outage.
