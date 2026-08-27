@@ -12,6 +12,11 @@ import { getIndexedSearchResults } from "@/lib/indexedSearch";
 
 export const dynamic = "force-dynamic";
 
+const targetedKehTitles: Record<string, string> = {
+  "canon-eos-m50-mark-ii-body": "Canon EOS M50 Mark II Used at KEH: Current Prices",
+  "canon-eos-r10-body": "Canon EOS R10 Used at KEH: Current Prices",
+};
+
 function money(value?: number | null, currency = "USD"): string {
   if (value === null || value === undefined) return "Price unavailable";
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(value);
@@ -23,14 +28,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const model = await getPublicKehCameraModel(slug);
     const indexedProduct = findIndexedCameraProduct(model.catalog_product_label, model.model_name);
     const isCatalogModel = model.provider_scope === "ebay_keh";
-    const canonical = indexedProduct ? `/used/${indexedProduct.slug}` : `/cameras/${model.slug}`;
-    const title = indexedProduct
-      ? `Used ${model.model_name} inventory at KEH`
-      : isCatalogModel
-        ? `Used ${model.model_name}: Filtered Prices & Listings`
-        : `Used ${model.model_name} prices at KEH`;
+    const canonical = `/cameras/${model.slug}`;
+    const title = targetedKehTitles[model.slug]
+      || (indexedProduct
+        ? `${model.model_name} Used at KEH: Current Inventory`
+        : isCatalogModel
+          ? `Used ${model.model_name}: Filtered Prices & KEH Inventory`
+          : `Used ${model.model_name} Prices at KEH`);
     const description = indexedProduct
-      ? `See current used ${model.model_name} inventory and prices from eBay and KEH through PriceSift.`
+      ? `See current used ${model.model_name} inventory and prices at KEH, with a direct link to PriceSift's broader filtered used-market price guide.`
       : isCatalogModel
         ? `PriceSift checks current used ${model.model_name} marketplace candidates, filters obvious bad matches when detectable, and compares cleaner eBay options with current KEH inventory.`
         : `See current used ${model.model_name} inventory and prices from KEH through PriceSift.`;
@@ -38,9 +44,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title,
       description,
       alternates: { canonical },
-      robots: indexedProduct
-        ? { index: false, follow: true }
-        : { index: true, follow: true },
+      robots: { index: true, follow: true },
       openGraph: {
         title: `${title} | PriceSift`,
         description,
@@ -100,15 +104,15 @@ export default async function CameraModelPage({ params }: { params: Promise<{ sl
             </p>
             {indexedProduct ? (
               <div className="mt-5 rounded-2xl border border-ps-border bg-ps-accent-soft p-4">
-                <p className="font-bold text-ps-text-primary">PriceSift has a curated buying page for this exact model.</p>
+                <p className="font-bold text-ps-text-primary">PriceSift has a curated used-market price guide for this exact model.</p>
                 <p className="mt-1 text-sm leading-6 text-ps-text-secondary">
-                  It combines current filtered listings, price context, common marketplace traps, and model-specific used-buying checks.
+                  It covers the broader used market with filtered listings, median price context, history, common marketplace traps, and model-specific buying checks.
                 </p>
                 <Link
                   href={`/used/${indexedProduct.slug}`}
                   className="mt-3 inline-flex font-bold text-ps-accent-hover hover:text-ps-text-primary hover:underline"
                 >
-                  Open the used {indexedProduct.title} guide →
+                  Open the used {indexedProduct.title} price guide →
                 </Link>
               </div>
             ) : null}
@@ -121,7 +125,7 @@ export default async function CameraModelPage({ params }: { params: Promise<{ sl
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href={indexedProduct ? `/used/${indexedProduct.slug}` : searchUrl} className="rounded-2xl bg-ps-accent-strong px-5 py-3 font-bold text-white hover:bg-ps-accent-hover">
-                {indexedProduct ? "Open curated used guide" : isCatalogModel ? "Compare eBay + KEH" : "Open PriceSift results"}
+                {indexedProduct ? "Open broader used-price guide" : isCatalogModel ? "Compare eBay + KEH" : "Open PriceSift results"}
               </Link>
               <ShareSearchButton label={model.model_name} bestPrice={model.lowest_price} theme="light" />
             </div>
