@@ -9,11 +9,6 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <main className="pricesift-home min-h-screen overflow-x-hidden bg-ps-canvas px-5 py-8 text-ps-text-primary sm:px-6 sm:py-10">
-      <script
-        type="text/javascript"
-        src="http://classic.avantlink.com/affiliate_app_confirm.php?mode=js&authResponse=2445f9a719b815b5f583cf268a8529166b803d72"
-      ></script>
-
       <section className="mx-auto flex min-h-[78vh] max-w-5xl flex-col items-center justify-center text-center">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ps-success">
           Buy used. Keep good products in use.
