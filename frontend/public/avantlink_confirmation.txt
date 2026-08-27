@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<root>
+	<Process>Application-Confirmation</Process>
+	<Version>1.0</Version>
+	<Mode>Verify-File</Mode>
+	<Authentication>2445f9a719b815b5f583cf268a8529166b803d72</Authentication>
+</root>
