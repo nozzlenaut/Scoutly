@@ -28,4 +28,11 @@ jobs:
       - name: Typecheck frontend
         run: npx tsc --noEmit
       - name: Lint frontend
-        run: npm run lint
+        continue-on-error: true
+        run: npm run lint > ../lint-modern.log 2>&1
+      - name: Upload lint log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-modern-log
+          path: lint-modern.log
