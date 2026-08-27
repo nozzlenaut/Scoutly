@@ -39,6 +39,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <meta {...impactVerificationMeta} />
+        <script
+          type="text/javascript"
+          src="https://classic.avantlink.com/affiliate_app_confirm.php?mode=js&authResponse=2445f9a719b815b5f583cf268a8529166b803d72"
+        ></script>
       </head>
       <body>
         {children}
