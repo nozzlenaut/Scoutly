@@ -16,12 +16,22 @@ type DemandCategoryRow = AnalyticsCategoryRow & {
   demand_searches?: number;
   demand_no_results?: number;
   seo_page_searches?: number;
+  last_24h_searches?: number;
+  last_24h_demand_searches?: number;
+  last_24h_seo_page_searches?: number;
 };
 
 type DemandTopSearch = AnalyticsTopSearch & {
   demand_searches?: number;
   demand_no_results?: number;
   seo_page_searches?: number;
+  last_24h_searches?: number;
+  last_24h_demand_searches?: number;
+  last_24h_seo_page_searches?: number;
+};
+
+type DemandUnresolvedSearch = AnalyticsDigest["top_unresolved_searches"][number] & {
+  last_24h_searches?: number;
 };
 
 type AnalyticsForensics = {
@@ -37,6 +47,14 @@ type ExtendedDigest = AnalyticsDigest & {
   demand_search_count?: number;
   seo_page_search_count?: number;
   seo_origin_tracking_note?: string;
+  last_24h_search_count?: number;
+  last_24h_demand_search_count?: number;
+  last_24h_seo_page_search_count?: number;
+  last_24h_resolved_count?: number;
+  last_24h_with_results_count?: number;
+  last_24h_no_result_count?: number;
+  last_24h_unresolved_count?: number;
+  last_24h_us_only_count?: number;
   forensics?: AnalyticsForensics;
 };
 
@@ -51,7 +69,7 @@ function normalizeLabel(value: string): string {
 export function AdminAnalyticsDigest({ digest }: Props) {
   const [copyStatus, setCopyStatus] = useState<"idle" | "summary" | "json" | "error">("idle");
   const extended = digest as ExtendedDigest;
-  const unresolvedSearches = digest.top_unresolved_searches || [];
+  const unresolvedSearches = (digest.top_unresolved_searches || []) as DemandUnresolvedSearch[];
   const categoryRows = digest.category_rows as DemandCategoryRow[];
   const topSearches = digest.top_searches as DemandTopSearch[];
   const demandSearchCount = extended.demand_search_count ?? digest.search_count;
@@ -84,7 +102,7 @@ export function AdminAnalyticsDigest({ digest }: Props) {
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200">Light analytics</p>
           <h2 className="mt-2 text-2xl font-black">Last {digest.days} days</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
-            Search and click trends only. No IP addresses, accounts, or cookies are stored. SEO-page launches are tracked separately so curated pages do not masquerade as fresh search demand.
+            Search and click trends only. No IP addresses, accounts, or cookies are stored. SEO-page launches are tracked separately so curated pages do not masquerade as fresh search demand. Parenthetical +X counts are the rolling last 24 hours.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -108,12 +126,12 @@ export function AdminAnalyticsDigest({ digest }: Props) {
       {copyStatus === "error" ? <p className="mt-3 text-sm text-amber-200">Clipboard access failed. Select the text below manually.</p> : null}
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-8">
-        <Metric label="Searches" value={String(digest.search_count)} />
-        <Metric label="Demand searches" value={String(demandSearchCount)} />
-        <Metric label="SEO launches" value={String(seoPageSearchCount)} />
-        <Metric label="With results" value={String(digest.with_results_count)} />
+        <Metric label="Searches" value={String(digest.search_count)} recent={extended.last_24h_search_count} />
+        <Metric label="Demand searches" value={String(demandSearchCount)} recent={extended.last_24h_demand_search_count} />
+        <Metric label="SEO launches" value={String(seoPageSearchCount)} recent={extended.last_24h_seo_page_search_count} />
+        <Metric label="With results" value={String(digest.with_results_count)} recent={extended.last_24h_with_results_count} />
         <Metric label="No-result rate" value={formatPercent(digest.no_result_rate)} />
-        <Metric label="Unresolved" value={String(digest.unresolved_count ?? 0)} />
+        <Metric label="Unresolved" value={String(digest.unresolved_count ?? 0)} recent={extended.last_24h_unresolved_count} />
         <Metric label="Tracked clicks" value={String(digest.click_count)} />
         <Metric label="US-only use" value={formatPercent(digest.us_only_rate)} />
       </div>
@@ -138,7 +156,8 @@ export function AdminAnalyticsDigest({ digest }: Props) {
               <div key={row.category} className="flex items-center justify-between gap-4 border-b border-white/5 pb-2">
                 <span className="font-semibold capitalize text-slate-200">{row.category}</span>
                 <span className="text-right text-slate-400">
-                  {row.demand_searches ?? row.searches} demand · {row.searches} total · {row.clicks} clicks
+                  {row.demand_searches ?? row.searches} demand · {row.searches} total
+                  {row.last_24h_searches !== undefined ? ` (+${row.last_24h_searches} 24h)` : ""} · {row.clicks} clicks
                 </span>
               </div>
             ))}
@@ -166,6 +185,7 @@ export function AdminAnalyticsDigest({ digest }: Props) {
                   </div>
                   <p className="mt-1 text-xs text-slate-500">
                     {row.category} · {demandSearches} demand · {row.searches} total
+                    {row.last_24h_searches !== undefined ? ` (+${row.last_24h_searches} 24h)` : ""}
                     {seoLaunches > 0 ? ` · ${seoLaunches} SEO launches` : ""}
                     {` · ${row.no_results} empty · ${row.clicks} clicks`}
                   </p>
@@ -192,6 +212,7 @@ export function AdminAnalyticsDigest({ digest }: Props) {
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
                   {row.category} · catalog support needed first
+                  {row.last_24h_searches !== undefined ? ` · +${row.last_24h_searches} 24h` : ""}
                   {row.variants.length > 1 ? ` · ${row.variants.length} grouped variants` : ""}
                 </p>
                 {row.variants.length > 1 ? (
@@ -251,11 +272,16 @@ export function AdminAnalyticsDigest({ digest }: Props) {
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value, recent }: { label: string; value: string; recent?: number }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-4">
       <p className="text-xs uppercase tracking-[0.15em] text-slate-500">{label}</p>
-      <p className="mt-2 text-2xl font-black text-white">{value}</p>
+      <p className="mt-2 text-2xl font-black text-white">
+        {value}
+        {recent !== undefined ? (
+          <span className="ml-2 text-sm font-bold text-cyan-200">(+{recent})</span>
+        ) : null}
+      </p>
     </div>
   );
 }
