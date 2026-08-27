@@ -181,6 +181,43 @@ main:not(.pricesift-home):not(.pricesift-results):not(.pricesift-public) [class*
   color: #61758a !important;
 }
 
+.pricesift-admin .text-cyan-100,
+.pricesift-admin .text-cyan-200,
+.pricesift-admin .text-cyan-300,
+.pricesift-admin [class*="text-cyan-100/"] {
+  color: #346f91 !important;
+}
+
+.pricesift-admin .text-emerald-100,
+.pricesift-admin .text-emerald-200,
+.pricesift-admin .text-emerald-300 {
+  color: #18794e !important;
+}
+
+.pricesift-admin .text-amber-100,
+.pricesift-admin .text-amber-200,
+.pricesift-admin .text-amber-300 {
+  color: #8a5a00 !important;
+}
+
+.pricesift-admin .text-sky-100,
+.pricesift-admin .text-sky-200,
+.pricesift-admin .text-sky-300 {
+  color: #236f9d !important;
+}
+
+.pricesift-admin .text-violet-100,
+.pricesift-admin .text-violet-200,
+.pricesift-admin .text-violet-300 {
+  color: #6d4aa5 !important;
+}
+
+.pricesift-admin .text-fuchsia-100,
+.pricesift-admin .text-fuchsia-200,
+.pricesift-admin .text-fuchsia-300 {
+  color: #9b3d74 !important;
+}
+
 .pricesift-admin input,
 .pricesift-admin select,
 .pricesift-admin textarea {
