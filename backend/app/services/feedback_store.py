@@ -575,7 +575,8 @@ def log_filtered_listing(
     )
 
 def recent_filtered_listings(limit: int = 50) -> list[dict[str, Any]]:
-    limit = max(1, min(limit, MAX_FILTERED))
+    storage_limit = DB_MAX_FILTERED if database_configured() else MAX_FILTERED
+    limit = max(1, min(limit, storage_limit))
 
     def db_read() -> list[dict[str, Any]]:
         with database_connection() as connection:

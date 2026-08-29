@@ -16,6 +16,7 @@ def _snapshot(
     eligible: int,
     category: str = "cameras",
     age_hours: int = 1,
+    duplicates: int | None = 0,
 ) -> dict:
     return {
         "product_id": product_id,
@@ -27,6 +28,7 @@ def _snapshot(
         "candidate_count": candidates,
         "filtered_count": filtered,
         "eligible_count": eligible,
+        "duplicates_removed": duplicates,
     }
 
 
@@ -34,13 +36,14 @@ def _event(product_id: str, reasons: list[str], age_hours: int = 1) -> dict:
     return {
         "product_id": product_id,
         "filtered_at": (NOW - timedelta(hours=age_hours)).isoformat(),
+        "listing_type": "fixed_price",
         "reasons": reasons,
     }
 
 
 def test_noise_rate_excludes_duplicates_and_reports_them_separately():
     result = build_noise_index_from_records(
-        [_snapshot("r10", candidates=100, filtered=40, eligible=50)],
+        [_snapshot("r10", candidates=100, filtered=40, eligible=50, duplicates=10)],
         [],
         generated_at=NOW,
     )
@@ -48,6 +51,23 @@ def test_noise_rate_excludes_duplicates_and_reports_them_separately():
     assert row["noise_rate"] == 40.0
     assert row["duplicates_removed"] == 10
     assert row["eligible_count"] == 50
+    assert row["eligible_count_exact"] is True
+    assert row["duplicates_source"] == "recorded_at_collection"
+
+
+def test_legacy_capped_counts_are_not_presented_as_exact():
+    result = build_noise_index_from_records(
+        [_snapshot("legacy", candidates=200, filtered=30, eligible=100, duplicates=None)],
+        [],
+        generated_at=NOW,
+    )
+    row = result["models"][0]
+    category = result["categories"][0]
+    assert row["eligible_count_exact"] is False
+    assert row["duplicates_removed"] is None
+    assert row["duplicates_source"] == "not_recorded"
+    assert category["duplicates_removed"] is None
+    assert category["duplicates_complete"] is False
 
 
 def test_weighted_category_rate_uses_underlying_candidate_counts():
@@ -104,6 +124,19 @@ def test_overlapping_rejection_reasons_do_not_change_noise_numerator():
     assert sum(reason["count"] for reason in row["rejection_reasons"]) == 4
 
 
+def test_auction_reasons_do_not_contaminate_fixed_price_snapshot():
+    auction_event = _event("r10", ["auction-only reason"])
+    auction_event["listing_type"] = "auction"
+    result = build_noise_index_from_records(
+        [_snapshot("r10", candidates=30, filtered=2, eligible=28)],
+        [_event("r10", ["fixed-price reason"]), auction_event],
+        generated_at=NOW,
+    )
+    assert result["models"][0]["rejection_reasons"] == [
+        {"reason": "fixed-price reason", "count": 1}
+    ]
+
+
 def test_missing_reason_history_is_not_invented():
     result = build_noise_index_from_records(
         [_snapshot("legacy", candidates=30, filtered=10, eligible=20)],
@@ -131,6 +164,8 @@ def test_latest_snapshot_wins_and_stale_models_are_excluded():
     assert [row["product_id"] for row in result["models"]] == ["r10"]
     assert result["models"][0]["candidate_count"] == 80
     assert result["stale_model_count"] == 1
+    assert result["latest_observed_at"] == (NOW - timedelta(hours=1)).isoformat()
+    assert result["oldest_observed_at"] == (NOW - timedelta(hours=1)).isoformat()
 
 
 def test_noise_index_endpoint_is_public(monkeypatch, tmp_path):

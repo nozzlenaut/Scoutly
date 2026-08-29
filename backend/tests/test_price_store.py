@@ -41,6 +41,30 @@ def test_price_snapshots_upsert_six_hour_bucket(monkeypatch, tmp_path):
     assert snapshots[0]["median_price"] == 210.0
 
 
+def test_price_snapshot_keeps_exact_counts_beyond_price_sample_cap(monkeypatch, tmp_path):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
+    observed = datetime(2026, 8, 29, 12, 0, tzinfo=UTC)
+
+    record = record_price_snapshot(
+        product_id="console-sony-playstation-5-slim",
+        category="consoles",
+        product_label="Sony PlayStation 5 Slim",
+        provider="ebay",
+        query="Sony PlayStation 5 Slim",
+        prices=list(range(125)),
+        candidate_count=200,
+        filtered_count=45,
+        eligible_count=125,
+        duplicates_removed=30,
+        observed_at=observed,
+    )
+
+    assert record["eligible_count"] == 125
+    assert record["duplicates_removed"] == 30
+    assert len(record["sample_prices"]) == 100
+
+
 def test_price_context_waits_for_three_inventory_snapshots(monkeypatch, tmp_path):
     monkeypatch.delenv("DATABASE_URL", raising=False)
     monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))

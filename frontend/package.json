@@ -1,12 +1,13 @@
 {
   "name": "scoutly-frontend",
-  "version": "0.3.2",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@types/node": "latest",

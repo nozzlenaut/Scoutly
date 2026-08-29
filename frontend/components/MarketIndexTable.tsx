@@ -13,6 +13,7 @@ const categoryLabels: Record<string, string> = {
   consoles: "Consoles",
   gpus: "GPUs",
   cpus: "CPUs",
+  ram: "RAM",
   lego: "LEGO",
 };
 

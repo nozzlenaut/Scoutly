@@ -254,6 +254,7 @@ def initialize_database() -> bool:
             candidate_count INTEGER NOT NULL DEFAULT 0,
             filtered_count INTEGER NOT NULL DEFAULT 0,
             eligible_count INTEGER NOT NULL DEFAULT 0,
+            duplicates_removed INTEGER,
             lowest_price NUMERIC(12, 2),
             median_price NUMERIC(12, 2),
             p25_price NUMERIC(12, 2),
@@ -261,6 +262,10 @@ def initialize_database() -> bool:
             sample_prices JSONB NOT NULL DEFAULT '[]'::jsonb,
             UNIQUE (product_id, provider, snapshot_bucket)
         )
+        """,
+        """
+        ALTER TABLE scoutly_price_snapshots
+        ADD COLUMN IF NOT EXISTS duplicates_removed INTEGER
         """,
         """
         CREATE INDEX IF NOT EXISTS scoutly_price_snapshots_product_recent

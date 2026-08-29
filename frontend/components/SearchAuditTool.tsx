@@ -1,5 +1,8 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Audit images include dynamic marketplace URLs. */
+/* eslint-disable react-hooks/set-state-in-effect -- Audit drafts intentionally hydrate from browser-local storage. */
+
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { adminFetch } from "@/lib/api";
 import { ADMIN_BROWSER_SESSION } from "@/lib/adminSessionShared";

@@ -589,6 +589,13 @@ async def search_best_deals_with_auctions(
                     prices=prices,
                     candidate_count=provider_candidate_counts.get(provider_key, 0),
                     filtered_count=provider_filtered_counts.get(provider_key, 0),
+                    eligible_count=len(unique_candidates),
+                    duplicates_removed=max(
+                        0,
+                        provider_candidate_counts.get(provider_key, 0)
+                        - provider_filtered_counts.get(provider_key, 0)
+                        - len(unique_candidates),
+                    ),
                     source=snapshot_source,
                 )
         price_context = PriceContext(**build_price_context(product_id=product.id, current_prices=current_prices))

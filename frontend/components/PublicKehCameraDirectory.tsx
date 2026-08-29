@@ -1,9 +1,11 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Camera photos come from a dynamic retailer feed. */
+
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { KehCameraCatalogResponse } from "@/lib/api";
-import { findIndexedCameraProduct } from "@/lib/indexedProducts";
+import { findAllIndexedCameraProduct } from "@/lib/allIndexedProducts";
 
 function money(value?: number | null, currency = "USD"): string {
   if (value === null || value === undefined) return "Price unavailable";
@@ -88,7 +90,7 @@ export function PublicKehCameraDirectory({ data, theme = "dark" }: { data: KehCa
       {visibleModels.length ? (
         <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-label="Current KEH camera models">
           {visibleModels.map((model) => {
-            const indexedProduct = findIndexedCameraProduct(model.catalog_product_label, model.model_name);
+            const indexedProduct = findAllIndexedCameraProduct(model.catalog_product_label, model.model_name);
             const href = indexedProduct ? `/used/${indexedProduct.slug}` : `/cameras/${model.slug}`;
             return (
               <Link

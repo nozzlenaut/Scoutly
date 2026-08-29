@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { IScannerControls } from "@zxing/browser";
@@ -46,7 +46,7 @@ export function BookIsbnScanner({
   );
   const [error, setError] = useState<string | null>(null);
 
-  function stopCamera() {
+  const stopCamera = useCallback(() => {
     stoppedRef.current = true;
     controlsRef.current?.stop();
     controlsRef.current = null;
@@ -56,28 +56,31 @@ export function BookIsbnScanner({
       video.srcObject.getTracks().forEach((track) => track.stop());
     }
     if (video) video.srcObject = null;
-  }
+  }, []);
 
   function closeScanner() {
     stopCamera();
     setOpen(false);
   }
 
-  function navigateToIsbn(isbn: string) {
+  const navigateToIsbn = useCallback((isbn: string) => {
     stopCamera();
     setOpen(false);
     const params = new URLSearchParams({ category: "books", q: isbn });
     if (usOnly) params.set("us_only", "1");
     window.dispatchEvent(new CustomEvent("pricesift:search-start"));
     router.push(`/search?${params.toString()}`);
+  }, [router, stopCamera, usOnly]);
+
+  function openScanner() {
+    stoppedRef.current = false;
+    setError(null);
+    setStatus("Loading barcode scanner…");
+    setOpen(true);
   }
 
   useEffect(() => {
     if (!open) return;
-
-    stoppedRef.current = false;
-    setError(null);
-    setStatus("Loading barcode scanner…");
 
     async function begin() {
       if (!window.isSecureContext) {
@@ -157,7 +160,7 @@ export function BookIsbnScanner({
 
     void begin();
     return stopCamera;
-  }, [open]);
+  }, [navigateToIsbn, open, stopCamera]);
 
   return (
     <>
@@ -165,7 +168,7 @@ export function BookIsbnScanner({
         <span className={theme === "light" ? "text-ps-neutral" : "text-slate-400"}>Books tools:</span>
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={openScanner}
           className={theme === "light" ? "font-semibold text-ps-accent-hover underline underline-offset-4 transition hover:text-ps-text-primary" : "font-semibold text-cyan-200 underline decoration-cyan-200/30 underline-offset-4 transition hover:text-cyan-100"}
         >
           Scan an ISBN barcode

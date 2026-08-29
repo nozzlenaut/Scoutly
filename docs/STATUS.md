@@ -1,6 +1,6 @@
 # PriceSift current status
 
-_Last updated: July 21, 2026_
+_Last updated: August 29, 2026_
 
 This is the living project snapshot. Update this file when production behavior, provider coverage, known issues, or the immediate plan changes. Use the changelog only for history.
 
@@ -14,7 +14,7 @@ Production: https://www.pricesift.app/
 
 ## Current release
 
-- Release: v0.6.37 Amazon fallback links and optional ISBN barcode scanning
+- Release: v1.0.0 Noise Index accuracy, expanded SEO coverage, and aligned release versioning
 - Internal repository name: Scoutly
 - Deployment: Vercel frontend + Railway backend from `main`
 - Storage: PostgreSQL in production, local JSON fallback for development
@@ -38,8 +38,9 @@ Amazon is currently a separate fallback card rather than a ranked PriceSift prov
 
 ## Validation snapshot
 
-- Automated tests before this release: 235 passing
-- v0.6.37 adds an Amazon outbound allowlist and affiliate-tracking regression
+- Automated tests: 346 backend tests pass; frontend lint, TypeScript check, and production build pass
+- The Noise Index stores exact duplicate and eligible counts for new snapshots and leaves unavailable legacy counts clearly marked
+- Popular-book SEO coverage includes seven permanent exact-edition pages
 - QA cases reviewed: 106
 - Pass: 85
 - Top-3 only: 3

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketIndexTable } from "@/components/MarketIndexTable";
 import { SiteFooter } from "@/components/SiteFooter";
-import { indexedProducts } from "@/lib/indexedProducts";
+import { allIndexedProducts } from "@/lib/allIndexedProducts";
 import { getMarketIndex, type MarketIndexCategory, type MarketIndexModel } from "@/lib/marketIndex";
 
 export const revalidate = 21600;
@@ -20,6 +20,12 @@ export const metadata: Metadata = {
     url: "/used/market",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "PriceSift Used Market Index",
+    description:
+      "See whether tracked used prices are heating up or cooling down, then drill into individual model history.",
+  },
 };
 
 const categoryLabels: Record<string, string> = {
@@ -27,6 +33,7 @@ const categoryLabels: Record<string, string> = {
   consoles: "Console Market Index",
   gpus: "GPU Market Index",
   cpus: "CPU Market Index",
+  ram: "RAM Market Index",
   lego: "LEGO Market Index",
 };
 
@@ -48,7 +55,7 @@ function normalize(value: string): string {
 function modelHref(row: MarketIndexModel): string {
   const label = normalize(row.product_label);
   const query = normalize(row.query);
-  const indexed = indexedProducts.find((product) => {
+  const indexed = allIndexedProducts.find((product) => {
     if (product.category !== row.category) return false;
     const title = normalize(product.title);
     const productQuery = normalize(product.query);

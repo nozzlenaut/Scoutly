@@ -1,6 +1,9 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect -- Search state intentionally follows browser preferences and debounced catalog requests. */
+
 import { useEffect, useId, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { suggestProducts, type ProductMatch } from "@/lib/api";
 import { getCategory, searchCategories } from "@/lib/categoryCatalog";
@@ -520,7 +523,7 @@ export function SearchForm({
           </p>
           {selectedCategory.id === "cameras" ? (
             <p className={theme === "light" ? "mt-2 text-xs text-ps-neutral" : "mt-2 text-xs text-slate-400"}>
-              <a
+              <Link
                 href="/cameras"
                 className={
                   theme === "light"
@@ -529,7 +532,7 @@ export function SearchForm({
                 }
               >
                 Browse every camera model currently available at KEH
-              </a>
+              </Link>
             </p>
           ) : null}
         </>

@@ -1,7 +1,14 @@
 # Changelog
 
-## Unreleased
+## v1.0.0 - Noise Index accuracy, SEO coverage, and release alignment
 
+- Stores full eligible-listing totals and exact duplicate removals for new marketplace snapshots instead of deriving duplicates from a 100-price sample cap.
+- Leaves older duplicate totals unavailable when they were not recorded, keeps auction rejection reasons out of fixed-price snapshots, and reports the actual snapshot collection window.
+- Improves Noise Index reason labels, RAM coverage, structured data, metadata, and plain-language methodology.
+- Fixes curated internal links for expanded product and camera pages, makes the camera sitemap feed more resilient, and blocks admin pages from indexing.
+- Adds exact-edition pages for four more popular books: Atomic Habits, The Let Them Theory, Sunrise on the Reaping, and The Women.
+- Aligns the public footer, backend API, frontend package, and release documentation on v1.0.0.
+- Makes lint and TypeScript checks required in CI alongside backend tests and the production build.
 - Adds grouped catalog support for Steam Deck OLED 512GB/1TB systems and PlayStation Vita Slim/PCH-2000-series handhelds; LEGO 10327 and the RTX 5060 Ti 16GB were already present on `main` and are not duplicated.
 - Surfaces actual unresolved public search text in the existing 7/30/90-day admin analytics digest, with counts, recent timestamps, and conservative grouping of casing, punctuation, and obvious typo variants.
 - Keeps supported products with temporarily empty inventory separate from genuinely unresolved catalog searches.

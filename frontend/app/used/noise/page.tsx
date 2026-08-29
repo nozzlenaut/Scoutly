@@ -19,6 +19,12 @@ export const metadata: Metadata = {
     url: "/used/noise",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Used Marketplace Noise Index | PriceSift",
+    description:
+      "See how many current marketplace candidates PriceSift filters before calculating useful used prices.",
+  },
 };
 
 const categoryLabels: Record<string, string> = {
@@ -26,6 +32,7 @@ const categoryLabels: Record<string, string> = {
   consoles: "Consoles",
   gpus: "GPUs",
   cpus: "CPUs",
+  ram: "RAM",
   lego: "LEGO",
 };
 
@@ -57,6 +64,8 @@ function reasonBucket(reason: string): string {
   const value = reason.toLowerCase();
   if (
     value.includes("bad condition") || value.includes("hardware defect") ||
+    value.includes("bad title term") || value.includes("cpu unsafe") ||
+    value.includes("damage") ||
     value.includes("for parts") || value.includes("repair") ||
     value.includes("defective") || value.includes("not working") ||
     value.includes("untested") || value.includes("as-is") ||
@@ -67,6 +76,11 @@ function reasonBucket(reason: string): string {
     value.includes("without console")
   ) return "Accessory or incomplete listing";
   if (
+    value.includes("bundle") || value.includes("lot") ||
+    value.includes("full system")
+  ) return "Bundle, lot, or full system";
+  if (
+    value.includes("catalog/product match rejected") ||
     value.includes("model") || value.includes("required term") ||
     value.includes("form factor") || value.includes("conflict")
   ) return "Wrong model or variant";
@@ -125,11 +139,15 @@ function SnapshotCard({ row }: { row: NoiseIndexModel }) {
         </div>
         <div className="rounded-2xl bg-ps-control p-3">
           <p className="text-xs text-ps-neutral">Eligible listings</p>
-          <p className="mt-1 text-xl font-black">{row.eligible_count}</p>
+          <p className="mt-1 text-xl font-black">
+            {row.eligible_count_exact ? row.eligible_count : `${row.eligible_count}+`}
+          </p>
         </div>
         <div className="rounded-2xl bg-ps-control p-3">
           <p className="text-xs text-ps-neutral">Duplicates removed</p>
-          <p className="mt-1 text-xl font-black">{row.duplicates_removed}</p>
+          <p className="mt-1 text-xl font-black">
+            {row.duplicates_removed === null ? "Not recorded" : row.duplicates_removed}
+          </p>
         </div>
       </div>
 
@@ -167,13 +185,25 @@ export default async function UsedNoisePage() {
   const pageUrl = "https://www.pricesift.app/used/noise";
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "Dataset",
-    name: "PriceSift Used Marketplace Noise Index",
-    description:
-      "Current PriceSift filtering counts showing marketplace candidates checked, rejected listings, eligible listings, and duplicate removals.",
-    url: pageUrl,
-    creator: { "@type": "Organization", name: "PriceSift", url: "https://www.pricesift.app/" },
-    dateModified: data?.generated_at || undefined,
+    "@graph": [
+      {
+        "@type": "Dataset",
+        name: "PriceSift Used Marketplace Noise Index",
+        description:
+          "Current PriceSift filtering counts showing marketplace candidates checked, rejected listings, eligible listings, and duplicate removals.",
+        url: pageUrl,
+        creator: { "@type": "Organization", name: "PriceSift", url: "https://www.pricesift.app/" },
+        dateModified: data?.latest_observed_at || undefined,
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: "https://www.pricesift.app/" },
+          { "@type": "ListItem", position: 2, name: "Used price guides", item: "https://www.pricesift.app/used" },
+          { "@type": "ListItem", position: 3, name: "Marketplace Noise Index", item: pageUrl },
+        ],
+      },
+    ],
   };
 
   return (
@@ -206,7 +236,10 @@ export default async function UsedNoisePage() {
           </div>
           {data ? (
             <p className="mt-5 text-xs leading-5 text-ps-neutral">
-              Current marketplace snapshot generated {new Date(data.generated_at).toLocaleString("en-US", { timeZone: "America/Detroit" })} ET. Models older than {data.stale_after_days} days are excluded from this current view.
+              Index generated {new Date(data.generated_at).toLocaleString("en-US", { timeZone: "America/Detroit" })} ET
+              {data.oldest_observed_at && data.latest_observed_at
+                ? ` from snapshots collected ${new Date(data.oldest_observed_at).toLocaleString("en-US", { timeZone: "America/Detroit" })}–${new Date(data.latest_observed_at).toLocaleString("en-US", { timeZone: "America/Detroit" })} ET.`
+                : "."} Models older than {data.stale_after_days} days are excluded from this current view.
             </p>
           ) : null}
         </header>
@@ -227,7 +260,7 @@ export default async function UsedNoisePage() {
 
             {data.categories.length > 0 ? (
               <section className="mt-10" aria-labelledby="noise-categories">
-                <p className="text-sm uppercase tracking-[0.22em] text-ps-neutral">Weighted by actual search volume</p>
+                <p className="text-sm uppercase tracking-[0.22em] text-ps-neutral">Weighted by candidates checked</p>
                 <h2 id="noise-categories" className="mt-2 text-3xl font-black">Category noise</h2>
                 <p className="mt-3 max-w-4xl text-sm leading-6 text-ps-text-secondary">
                   Category rates use total filtered listings divided by total candidates checked. PriceSift does not average model percentages, which would let tiny searches distort the category.
@@ -240,7 +273,13 @@ export default async function UsedNoisePage() {
                       <p className="mt-2 text-sm text-ps-text-secondary">
                         {category.filtered_count} filtered from {category.candidate_count} candidates across {category.model_count} current model{category.model_count === 1 ? "" : "s"}.
                       </p>
-                      <p className="mt-2 text-xs text-ps-neutral">{category.duplicates_removed} duplicate candidate matches removed separately.</p>
+                      <p className="mt-2 text-xs text-ps-neutral">
+                        {category.duplicates_removed === null
+                          ? "Duplicate counts were not stored for these snapshots."
+                          : category.duplicates_complete
+                            ? `${category.duplicates_removed} duplicate candidate matches removed separately.`
+                            : `${category.duplicates_removed} duplicates recorded across ${category.duplicates_reported_model_count} of ${category.model_count} models; older snapshots stay unknown.`}
+                      </p>
                     </article>
                   ))}
                 </div>
@@ -289,7 +328,7 @@ export default async function UsedNoisePage() {
               <div className="rounded-3xl border border-ps-border bg-ps-surface p-6 sm:p-8">
                 <h2 className="text-2xl font-black">Duplicates are separate on purpose</h2>
                 <p className="mt-3 text-sm leading-7 text-ps-text-secondary sm:text-base">
-                  A duplicate candidate is not automatically a bad marketplace listing. PriceSift derives duplicate removals separately from the stored candidate, filtered, and unique eligible counts, and never puts them in the noise-rate numerator.
+                  A duplicate candidate is not automatically a bad marketplace listing. PriceSift now stores exact duplicate removals separately at collection time and never puts them in the noise-rate numerator. Older snapshots without that exact count stay marked unavailable instead of being guessed.
                 </p>
                 <p className="mt-3 text-xs leading-5 text-ps-neutral">{data.methodology}</p>
               </div>

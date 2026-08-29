@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- Camera photos come from a dynamic retailer feed without a stable host allowlist. */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -6,8 +7,8 @@ import { FilterTransparencyPanel } from "@/components/FilterTransparencyPanel";
 import { PriceContextPanel } from "@/components/PriceContextPanel";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
 import { SiteFooter } from "@/components/SiteFooter";
+import { findAllIndexedCameraProduct } from "@/lib/allIndexedProducts";
 import { buildOutboundUrl, getPublicKehCameraModel, type KehCameraModel } from "@/lib/api";
-import { findIndexedCameraProduct } from "@/lib/indexedProducts";
 import { getIndexedSearchResults } from "@/lib/indexedSearch";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   try {
     const model = await getPublicKehCameraModel(slug);
-    const indexedProduct = findIndexedCameraProduct(model.catalog_product_label, model.model_name);
+    const indexedProduct = findAllIndexedCameraProduct(model.catalog_product_label, model.model_name);
     const isCatalogModel = model.provider_scope === "ebay_keh";
     const canonical = `/cameras/${model.slug}`;
     const title = targetedKehTitles[model.slug]
@@ -69,7 +70,7 @@ export default async function CameraModelPage({ params }: { params: Promise<{ sl
     notFound();
   }
 
-  const indexedProduct = findIndexedCameraProduct(model.catalog_product_label, model.model_name);
+  const indexedProduct = findAllIndexedCameraProduct(model.catalog_product_label, model.model_name);
   const searchQuery = model.catalog_product_label || model.model_name;
   const searchUrl = `/search?category=cameras&q=${encodeURIComponent(searchQuery)}`;
   const isCatalogModel = model.provider_scope === "ebay_keh";

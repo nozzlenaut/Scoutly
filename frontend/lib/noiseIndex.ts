@@ -13,7 +13,8 @@ export type NoiseIndexModel = {
   filtered_count: number;
   noise_rate: number | null;
   eligible_count: number;
-  duplicates_removed: number;
+  eligible_count_exact: boolean;
+  duplicates_removed: number | null;
   duplicates_source: string;
   rejection_reasons: NoiseReason[];
   rejection_reason_breakdown_available: boolean;
@@ -27,11 +28,16 @@ export type NoiseIndexCategory = {
   filtered_count: number;
   noise_rate: number | null;
   eligible_count: number;
-  duplicates_removed: number;
+  eligible_count_exact: boolean;
+  duplicates_removed: number | null;
+  duplicates_reported_model_count: number;
+  duplicates_complete: boolean;
 };
 
 export type NoiseIndexResponse = {
   generated_at: string;
+  latest_observed_at: string | null;
+  oldest_observed_at: string | null;
   snapshot_mode: "current_marketplace_snapshot";
   historical_trends_available: boolean;
   stale_after_days: number;

@@ -10,6 +10,7 @@ export function AdminAnalyticsOptOut() {
   const [excluded, setExcluded] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- The cookie is only available after client hydration.
     setExcluded(analyticsOptedOut());
   }, []);
 

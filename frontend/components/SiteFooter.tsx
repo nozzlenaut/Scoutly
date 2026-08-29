@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const PRICESIFT_VERSION = "0.6.48";
+const PRICESIFT_VERSION = "1.0.0";
 
 const linkClasses =
   "text-cyan-200 hover:text-cyan-100 [.pricesift-home_&]:text-ps-accent-hover [.pricesift-home_&]:hover:text-ps-text-primary [.pricesift-home_&]:hover:underline [.pricesift-results_&]:text-ps-accent-hover [.pricesift-results_&]:hover:text-ps-text-primary [.pricesift-results_&]:hover:underline [.pricesift-public_&]:text-ps-accent-hover [.pricesift-public_&]:hover:text-ps-text-primary [.pricesift-public_&]:hover:underline";

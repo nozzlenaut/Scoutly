@@ -8,6 +8,12 @@ export const metadata: Metadata = {
   description: "Cleaner current used listings, recent price context, and buying guidance for exact cameras, consoles, graphics cards, LEGO sets, and selected popular books.",
   alternates: { canonical: "/used" },
   robots: { index: true, follow: true },
+  twitter: {
+    card: "summary",
+    title: "Used Product Price Guides | PriceSift",
+    description:
+      "Cleaner current used listings, recent price context, and practical buying checks for exact products.",
+  },
 };
 
 export default function UsedProductGuidesPage() {

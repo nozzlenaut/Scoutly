@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect -- Delivery UI synchronizes an ephemeral ZIP store with an async lookup lifecycle. */
+
 import { useEffect, useMemo, useState } from "react";
 import { ResultCard } from "@/components/ResultCard";
 import {
@@ -37,7 +39,6 @@ export function DeliveryResultsGrid({
       .slice(0, 3),
     [results],
   );
-  const itemIdsKey = itemIds.join("|");
   const [postalCode, setPostalCode] = useState("");
   const [status, setStatus] = useState<DeliveryStatus>("idle");
   const [estimates, setEstimates] = useState<DeliveryEstimateItem[]>([]);
@@ -74,7 +75,7 @@ export function DeliveryResultsGrid({
     return () => {
       cancelled = true;
     };
-  }, [deliveryEnabled, itemIdsKey, postalCode]);
+  }, [deliveryEnabled, itemIds, postalCode]);
 
   const estimatesById = useMemo(
     () => new Map(estimates.map((estimate) => [estimate.item_id, estimate])),

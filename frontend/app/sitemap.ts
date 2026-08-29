@@ -4,6 +4,8 @@ import { allIndexedProducts } from "@/lib/allIndexedProducts";
 import { buyingGuides } from "@/lib/buyingGuides";
 import { popularBooks } from "@/lib/popularBooks";
 
+export const revalidate = 21600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.pricesift.app";
   const routes: MetadataRoute.Sitemap = [
@@ -33,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const cameraData = await getPublicKehCameraCatalog({ limit: 1000 });
+    const cameraData = await getPublicKehCameraCatalog({ limit: 1000, revalidateSeconds: revalidate });
     routes.push(
       ...cameraData.models.map((model) => ({
         url: `${baseUrl}/cameras/${model.slug}`,

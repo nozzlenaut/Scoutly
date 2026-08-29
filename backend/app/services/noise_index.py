@@ -33,6 +33,15 @@ def _nonnegative_int(value: Any) -> int:
         return 0
 
 
+def _nullable_nonnegative_int(value: Any) -> int | None:
+    if value is None or value == "":
+        return None
+    try:
+        return max(0, int(value))
+    except (TypeError, ValueError):
+        return None
+
+
 def _noise_rate(filtered_count: int, candidate_count: int) -> float | None:
     if candidate_count <= 0:
         return None
@@ -53,6 +62,8 @@ def _reason_counts_for_snapshot(
     latest = observed_at + timedelta(minutes=1)
     for event in filtered_events:
         if str(event.get("product_id") or "") != product_id:
+            continue
+        if str(event.get("listing_type") or "").strip().lower() != "fixed_price":
             continue
         filtered_at = _parse_datetime(event.get("filtered_at"))
         if filtered_at is None or filtered_at < earliest or filtered_at > latest:
@@ -103,7 +114,12 @@ def build_noise_index_from_records(
         if candidates > 0:
             filtered = min(candidates, filtered)
         eligible = _nonnegative_int(snapshot.get("eligible_count"))
-        duplicates = max(0, candidates - filtered - eligible)
+        duplicates = _nullable_nonnegative_int(snapshot.get("duplicates_removed"))
+        eligible_count_exact = (
+            duplicates is not None
+            or eligible < 100
+            or max(0, candidates - filtered) <= 100
+        )
         reasons = _reason_counts_for_snapshot(
             product_id,
             observed_at,
@@ -124,8 +140,11 @@ def build_noise_index_from_records(
                 "filtered_count": filtered,
                 "noise_rate": rate,
                 "eligible_count": eligible,
+                "eligible_count_exact": eligible_count_exact,
                 "duplicates_removed": duplicates,
-                "duplicates_source": "derived_from_snapshot_counts",
+                "duplicates_source": (
+                    "recorded_at_collection" if duplicates is not None else "not_recorded"
+                ),
                 "rejection_reasons": [
                     {"reason": reason, "count": count}
                     for reason, count in reasons.most_common(5)
@@ -152,7 +171,11 @@ def build_noise_index_from_records(
         candidate_total = sum(int(row["candidate_count"]) for row in rows)
         filtered_total = sum(int(row["filtered_count"]) for row in rows)
         eligible_total = sum(int(row["eligible_count"]) for row in rows)
-        duplicate_total = sum(int(row["duplicates_removed"]) for row in rows)
+        known_duplicates = [
+            int(row["duplicates_removed"])
+            for row in rows
+            if row["duplicates_removed"] is not None
+        ]
         categories.append(
             {
                 "category": category,
@@ -161,7 +184,10 @@ def build_noise_index_from_records(
                 "filtered_count": filtered_total,
                 "noise_rate": _noise_rate(filtered_total, candidate_total),
                 "eligible_count": eligible_total,
-                "duplicates_removed": duplicate_total,
+                "eligible_count_exact": all(bool(row["eligible_count_exact"]) for row in rows),
+                "duplicates_removed": sum(known_duplicates) if known_duplicates else None,
+                "duplicates_reported_model_count": len(known_duplicates),
+                "duplicates_complete": len(known_duplicates) == len(rows),
             }
         )
 
@@ -180,8 +206,16 @@ def build_noise_index_from_records(
         )
     )
 
+    observed_times = [
+        observed
+        for model in models
+        if (observed := _parse_datetime(model.get("observed_at"))) is not None
+    ]
+
     return {
         "generated_at": generated_at.astimezone(UTC).isoformat(),
+        "latest_observed_at": max(observed_times).isoformat() if observed_times else None,
+        "oldest_observed_at": min(observed_times).isoformat() if observed_times else None,
         "snapshot_mode": "current_marketplace_snapshot",
         "historical_trends_available": False,
         "stale_after_days": stale_days,
@@ -190,8 +224,9 @@ def build_noise_index_from_records(
         "model_count": len(models),
         "methodology": (
             "Noise rate is filtered listings divided by marketplace candidates checked. "
-            "Duplicate candidate matches are derived separately from the same stored snapshot counts "
-            "and never count as marketplace noise. Rejection reasons use recorded filter events near "
+            "Duplicate candidate matches are stored separately at collection time and never count as "
+            "marketplace noise; older snapshots without an exact duplicate count stay marked unavailable. "
+            "Rejection reasons use fixed-price filter events recorded near "
             "the current stored snapshot; PriceSift does not backfill missing reason history."
         ),
         "categories": categories,
@@ -212,7 +247,7 @@ def build_noise_index(
     min_ranking_candidates = max(1, min(int(min_ranking_candidates), 1000))
     generated_at = (now or datetime.now(UTC)).astimezone(UTC)
     snapshots = list_price_snapshots(days=days, limit=25000)
-    filtered_events = recent_filtered_listings(limit=3000)
+    filtered_events = recent_filtered_listings(limit=20000)
     return build_noise_index_from_records(
         snapshots,
         filtered_events,

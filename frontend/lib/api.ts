@@ -1014,11 +1014,14 @@ export async function syncKehFeed(token: string): Promise<KehSyncRun> {
 }
 
 export async function getPublicKehCameraCatalog(
-  options: { query?: string; limit?: number } = {},
+  options: { query?: string; limit?: number; revalidateSeconds?: number } = {},
 ): Promise<KehCameraCatalogResponse> {
   const params = new URLSearchParams({ limit: String(options.limit ?? 500) });
   if (options.query) params.set("q", options.query);
-  const response = await fetch(`${baseUrl}/api/keh/cameras/public?${params.toString()}`, { cache: "no-store" });
+  const requestOptions = options.revalidateSeconds
+    ? { next: { revalidate: options.revalidateSeconds } }
+    : { cache: "no-store" as const };
+  const response = await fetch(`${baseUrl}/api/keh/cameras/public?${params.toString()}`, requestOptions);
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
     throw new Error(detail || `Public KEH camera catalog failed (${response.status})`);

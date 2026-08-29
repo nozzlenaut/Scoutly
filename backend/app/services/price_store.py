@@ -119,6 +119,8 @@ def record_price_snapshot(
     prices: Iterable[float],
     candidate_count: int = 0,
     filtered_count: int = 0,
+    eligible_count: int | None = None,
+    duplicates_removed: int | None = None,
     source: str = "search",
     observed_at: datetime | None = None,
 ) -> dict[str, Any]:
@@ -137,7 +139,12 @@ def record_price_snapshot(
         "source": source,
         "candidate_count": max(0, int(candidate_count)),
         "filtered_count": max(0, int(filtered_count)),
-        "eligible_count": len(clean_prices),
+        "eligible_count": (
+            len(clean_prices) if eligible_count is None else max(0, int(eligible_count))
+        ),
+        "duplicates_removed": (
+            None if duplicates_removed is None else max(0, int(duplicates_removed))
+        ),
         "lowest_price": round(min(clean_prices), 2) if clean_prices else None,
         "median_price": round(float(median(clean_prices)), 2) if clean_prices else None,
         "p25_price": _percentile(clean_prices, 0.25),
@@ -152,11 +159,11 @@ def record_price_snapshot(
                 INSERT INTO scoutly_price_snapshots (
                     id, snapshot_bucket, observed_at, product_id, category,
                     product_label, provider, query, source, candidate_count,
-                    filtered_count, eligible_count, lowest_price, median_price,
+                    filtered_count, eligible_count, duplicates_removed, lowest_price, median_price,
                     p25_price, p75_price, sample_prices
                 ) VALUES (
                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s, %s, %s, %s::jsonb
+                    %s, %s, %s, %s, %s, %s, %s, %s::jsonb
                 )
                 ON CONFLICT (product_id, provider, snapshot_bucket)
                 DO UPDATE SET
@@ -168,6 +175,7 @@ def record_price_snapshot(
                     candidate_count = EXCLUDED.candidate_count,
                     filtered_count = EXCLUDED.filtered_count,
                     eligible_count = EXCLUDED.eligible_count,
+                    duplicates_removed = EXCLUDED.duplicates_removed,
                     lowest_price = EXCLUDED.lowest_price,
                     median_price = EXCLUDED.median_price,
                     p25_price = EXCLUDED.p25_price,
@@ -187,6 +195,7 @@ def record_price_snapshot(
                     record["candidate_count"],
                     record["filtered_count"],
                     record["eligible_count"],
+                    record["duplicates_removed"],
                     record["lowest_price"],
                     record["median_price"],
                     record["p25_price"],
@@ -240,7 +249,7 @@ def list_price_snapshots(
                 f"""
                 SELECT id, snapshot_bucket, observed_at, product_id, category,
                        product_label, provider, query, source, candidate_count,
-                       filtered_count, eligible_count, lowest_price, median_price,
+                       filtered_count, eligible_count, duplicates_removed, lowest_price, median_price,
                        p25_price, p75_price, sample_prices
                 FROM scoutly_price_snapshots
                 WHERE {where}

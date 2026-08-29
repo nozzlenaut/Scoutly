@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Lens photos come from a dynamic retailer feed. */
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AmazonLensFallback } from "@/components/AmazonLensFallback";
 import {

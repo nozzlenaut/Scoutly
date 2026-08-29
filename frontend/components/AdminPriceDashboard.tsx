@@ -106,10 +106,9 @@ export function AdminPriceDashboard({ initialOverview, token }: { initialOvervie
   }, [token]);
 
   useEffect(() => {
-    setOverview(initialOverview);
-    setStatus("ready");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Loads the secondary admin signal panel after the server overview hydrates.
     void loadSignals();
-  }, [initialOverview, loadSignals]);
+  }, [loadSignals]);
 
   if (status === "loading" && !overview) {
     return <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6 text-slate-300">Loading price history…</div>;

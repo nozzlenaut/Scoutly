@@ -4,8 +4,9 @@ import { BetaFeedbackForm } from "@/components/BetaFeedbackForm";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "Beta feedback | PriceSift",
+  title: "Beta feedback",
   description: "Help test PriceSift and report bad results, missing products, confusing behavior, or feature ideas.",
+  alternates: { canonical: "/feedback" },
 };
 
 export default function FeedbackPage() {

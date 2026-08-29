@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Listing photos are dynamic marketplace URLs. */
+
 import { FormEvent, useMemo, useState } from "react";
 import {
   buildOutboundUrl,
