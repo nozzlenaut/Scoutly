@@ -120,7 +120,9 @@ export default async function IndexedProductPage({
     q: product.query,
     source: "seo_page",
   });
-  const guideHref = getBuyingGuideHref(product.category);
+  const guideHref = product.category === "cpus"
+    ? "/buying-guides/used-cpus"
+    : getBuyingGuideHref(product.category);
   const pageUrl = `https://www.pricesift.app/used/${product.slug}`;
   const liveInventoryHref = cameraInventoryHrefs[product.slug];
   const prices = results
