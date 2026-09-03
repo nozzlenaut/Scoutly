@@ -90,6 +90,20 @@ def _clean_prices(prices: Iterable[float]) -> list[float]:
     return cleaned[:100]
 
 
+def _snapshot_observed_at(snapshot: dict[str, Any]) -> datetime | None:
+    value = snapshot.get("observed_at")
+    if isinstance(value, datetime):
+        observed = value
+    else:
+        try:
+            observed = datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    if observed.tzinfo is None:
+        observed = observed.replace(tzinfo=UTC)
+    return observed.astimezone(UTC)
+
+
 def _db_or_file_read(db_reader, file_reader):
     if database_configured():
         try:
@@ -300,6 +314,33 @@ def _context_from_snapshots(
     if current_best is not None and historical_median and historical_median > 0:
         comparison_percent = round(((current_best - historical_median) / historical_median) * 100, 1)
 
+    trend_start_price = None
+    trend_end_price = None
+    trend_percent = None
+    trend_observation_days = None
+    if history_ready:
+        trend_points: list[tuple[datetime, float]] = []
+        for snapshot in positive_snapshots:
+            observed = _snapshot_observed_at(snapshot)
+            try:
+                snapshot_median = float(snapshot.get("median_price"))
+            except (TypeError, ValueError):
+                continue
+            if observed is None or snapshot_median <= 0 or not math.isfinite(snapshot_median):
+                continue
+            trend_points.append((observed, snapshot_median))
+
+        trend_points.sort(key=lambda item: item[0])
+        if len(trend_points) >= 2:
+            start_observed, start_price = trend_points[0]
+            end_observed, end_price = trend_points[-1]
+            elapsed_days = (end_observed - start_observed).total_seconds() / 86400
+            if elapsed_days > 0 and start_price > 0:
+                trend_start_price = round(start_price, 2)
+                trend_end_price = round(end_price, 2)
+                trend_percent = round(((end_price - start_price) / start_price) * 100, 1)
+                trend_observation_days = round(elapsed_days, 1)
+
     last_observed = snapshots[0].get("observed_at") if snapshots else None
     first_observed = snapshots[-1].get("observed_at") if snapshots else None
     available_count = len(positive_snapshots)
@@ -320,6 +361,10 @@ def _context_from_snapshots(
         "typical_high_price": _percentile(historical_prices, 0.75) if history_ready else None,
         "historical_median_price": historical_median,
         "current_vs_median_percent": comparison_percent,
+        "trend_start_price": trend_start_price,
+        "trend_end_price": trend_end_price,
+        "trend_percent": trend_percent,
+        "trend_observation_days": trend_observation_days,
         "first_observed_at": first_observed,
         "last_observed_at": last_observed,
     }
