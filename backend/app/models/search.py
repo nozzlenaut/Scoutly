@@ -36,6 +36,10 @@ class PriceContext(BaseModel):
     typical_high_price: float | None = None
     historical_median_price: float | None = None
     current_vs_median_percent: float | None = None
+    trend_start_price: float | None = None
+    trend_end_price: float | None = None
+    trend_percent: float | None = None
+    trend_observation_days: float | None = None
     first_observed_at: str | None = None
     last_observed_at: str | None = None
 
