@@ -79,6 +79,7 @@ def test_price_context_waits_for_three_inventory_snapshots(monkeypatch, tmp_path
     )
     assert early["history_ready"] is False
     assert early["current_best_price"] == 190.0
+    assert early["trend_percent"] is None
 
     _record(start + timedelta(hours=12), [210, 220, 230])
     ready = build_price_context(
@@ -92,6 +93,32 @@ def test_price_context_waits_for_three_inventory_snapshots(monkeypatch, tmp_path
     assert ready["typical_high_price"] == 220.0
     assert ready["historical_median_price"] == 215.0
     assert ready["current_vs_median_percent"] == -11.6
+    assert ready["trend_start_price"] == 210.0
+    assert ready["trend_end_price"] == 220.0
+    assert ready["trend_percent"] == 4.8
+    assert ready["trend_observation_days"] == 0.5
+
+
+def test_price_context_trend_uses_oldest_and_newest_snapshot_medians(monkeypatch, tmp_path):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("SCOUTLY_DATA_DIR", str(tmp_path))
+    start = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
+
+    _record(start, [100, 110, 120])
+    _record(start + timedelta(days=7), [90, 100, 110])
+    _record(start + timedelta(days=14), [80, 90, 100])
+
+    context = build_price_context(
+        product_id="cpu-intel-core-i9-9900k",
+        current_prices=[80, 90, 100],
+        days=3650,
+    )
+
+    assert context["history_ready"] is True
+    assert context["trend_start_price"] == 110.0
+    assert context["trend_end_price"] == 90.0
+    assert context["trend_percent"] == -18.2
+    assert context["trend_observation_days"] == 14.0
 
 
 def test_no_inventory_snapshots_are_kept_for_availability(monkeypatch, tmp_path):
