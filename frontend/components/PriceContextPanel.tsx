@@ -1,7 +1,14 @@
 import type { PriceContext } from "@/lib/api";
 
-function money(value: number | null): string {
-  return value === null ? "—" : `$${value.toFixed(2)}`;
+type PriceTrendContext = PriceContext & {
+  trend_start_price?: number | null;
+  trend_end_price?: number | null;
+  trend_percent?: number | null;
+  trend_observation_days?: number | null;
+};
+
+function money(value: number | null | undefined): string {
+  return value == null ? "—" : `$${value.toFixed(2)}`;
 }
 
 function comparisonLabel(value: number | null): string | null {
@@ -12,16 +19,40 @@ function comparisonLabel(value: number | null): string | null {
   return "Near the recent median";
 }
 
+function trendLabel(value: number): string {
+  const magnitude = Math.abs(value).toFixed(1);
+  if (value <= -0.5) return `↓ ${magnitude}%`;
+  if (value >= 0.5) return `↑ ${magnitude}%`;
+  return `→ ${magnitude}%`;
+}
+
+function observedDaysLabel(value: number | null | undefined): string {
+  if (value == null) return "recent observations";
+  if (value < 1) return "less than a day of observations";
+  const rounded = value >= 10 ? Math.round(value).toString() : value.toFixed(1).replace(/\.0$/, "");
+  return `${rounded} days of observations`;
+}
+
 export function PriceContextPanel({ context, theme = "dark" }: { context: PriceContext; theme?: "dark" | "light" }) {
   if (!context.product_id) return null;
 
+  const trendContext = context as PriceTrendContext;
   const comparison = comparisonLabel(context.current_vs_median_percent);
   const historyProgress = Math.min(context.available_snapshot_count, 3);
+  const hasTrend = trendContext.trend_percent != null
+    && trendContext.trend_start_price != null
+    && trendContext.trend_end_price != null;
+  const trendPercent = trendContext.trend_percent ?? 0;
   const light = theme === "light";
   const metricClasses = light ? "rounded-2xl bg-ps-control p-4" : "rounded-2xl bg-slate-950/35 p-4";
   const metricLabelClasses = light ? "text-xs uppercase tracking-[0.16em] text-ps-neutral" : "text-xs uppercase tracking-[0.16em] text-slate-400";
   const metricValueClasses = light ? "mt-2 text-2xl font-black text-ps-text-primary" : "mt-2 text-2xl font-black text-white";
   const metricDetailClasses = light ? "mt-1 text-xs text-ps-neutral" : "mt-1 text-xs text-slate-400";
+  const trendValueClasses = trendPercent <= -0.5
+    ? light ? "text-ps-success" : "text-emerald-200"
+    : trendPercent >= 0.5
+      ? light ? "text-ps-warning" : "text-amber-200"
+      : light ? "text-ps-text-secondary" : "text-slate-200";
 
   return (
     <section className={light ? "mt-6 rounded-3xl border border-ps-border bg-ps-surface p-5" : "mt-6 rounded-3xl border border-cyan-300/15 bg-cyan-300/[0.07] p-5"} aria-label="Price context">
@@ -85,6 +116,20 @@ export function PriceContextPanel({ context, theme = "dark" }: { context: PriceC
           </p>
         </div>
       </div>
+
+      {hasTrend ? (
+        <div className={light ? "mt-4 border-t border-ps-border pt-4" : "mt-4 border-t border-white/10 pt-4"}>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className={metricLabelClasses}>{context.window_days}-day price trend</p>
+              <p className={`mt-1 text-2xl font-black ${trendValueClasses}`}>{trendLabel(trendPercent)}</p>
+            </div>
+            <p className={light ? "max-w-2xl text-sm leading-6 text-ps-text-secondary" : "max-w-2xl text-sm leading-6 text-slate-300"}>
+              Median eligible-listing price moved from {money(trendContext.trend_start_price)} to {money(trendContext.trend_end_price)} across {observedDaysLabel(trendContext.trend_observation_days)} inside this {context.window_days}-day window.
+            </p>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
