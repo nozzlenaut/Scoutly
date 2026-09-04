@@ -1,5 +1,6 @@
 import { Analytics } from "@vercel/analytics/next";
 import { VerifiedOutboundClickTracker } from "@/components/VerifiedOutboundClickTracker";
+import { PresenceHeartbeat } from "@/components/PresenceHeartbeat";
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <VerifiedOutboundClickTracker />
+        <PresenceHeartbeat />
         <Analytics />
       </body>
     </html>
