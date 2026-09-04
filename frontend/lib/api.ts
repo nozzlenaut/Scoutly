@@ -961,7 +961,7 @@ export async function getPriceOverview(
 ): Promise<PriceOverview> {
   const params = new URLSearchParams({ days: String(days), limit: "1000" });
   if (token) params.set("token", token);
-  // Use the same direct Railway API pattern as the working KEH admin page.
+  // Use the same direct backend API pattern as the working KEH admin page.
   // This works during server rendering and in the browser because the API
   // already exposes the required public-beta CORS policy.
   const response = await adminFetch(`${baseUrl}/api/prices/overview?${params.toString()}`, { cache: "no-store" });

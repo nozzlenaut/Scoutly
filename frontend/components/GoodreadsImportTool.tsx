@@ -1,7 +1,6 @@
 
 "use client";
 
-import { track } from "@vercel/analytics";
 import { type ChangeEvent, useMemo, useRef, useState } from "react";
 import {
   exactListingOutboundUrl,
@@ -358,10 +357,6 @@ export function GoodreadsImportTool() {
       setBooks(imported);
       setFileName(file.name);
       setSelectedShelf(importedShelves.has("to-read") ? "to-read" : "all");
-      track("goodreads_csv_loaded", {
-        rows: imported.length,
-        has_to_read: importedShelves.has("to-read"),
-      });
     } catch (error) {
       setBooks([]);
       setFileName("");
@@ -414,17 +409,7 @@ export function GoodreadsImportTool() {
       ),
     );
 
-    track("goodreads_batch_started", {
-      shelf: selectedShelf,
-      searchable: counts.ready,
-      imported: visibleBooks.length,
-    });
-
     let cursor = 0;
-    let foundCount = 0;
-    let missCount = 0;
-    let errorCount = 0;
-
     async function worker(): Promise<void> {
       while (cursor < targetBooks.length) {
         const position = cursor;
@@ -438,8 +423,6 @@ export function GoodreadsImportTool() {
             author: book.author,
           });
           const found = response.top_results.length > 0;
-          if (found) foundCount += 1;
-          else missCount += 1;
           updateBook(book.id, {
             searchState: found ? "found" : "miss",
             response,
@@ -447,7 +430,6 @@ export function GoodreadsImportTool() {
             batchId,
           });
         } catch (error) {
-          errorCount += 1;
           updateBook(book.id, {
             searchState: "error",
             error:
@@ -465,13 +447,6 @@ export function GoodreadsImportTool() {
     await Promise.all([worker(), worker()]);
     setRunning(false);
 
-    track("goodreads_batch_completed", {
-      shelf: selectedShelf,
-      searched: targetBooks.length,
-      found: foundCount,
-      misses: missCount,
-      errors: errorCount,
-    });
   }
 
   return (
@@ -517,7 +492,6 @@ export function GoodreadsImportTool() {
             href="https://www.goodreads.com/review/import"
             target="_blank"
             rel="noreferrer"
-            onClick={() => track("goodreads_export_link_clicked")}
             className="rounded-2xl bg-ps-accent-strong px-5 py-3 text-center font-bold text-white transition hover:bg-ps-accent-hover"
           >
             Click here to export from Goodreads ↗
@@ -821,12 +795,6 @@ export function GoodreadsImportTool() {
                           href={exactUrl}
                           target="_blank"
                           rel="noreferrer"
-                          onClick={() =>
-                            track("goodreads_exact_listing_clicked", {
-                              isbn: book.isbn,
-                              provider: top.provider,
-                            })
-                          }
                           className="rounded-xl bg-ps-accent-strong px-4 py-2.5 text-sm font-bold text-white transition hover:bg-ps-accent-hover"
                         >
                           Open exact listing ↗
@@ -837,12 +805,6 @@ export function GoodreadsImportTool() {
                           href={separatedUrl}
                           target="_blank"
                           rel="noreferrer"
-                          onClick={() =>
-                            track("goodreads_separated_exact_clicked", {
-                              isbn: book.isbn,
-                              kind: separatedKind,
-                            })
-                          }
                           className="rounded-xl border border-ps-border bg-ps-control px-4 py-2.5 text-sm font-bold text-ps-accent-hover transition hover:bg-ps-accent-soft"
                         >
                           {separatedKind === "collectible"
@@ -855,17 +817,6 @@ export function GoodreadsImportTool() {
                           href={amazonFallback.url}
                           target="_blank"
                           rel="sponsored noreferrer"
-                          onClick={() =>
-                            track("goodreads_amazon_fallback_clicked", {
-                              format: amazonFallback.format,
-                              has_exact_identifier:
-                                amazonFallback.exactIdentifier,
-                              source:
-                                book.importStatus === "digital"
-                                  ? "digital"
-                                  : "exact_miss",
-                            })
-                          }
                           className="rounded-xl border border-ps-warning/40 bg-amber-50 px-4 py-2.5 text-sm font-bold text-ps-warning transition hover:bg-ps-surface-strong"
                         >
                           {amazonFallback.label}
@@ -876,11 +827,6 @@ export function GoodreadsImportTool() {
                           href={otherUrl}
                           target="_blank"
                           rel="noreferrer"
-                          onClick={() =>
-                            track("goodreads_other_editions_clicked", {
-                              isbn: book.isbn,
-                            })
-                          }
                           className="rounded-xl border border-ps-warning/40 bg-amber-50 px-4 py-2.5 text-sm font-bold text-ps-warning transition hover:bg-ps-surface-strong"
                         >
                           Search other editions ↗

@@ -35,7 +35,7 @@ function AdminGate({ invalid = false }: { invalid?: boolean }) {
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">PriceSift admin</p>
           <h1 className="mt-2 text-3xl font-black">Admin token required</h1>
           <p className="mt-3 text-sm text-slate-400">
-            {invalid ? "That token was not accepted. Try the private token saved in Railway." : "Enter the private token saved in Railway to open testing analytics and live filter rules."}
+            {invalid ? "That token was not accepted. Try the private admin token configured for PriceSift." : "Enter the private admin token configured for PriceSift to open testing analytics and live filter rules."}
           </p>
           <AdminLoginForm next="/admin" />
         </section>

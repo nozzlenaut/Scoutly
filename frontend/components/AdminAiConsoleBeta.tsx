@@ -93,7 +93,7 @@ export function AdminAiConsoleBeta({ token }: Props) {
             <p className="mt-3 text-sm font-semibold text-amber-200">
               {status.enabled
                 ? "OPENAI_API_KEY is missing, so AI calls are currently skipped. You can still switch the beta off here."
-                : "Add OPENAI_API_KEY in Railway first. The switch cannot be turned on until the backend sees it."}
+                : "Configure OPENAI_API_KEY in the backend environment first. The switch cannot be turned on until the backend sees it."}
             </p>
           ) : null}
 

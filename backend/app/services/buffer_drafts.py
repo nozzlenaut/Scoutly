@@ -216,7 +216,7 @@ def _reserve_database_record(record: dict[str, Any]) -> None:
 def _reserve_record(record: dict[str, Any]) -> None:
     if database_configured():
         # Fail closed when PostgreSQL is configured but unavailable. Falling back to
-        # a process-local file here could create duplicates across Railway instances.
+        # a process-local file here could create duplicates across backend instances.
         _reserve_database_record(record)
         return
     _reserve_file_record(record)

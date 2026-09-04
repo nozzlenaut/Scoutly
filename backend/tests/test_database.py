@@ -6,7 +6,7 @@ from app.main import app
 from app.services import database, feedback_store
 
 
-def test_database_url_ignores_unresolved_railway_reference(monkeypatch):
+def test_database_url_ignores_unresolved_reference(monkeypatch):
     monkeypatch.setenv("DATABASE_URL", "${{Postgres.DATABASE_URL}}")
     assert database.database_url() is None
     assert database.database_configured() is False

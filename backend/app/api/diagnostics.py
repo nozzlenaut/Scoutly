@@ -21,9 +21,7 @@ router = APIRouter(tags=["Diagnostics"])
 
 def _commit_sha() -> str | None:
     for name in (
-        "RAILWAY_GIT_COMMIT_SHA",
         "GIT_COMMIT_SHA",
-        "VERCEL_GIT_COMMIT_SHA",
         "SOURCE_VERSION",
     ):
         value = os.getenv(name, "").strip()

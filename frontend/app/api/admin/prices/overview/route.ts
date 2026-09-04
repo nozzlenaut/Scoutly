@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const backend = backendUrl();
   if (!backend) {
     return NextResponse.json(
-      { detail: "Vercel is missing API_URL or NEXT_PUBLIC_API_URL." },
+      { detail: "PriceSift frontend is missing API_URL or NEXT_PUBLIC_API_URL." },
       { status: 503 },
     );
   }
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     return NextResponse.json(
-      { detail: error instanceof Error ? error.message : "Could not reach the Railway API." },
+      { detail: error instanceof Error ? error.message : "Could not reach the PriceSift API." },
       { status: 502 },
     );
   }

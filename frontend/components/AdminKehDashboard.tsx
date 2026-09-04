@@ -79,8 +79,8 @@ export function AdminKehDashboard({ initialOverview, token }: { initialOverview:
         </div>
         {latest ? <p className="mt-4 text-sm text-slate-400">Feed rows {latest.feed_items} · camera/lens rows {latest.scoped_items} · matched {latest.matched_items} · unmatched {latest.unmatched_items} · ambiguous {latest.ambiguous_items}</p> : null}
         {message ? <p className="mt-4 rounded-2xl border border-cyan-200/20 bg-cyan-200/10 p-3 text-sm text-cyan-50">{message}</p> : null}
-        {!overview.configured ? <p className="mt-4 text-sm text-amber-200">Add AWIN_KEH_FEED_URL to Railway before syncing.</p> : null}
-        {overview.configured && !overview.enabled ? <p className="mt-4 text-sm text-amber-200">Set KEH_FEED_ENABLED=true in Railway to allow shadow syncs.</p> : null}
+        {!overview.configured ? <p className="mt-4 text-sm text-amber-200">Configure AWIN_KEH_FEED_URL in the backend environment before syncing.</p> : null}
+        {overview.configured && !overview.enabled ? <p className="mt-4 text-sm text-amber-200">Set KEH_FEED_ENABLED=true in the backend environment to allow shadow syncs.</p> : null}
       </section>
 
       <section className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-5">

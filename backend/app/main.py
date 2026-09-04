@@ -52,9 +52,8 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="PriceSift API", version=APP_VERSION, lifespan=lifespan)
 app.add_middleware(AdminAuthorizationMiddleware)
 
-# Scoutly does not use cookies or browser credentials yet, so a public API CORS
-# policy is the simplest way to support localhost, Vercel production domains,
-# and Vercel preview deployments while we are in MVP development.
+# PriceSift does not use cookies or browser credentials yet, so a public API CORS
+# policy keeps localhost and the public frontend simple while the app remains in MVP development.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

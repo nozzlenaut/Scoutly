@@ -54,7 +54,7 @@ class _AIReviewConfig:
 
 def _review_config_from_env() -> _AIReviewConfig | None:
     # The admin-persisted feature flag is the spending switch. Merely adding an
-    # OPENAI_API_KEY in Railway must not start making paid review calls.
+    # OPENAI_API_KEY in the backend environment must not start making paid review calls.
     if not ai_console_review_enabled():
         return None
 

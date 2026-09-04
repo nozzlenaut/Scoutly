@@ -118,7 +118,7 @@ export function AdminPriceDashboard({ initialOverview, token }: { initialOvervie
     return (
       <div className="mt-8 rounded-3xl border border-amber-300/25 bg-amber-300/10 p-6 text-amber-50">
         <h2 className="text-xl font-bold">Price history could not load</h2>
-        <p className="mt-2 text-sm leading-6">The page loaded, but PriceSift could not retrieve the overview through the Vercel-to-Railway proxy.</p>
+        <p className="mt-2 text-sm leading-6">The page loaded, but PriceSift could not retrieve the overview through the frontend-to-backend proxy.</p>
         {errorMessage ? <p className="mt-3 break-words rounded-2xl bg-slate-950/40 p-3 font-mono text-xs text-amber-100/80">{errorMessage}</p> : null}
         <button type="button" onClick={() => void load()} className="mt-4 rounded-2xl bg-white px-4 py-2 font-semibold text-slate-950">Retry</button>
       </div>
