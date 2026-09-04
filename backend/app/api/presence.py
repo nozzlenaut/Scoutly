@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
@@ -13,10 +15,7 @@ class PresenceHeartbeat(BaseModel):
     session_id: str = Field(min_length=16, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
 
 
-def _ensure_table(connection: object) -> None:
-    global _initialized
-    if _initialized:
-        return
+def _ensure_table(connection: Any) -> None:
     connection.execute(
         """
         CREATE TABLE IF NOT EXISTS scoutly_active_sessions (
@@ -29,16 +28,17 @@ def _ensure_table(connection: object) -> None:
     connection.execute(
         "CREATE INDEX IF NOT EXISTS scoutly_active_sessions_recent ON scoutly_active_sessions (last_seen DESC)"
     )
-    _initialized = True
 
 
 @router.post("/presence")
 def heartbeat(payload: PresenceHeartbeat) -> dict[str, bool]:
+    global _initialized
     if not database_configured():
         return {"ok": False}
 
     with database_connection() as connection:
-        _ensure_table(connection)
+        if not _initialized:
+            _ensure_table(connection)
         connection.execute(
             """
             INSERT INTO scoutly_active_sessions (session_id, first_seen, last_seen)
@@ -50,4 +50,5 @@ def heartbeat(payload: PresenceHeartbeat) -> dict[str, bool]:
         connection.execute(
             "DELETE FROM scoutly_active_sessions WHERE last_seen < NOW() - INTERVAL '24 hours'"
         )
+    _initialized = True
     return {"ok": True}
