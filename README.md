@@ -2,11 +2,11 @@
 
 **Find the best price for what you already want.**
 
-PriceSift is an exact-item results site for used and secondhand products. It is for the point where someone already knows what they want and needs a short list of useful current listings - not a wall of marketplace noise.
+PriceSift is an exact-item results site for used and secondhand products. It is for the point where someone already knows what they want and needs a short list of useful current listings — not a wall of marketplace noise.
 
 Live site: https://www.pricesift.app/
 
-`Scoutly` remains the internal repository and infrastructure name.
+> The public product is **PriceSift**. `Scoutly` is the older/internal repository name that stuck around.
 
 ## What PriceSift does
 
@@ -77,10 +77,9 @@ The frontend runs at `http://localhost:3000`; the backend runs at `http://localh
 
 ## Deployment
 
-- Vercel deploys the frontend from `main`.
-- Railway deploys the backend and scheduled jobs from `main`.
-- PostgreSQL stores production analytics, reports, QA evaluations, and price history.
-- Railway refreshes the KEH feed every six hours; `/admin/keh` can request a fresh sync after matching changes are deployed.
+Production is self-hosted on a Raspberry Pi. GitHub is used for source/history and development work; production is **not** automatically deployed from GitHub.
+
+That separation is intentional: changes are tested before they are pushed to the live Pi.
 
 ## Project references
 
